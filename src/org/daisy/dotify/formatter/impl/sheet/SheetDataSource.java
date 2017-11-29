@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.daisy.dotify.api.formatter.TransitionBuilderProperties.ApplicationRange;
 import org.daisy.dotify.api.writer.SectionProperties;
 import org.daisy.dotify.common.splitter.DefaultSplitResult;
 import org.daisy.dotify.common.splitter.SplitPointDataSource;
@@ -19,6 +20,7 @@ import org.daisy.dotify.formatter.impl.page.RestartPaginationException;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;
 import org.daisy.dotify.formatter.impl.search.SheetIdentity;
+import org.daisy.dotify.formatter.impl.volume.TransitionContent;
 
 /**
  * Provides a data source for sheets. Given a list of 
@@ -46,6 +48,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 	private boolean volBreakAllowed;
 	private boolean updateCounter;
 	private boolean allowsSplit;
+	private boolean wasSplitInsideSequence;
 	//Output buffer
 	private List<Sheet> sheetBuffer;
 
@@ -67,6 +70,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 		this.initialPageOffset = 0;
 		this.updateCounter = false;
 		this.allowsSplit = true;
+		this.wasSplitInsideSequence = false;
 	}
 	
 	public SheetDataSource(SheetDataSource template) {
@@ -104,6 +108,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 		this.initialPageOffset = template.initialPageOffset;
 		this.updateCounter = tail?true:template.updateCounter;
 		this.allowsSplit = true;
+		this.wasSplitInsideSequence = template.wasSplitInsideSequence;
 	}
 	
 	@Override
@@ -211,7 +216,15 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 						!(	!context.getConfiguration().allowsEndingVolumeOnHyphen() 
 								&& sheetBuffer.size()==index-1 
 								&& (!sectionProperties.duplex() || pageIndex % 2 == 1));
-				PageImpl p = psb.nextPage(initialPageOffset, hyphenateLastLine);
+				TransitionContent transition = null;
+				if (context.getTransitionBuilder().getProperties().getApplicationRange()!=ApplicationRange.NONE) {
+					if (index-1==sheetBuffer.size() && (!sectionProperties.duplex() || pageIndex % 2 == 1)) {
+						transition = context.getTransitionBuilder().getInterruptTransition();
+					} else if (wasSplitInsideSequence && sheetBuffer.size()==0  && (!sectionProperties.duplex() || pageIndex % 2 == 0)) {
+						transition = context.getTransitionBuilder().getResumeTransition();
+					}
+				}
+				PageImpl p = psb.nextPage(initialPageOffset, hyphenateLastLine, Optional.ofNullable(transition));
 				struct.increasePageCount();
 				s.avoidVolumeBreakAfterPriority(p.getAvoidVolumeBreakAfter());
 				if (!psb.hasNext()) {
@@ -271,6 +284,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 		} else {
 			struct.setDefaultPageOffset(initialPageOffset + psb.getSizeLast());
 		}
+		wasSplitInsideSequence = psb.hasNext();
 		if (atIndex==0) {
 			return new DefaultSplitResult<Sheet, SheetDataSource>(Collections.emptyList(), new SheetDataSource(this, atIndex, true));
 		} else {
