@@ -221,6 +221,7 @@ public class PageSequenceBuilder2 {
 				}
 				// Using copy to find the break point so that only the required data is rendered
 				SplitPointSpecification spec;
+				boolean addTransition = true;
 				if (transitionContent.isPresent() && transitionContent.get().getType()==Type.INTERRUPT) {
 					SplitPointCost<RowGroup> cost = (SplitPointDataSource<RowGroup, ?> units, int in, int limit)->{
 						Integer volumeBreakPriority = // 1-9 or null: 
@@ -236,7 +237,14 @@ public class PageSequenceBuilder2 {
 									:21 // because 11 + 9 = 20
 								)*limit-in;
 					};
-					spec = sph.find(flowHeight, copy, cost, force?StandardSplitOption.ALLOW_FORCE:null);
+					spec = sph.find(current.getFlowHeight(), copy, cost, force?StandardSplitOption.ALLOW_FORCE:null);
+					if (sph.split(spec, copy).getHead().stream().limit(flowHeight).filter(r->r.isLastRowGroupInBlock()).findFirst().isPresent()) {
+						// reset and retry with the new limit
+						copy = new RowGroupDataSource(data);
+						spec = sph.find(flowHeight, copy, cost, force?StandardSplitOption.ALLOW_FORCE:null);
+					} else {
+						addTransition = false;
+					}
 				} else {
 					spec = sph.find(flowHeight, copy, force?StandardSplitOption.ALLOW_FORCE:null);
 				}
@@ -257,7 +265,7 @@ public class PageSequenceBuilder2 {
 				force = res.getHead().size()==0;
 				data = res.getTail();
 				List<RowGroup> head;
-				if (transitionContent.isPresent()) {
+				if (addTransition && transitionContent.isPresent()) {
 					if (transitionContent.get().getType()==TransitionContent.Type.INTERRUPT) {
 						head = new ArrayList<>(res.getHead());
 						head.addAll(transitionText);
