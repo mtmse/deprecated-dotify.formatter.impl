@@ -20,6 +20,7 @@ import org.daisy.dotify.formatter.impl.page.RestartPaginationException;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
+import org.daisy.dotify.formatter.impl.search.PageId;
 import org.daisy.dotify.formatter.impl.search.SheetIdentity;
 import org.daisy.dotify.formatter.impl.volume.TransitionContent;
 
@@ -50,6 +51,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 	private boolean updateCounter;
 	private boolean allowsSplit;
 	private boolean wasSplitInsideSequence;
+	private boolean volumeEnded;
 	//Output buffer
 	private List<Sheet> sheetBuffer;
 
@@ -72,6 +74,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 		this.updateCounter = false;
 		this.allowsSplit = true;
 		this.wasSplitInsideSequence = false;
+		this.volumeEnded = false;
 	}
 	
 	public SheetDataSource(SheetDataSource template) {
@@ -110,6 +113,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 		this.updateCounter = tail?true:template.updateCounter;
 		this.allowsSplit = true;
 		this.wasSplitInsideSequence = template.wasSplitInsideSequence;
+		this.volumeEnded = false;
 	}
 	
 	@Override
@@ -200,44 +204,70 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 			}
 			int currentSize = sheetBuffer.size();
 			while (psb.hasNext() && currentSize == sheetBuffer.size()) {
-				if (!sectionProperties.duplex() || pageIndex % 2 == 0) {
+				if (!sectionProperties.duplex() || pageIndex % 2 == 0 || volumeEnded || s==null) {
 					if (s!=null) {
 						Sheet r = s.build();
 						sheetBuffer.add(r);
 						s = null;
+						if (volumeEnded) {
+							pageIndex += pageIndex%2==1?1:0;
+						}
 						continue;
+					} else if (volumeEnded) {
+						throw new AssertionError("Error in code.");
 					}
 					volBreakAllowed = true;
 					s = new Sheet.Builder(sectionProperties);
 					si = new SheetIdentity(rcontext.getSpace(), rcontext.getCurrentVolume(), volumeGroup, sheetBuffer.size()+sheetOffset);
 					sheetIndex++;
 				}
-				
-				boolean hyphenateLastLine = 
-						!(	!context.getConfiguration().allowsEndingVolumeOnHyphen() 
-								&& sheetBuffer.size()==index-1 
-								&& (!sectionProperties.duplex() || pageIndex % 2 == 1));
+
 				TransitionContent transition = null;
 				if (context.getTransitionBuilder().getProperties().getApplicationRange()!=ApplicationRange.NONE) {
 					if (!allowsSplit && index-1==sheetBuffer.size()) {
 						if ((!sectionProperties.duplex() || pageIndex % 2 == 1)) {
 							transition = context.getTransitionBuilder().getInterruptTransition();
 						} else {
-							PageDetails pd1 = psb.nextPageDetails(initialPageOffset, 0);
-							Optional<PageDetails> next = rcontext.getRefs().findNextPageInSequence(pd1.getPageId());
-							if (next.isPresent() && unlessNull(rcontext.getRefs().getAvoidVolumeBreakAfter(pd1.getPageId()), 10)>unlessNull(rcontext.getRefs().getAvoidVolumeBreakAfter(next.get().getPageId()), 10)) {
-								//break here
-								transition = context.getTransitionBuilder().getInterruptTransition();
+							// This id is the same id as the one created below in the call to nextPage
+							PageId thisPageId = psb.nextPageId(initialPageOffset, 0);
+							// This gets the page details for the next page in this sequence (if any)
+							Optional<PageDetails> next = rcontext.getRefs().findNextPageInSequence(thisPageId);
+							// If there is a page details in this sequence and volume break is preferred on this page
+							if (next.isPresent()) {
+								int v1 = getWithDefault(rcontext.getRefs().getAvoidVolumeBreakAfter(thisPageId), 10);
+								int v2 = getWithDefault(rcontext.getRefs().getAvoidVolumeBreakAfter(next.get().getPageId()), 10);
+								System.out.println(v1 + " " + v2);
+								if (v1>v2) {
+									//break here
+									transition = context.getTransitionBuilder().getInterruptTransition();
+								}
 							}
 						}
+						volumeEnded = transition!=null;
 					} else if (wasSplitInsideSequence && sheetBuffer.size()==0  && (!sectionProperties.duplex() || pageIndex % 2 == 0)) {
 						transition = context.getTransitionBuilder().getResumeTransition();
 					}
 				}
+				boolean hyphenateLastLine = 
+						!(	!context.getConfiguration().allowsEndingVolumeOnHyphen() 
+								&& sheetBuffer.size()==index-1 
+								&& (!sectionProperties.duplex() || pageIndex % 2 == 1));
+				
 				PageImpl p = psb.nextPage(initialPageOffset, hyphenateLastLine, Optional.ofNullable(transition));
-				rcontext.getRefs().setAvoidVolumeBreakAfter(p.getDetails().getPageId(), p.getAvoidVolumeBreakAfter());
+				System.out.println(p.getDetails().getPageId() + " " + p.getAvoidVolumeBreakAfter());
+				rcontext.getRefs().keepAvoidVolumeBreakAfter(p.getDetails().getPageId(), p.getAvoidVolumeBreakAfter());
 				struct.increasePageCount();
-				s.avoidVolumeBreakAfterPriority(p.getAvoidVolumeBreakAfter());
+				Integer vpx = p.getAvoidVolumeBreakAfter();
+				if (context.getTransitionBuilder().getProperties().getApplicationRange()==ApplicationRange.SHEET) {
+					Sheet sx = s.build();
+					if (!sx.getPages().isEmpty()) {
+						Integer vp = sx.getAvoidVolumeBreakAfterPriority();
+						if (getWithDefault(vp, 10)>getWithDefault(vpx, 10)) {
+							vpx = vp;
+						}
+					}
+				}
+				s.avoidVolumeBreakAfterPriority(vpx);
 				if (!psb.hasNext()) {
 					s.avoidVolumeBreakAfterPriority(null);
 					//Don't get or store this value in crh as it is transient and not a property of the sheet context
@@ -259,7 +289,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 				s.add(p);
 				pageIndex++;
 			}
-			if (!psb.hasNext()) {
+			if (!psb.hasNext()||volumeEnded) {
 				rcontext.getRefs().setSequenceScope(new DocumentSpace(rcontext.getSpace(), rcontext.getCurrentVolume()), seqsIndex, psb.getGlobalStartIndex(), psb.getToIndex());
 				if (counter!=null) {
 					rcontext.getRefs().setPageNumberOffset(counter, initialPageOffset + psb.getSizeLast());
@@ -271,7 +301,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 		return true;
 	}
 	
-	private static int unlessNull(Integer value, int def) {
+	private static int getWithDefault(Integer value, int def) {
 		return value==null?def:value;
 	}
 

@@ -21,7 +21,7 @@ public class CrossReferenceHandler {
 	private final LookupHandler<BlockAddress, Integer> rowCount;
     private final LookupHandler<BlockAddress, List<String>> groupAnchors;
     private final LookupHandler<BlockAddress, List<Marker>> groupMarkers;
-	private final LookupHandler<PageId, Integer> avoidVolumeBreakAfter;
+	private final LookupHandler<PageId, Optional<Integer>> avoidVolumeBreakAfter;
 	private final Map<Integer, Overhead> volumeOverhead;
     private final Map<String, Integer> counters;
 	private final SearchInfo searchInfo;
@@ -135,9 +135,14 @@ public class CrossReferenceHandler {
 		breakable.commit();
 	}
 	
-	public void setAvoidVolumeBreakAfter(PageId id, Integer value) {
+	public void keepAvoidVolumeBreakAfter(PageId id, Integer value) {
 		if (readOnly) { return; }
-		avoidVolumeBreakAfter.put(id, value);
+		avoidVolumeBreakAfter.keep(id, Optional.ofNullable(value));
+	}
+	
+	public void commitAvoidVolumeBreakAfter() {
+		if (readOnly) { return; }
+		avoidVolumeBreakAfter.commit();
 	}
 	
 	public void setRowCount(BlockAddress blockId, int value) {
@@ -219,7 +224,7 @@ public class CrossReferenceHandler {
 	}
 	
 	public Integer getAvoidVolumeBreakAfter(PageId id) {
-		return avoidVolumeBreakAfter.get(id);
+		return avoidVolumeBreakAfter.get(id, Optional.empty()).orElse(null);
 	}
 
 	public List<String> getGroupAnchors(BlockAddress blockId) {
@@ -296,7 +301,9 @@ public class CrossReferenceHandler {
 	 */
 	public boolean isDirty() {
 		//TODO: fix dirty flag for anchors/markers
-		return pageRefs.isDirty() || volumeRefs.isDirty() || anchorRefs.isDirty() || variables.isDirty() || breakable.isDirty() || overheadDirty || searchInfo.isDirty();
+		return pageRefs.isDirty() || volumeRefs.isDirty() || anchorRefs.isDirty() || variables.isDirty() || breakable.isDirty() || overheadDirty || searchInfo.isDirty()
+				|| avoidVolumeBreakAfter.isDirty()
+				;
 		 //|| groupAnchors.isDirty()
 		 //|| groupMarkers.isDirty() || rowCount.isDirty()
 	}
@@ -316,6 +323,7 @@ public class CrossReferenceHandler {
 		variables.setDirty(value);
 		breakable.setDirty(value);
 		searchInfo.setDirty(value);
+		avoidVolumeBreakAfter.setDirty(value);
 		//TODO: fix dirty flag for anchors/markers
 		//rowCount.setDirty(value);
 		//groupAnchors.setDirty(value);
