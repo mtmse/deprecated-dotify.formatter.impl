@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.MarkerReferenceField;
@@ -85,6 +86,10 @@ class SearchInfo {
 			spaces.put(space, ret);
 		}
 		return ret;
+	}
+	
+	PageDetails getPageInSequenceWithOffset(PageDetails base, int offset, boolean adjustOutOfBounds) {
+		return offset==0?base:base.getPageInScope(getContentsInSequence(base.getSequenceId()), offset, adjustOutOfBounds);
 	}
 	
 	PageDetails getPageInDocumentWithOffset(PageDetails base, int offset, boolean adjustOutOfBounds) {
@@ -232,6 +237,11 @@ class SearchInfo {
 		} else {
 			return "";
 		}
+	}
+	
+	Optional<PageDetails> findNextPageInSequence(PageId id) {
+		PageDetails p = getPageDetails(id);
+		return Optional.ofNullable(getPageInSequenceWithOffset(p, 1, false));
 	}
 	
 	boolean isDirty() {

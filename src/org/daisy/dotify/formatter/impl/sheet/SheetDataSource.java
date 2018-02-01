@@ -19,6 +19,7 @@ import org.daisy.dotify.formatter.impl.page.PageStruct;
 import org.daisy.dotify.formatter.impl.page.RestartPaginationException;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;
+import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.formatter.impl.search.SheetIdentity;
 import org.daisy.dotify.formatter.impl.volume.TransitionContent;
 
@@ -218,13 +219,23 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 								&& (!sectionProperties.duplex() || pageIndex % 2 == 1));
 				TransitionContent transition = null;
 				if (context.getTransitionBuilder().getProperties().getApplicationRange()!=ApplicationRange.NONE) {
-					if (!allowsSplit && index-1==sheetBuffer.size() && (!sectionProperties.duplex() || pageIndex % 2 == 1)) {
-						transition = context.getTransitionBuilder().getInterruptTransition();
+					if (!allowsSplit && index-1==sheetBuffer.size()) {
+						if ((!sectionProperties.duplex() || pageIndex % 2 == 1)) {
+							transition = context.getTransitionBuilder().getInterruptTransition();
+						} else {
+							PageDetails pd1 = psb.nextPageDetails(initialPageOffset, 0);
+							Optional<PageDetails> next = rcontext.getRefs().findNextPageInSequence(pd1.getPageId());
+							if (next.isPresent() && unlessNull(rcontext.getRefs().getAvoidVolumeBreakAfter(pd1.getPageId()), 10)>unlessNull(rcontext.getRefs().getAvoidVolumeBreakAfter(next.get().getPageId()), 10)) {
+								//break here
+								transition = context.getTransitionBuilder().getInterruptTransition();
+							}
+						}
 					} else if (wasSplitInsideSequence && sheetBuffer.size()==0  && (!sectionProperties.duplex() || pageIndex % 2 == 0)) {
 						transition = context.getTransitionBuilder().getResumeTransition();
 					}
 				}
 				PageImpl p = psb.nextPage(initialPageOffset, hyphenateLastLine, Optional.ofNullable(transition));
+				rcontext.getRefs().setAvoidVolumeBreakAfter(p.getDetails().getPageId(), p.getAvoidVolumeBreakAfter());
 				struct.increasePageCount();
 				s.avoidVolumeBreakAfterPriority(p.getAvoidVolumeBreakAfter());
 				if (!psb.hasNext()) {
@@ -258,6 +269,10 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 			}
 		}
 		return true;
+	}
+	
+	private static int unlessNull(Integer value, int def) {
+		return value==null?def:value;
 	}
 
 	private void setPreviousSheet(int start, int p, DefaultContext rcontext) {
