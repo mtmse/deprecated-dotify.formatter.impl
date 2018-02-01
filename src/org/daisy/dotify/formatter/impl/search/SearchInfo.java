@@ -213,35 +213,33 @@ class SearchInfo {
 		}
 	}
 	
-	private PageDetails getPageDetails(PageId p) {
+	private Optional<PageDetails> getPageDetails(PageId p) {
 		DocumentSpaceData data = getViewForSpace(p.getSequenceId().getSpace());
 		if (p.getPageIndex()<data.pageDetails.size()) {
-			return data.pageDetails.get(p.getPageIndex());
+			return Optional.ofNullable(data.pageDetails.get(p.getPageIndex()));
 		} else {
-			return null;
+			return Optional.empty();
 		}
 	}
 	
 	String findStartAndMarker(PageId id, MarkerReferenceField f2) {
-		PageDetails p = getPageDetails(id);
-		if (p!=null) { 
-			PageDetails start;
-			if (f2.getSearchScope()==MarkerSearchScope.SPREAD ||
-				f2.getSearchScope()==MarkerSearchScope.SPREAD_CONTENT) {
-				start = getPageInVolumeWithOffset(p, f2.getOffset(), shouldAdjustOutOfBounds(p, f2));
-			} else {
-				//Keep while moving: start = p.getPageInScope(p.getSequenceParent(), f2.getOffset(), shouldAdjustOutOfBounds(p, f2));
-				start = p.getPageInScope(getContentsInSequence(p.getSequenceId()), f2.getOffset(), shouldAdjustOutOfBounds(p, f2));
-			}
-			return findMarker(start, f2);
-		} else {
-			return "";
-		}
+		return getPageDetails(id)
+			.map(p->{
+					PageDetails start;
+					if (f2.getSearchScope()==MarkerSearchScope.SPREAD ||
+						f2.getSearchScope()==MarkerSearchScope.SPREAD_CONTENT) {
+						start = getPageInVolumeWithOffset(p, f2.getOffset(), shouldAdjustOutOfBounds(p, f2));
+					} else {
+						//Keep while moving: start = p.getPageInScope(p.getSequenceParent(), f2.getOffset(), shouldAdjustOutOfBounds(p, f2));
+						start = p.getPageInScope(getContentsInSequence(p.getSequenceId()), f2.getOffset(), shouldAdjustOutOfBounds(p, f2));
+					}
+					return findMarker(start, f2);
+				})
+			.orElse("");
 	}
 	
 	Optional<PageDetails> findNextPageInSequence(PageId id) {
-		PageDetails p = getPageDetails(id);
-		return Optional.ofNullable(getPageInSequenceWithOffset(p, 1, false));
+		return getPageDetails(id).flatMap(p->Optional.ofNullable(getPageInSequenceWithOffset(p, 1, false)));
 	}
 	
 	boolean isDirty() {

@@ -121,13 +121,13 @@ public class PageSequenceBuilder2 {
 	}
 	
 	/**
-	 * Gets a new PageDetails representing the next page in this sequence.
+	 * Gets a new PageId representing the next page in this sequence.
 	 * @param initialOffset
 	 * @param offset
 	 * @return
 	 */
-	public PageDetails nextPageDetails(int initialOffset, int offset) {
-		return new PageDetails(master.duplex(), new PageId(pageCount+offset, getGlobalStartIndex(), seqId), initialOffset);
+	public PageId nextPageId(int initialOffset, int offset) {
+		return new PageId(pageCount+offset, getGlobalStartIndex(), seqId);
 	}
 
 	private PageImpl newPage(int pageNumberOffset) {
