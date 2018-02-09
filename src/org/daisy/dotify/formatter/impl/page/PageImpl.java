@@ -44,6 +44,7 @@ public class PageImpl implements Page {
 	private boolean isVolBreakAllowed;
 	private int keepPreviousSheets;
 	private VolumeKeepPriority volumeBreakAfterPriority;
+	private boolean hasBlock;
 	private final BrailleTranslator filter;
 	
 	public PageImpl(FieldResolver fieldResolver, PageDetails details, LayoutMaster master, FormatterContext fcontext, PageAreaContent pageAreaTemplate) {
@@ -61,6 +62,7 @@ public class PageImpl implements Page {
 		this.isVolBreakAllowed = true;
 		this.keepPreviousSheets = 0;
 		this.volumeBreakAfterPriority = VolumeKeepPriority.empty();
+		this.hasBlock = false;
 		this.pageMargin = ((details.getPageId().getOrdinal() % 2 == 0) ? master.getInnerMargin() : master.getOuterMargin());
 		this.finalRows = new BorderManager(master, fcontext, pageMargin);
 		this.hasRows = false;
@@ -85,6 +87,7 @@ public class PageImpl implements Page {
 		this.isVolBreakAllowed = template.isVolBreakAllowed;
 		this.keepPreviousSheets = template.keepPreviousSheets;
 		this.volumeBreakAfterPriority = template.volumeBreakAfterPriority;
+		this.hasBlock = template.hasBlock;
 		this.filter = template.filter;
 	}
 	
@@ -244,6 +247,14 @@ public class PageImpl implements Page {
 	
 	void setAvoidVolumeBreakAfter(VolumeKeepPriority value) {
 		this.volumeBreakAfterPriority = value;
+	}
+	
+	public boolean hasBlock() {
+		return hasBlock;
+	}
+	
+	void setHasBlock(boolean value) {
+		this.hasBlock = value;
 	}
 
 	public PageDetails getDetails() {
