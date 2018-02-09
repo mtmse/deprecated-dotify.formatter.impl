@@ -290,9 +290,24 @@ public class PageSequenceBuilder2 {
 					head = res.getHead();
 				}
 				addRows(head, current);
-				current.setAvoidVolumeBreakAfter(
-					getVolumeKeepPriority(res.getDiscarded(), getVolumeKeepPriority(res.getHead(), VolumeKeepPriority.empty()))
-				);
+				boolean hasBlock = false;
+				double blockOffset = 0;
+				for (RowGroup r : res.getHead()) {
+					if (r.isLastRowGroupInBlock()) {
+						hasBlock = true;
+						break;
+					} else {
+						blockOffset += r.getUnitSize();
+					}
+				}
+				VolumeKeepPriority p = getVolumeKeepPriority(res.getDiscarded(), getVolumeKeepPriority(res.getHead(), VolumeKeepPriority.empty()));
+				current.setAvoidVolumeBreakAfter(p);
+				current.setHasBlock(hasBlock);
+				/*
+					p.hasValue()
+						? VolumeKeepPriority.of(p.getValue() + (hasBlock?0.25:0))	// prefer where there is a block by giving it slightly lower keep priority
+						: (hasBlock?p:VolumeKeepPriority.of(9.75))					// discourage where there isn't a block by giving it slightly higher keep priority
+				);*/
 				for (RowGroup rg : res.getDiscarded()) {
 					addProperties(current, rg);
 				}

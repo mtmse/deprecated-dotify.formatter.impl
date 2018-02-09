@@ -22,7 +22,7 @@ public class CrossReferenceHandler {
 	private final LookupHandler<BlockAddress, Integer> rowCount;
     private final LookupHandler<BlockAddress, List<String>> groupAnchors;
     private final LookupHandler<BlockAddress, List<Marker>> groupMarkers;
-	private final LookupHandler<PageId, VolumeKeepPriority> avoidVolumeBreakAfter;
+	private final LookupHandler<PageId, PageStats> avoidVolumeBreakAfter;
 	private final Map<Integer, Overhead> volumeOverhead;
     private final Map<String, Integer> counters;
 	private final SearchInfo searchInfo;
@@ -136,7 +136,7 @@ public class CrossReferenceHandler {
 		breakable.commit();
 	}
 	
-	public void keepAvoidVolumeBreakAfter(PageId id, VolumeKeepPriority value) {
+	public void keepAvoidVolumeBreakAfter(PageId id, PageStats value) {
 		if (readOnly) { return; }
 		avoidVolumeBreakAfter.keep(id, value);
 	}
@@ -224,8 +224,8 @@ public class CrossReferenceHandler {
 		return breakable.get(ident, true);
 	}
 	
-	public VolumeKeepPriority getAvoidVolumeBreakAfter(PageId id) {
-		return avoidVolumeBreakAfter.get(id, VolumeKeepPriority.empty());
+	public PageStats getAvoidVolumeBreakAfter(PageId id) {
+		return avoidVolumeBreakAfter.get(id, PageStats.empty());
 	}
 
 	public List<String> getGroupAnchors(BlockAddress blockId) {
