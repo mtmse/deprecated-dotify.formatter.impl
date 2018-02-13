@@ -2,6 +2,7 @@ package org.daisy.dotify.formatter.impl.page;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -216,9 +217,9 @@ public class PageSequenceBuilder2 {
 				data = sl.getTail();
 				// And on copy...
 				copy = SplitPointHandler.skipLeading(copy, index).getTail();
-				int flowHeight = current.getFlowHeight();
+				float flowHeight = current.getFlowHeight();
 				List<RowGroup> transitionText = Collections.emptyList();
-				int fh = copy.getSize(flowHeight+1);
+				int fh = copy.getSize((int)flowHeight+1);
 				if (fh<=flowHeight) {
 					transitionContent=Optional.empty();
 				}
@@ -226,8 +227,17 @@ public class PageSequenceBuilder2 {
 					// Get the announcement text
 					transitionText = new RowGroupDataSource(master, bc, transitionContent.get().getInSequence(), null, cd).getRemaining();
 					// Subtract the height of the transition text from the available height
-					for (RowGroup r : transitionText) {
-						flowHeight-=r.getUnitSize();
+					//
+					// We need to account for the last unit size here (because this is the last unit) instead of below, if a transition is present.
+					// The reason being that the transition text may have a smaller row spacing than the last row of the text flow, for example:
+					// Text rows: 		X-X-X--|
+					// Transition rows:		 X-|
+					// This transition doesn't fit, because the last row of the text flow takes up three rows, not just one (which it would
+					// if a transition didn't follow).
+					Iterator<RowGroup> ri = transitionText.iterator();
+					while (ri.hasNext()) {
+						RowGroup r = ri.next();
+						flowHeight -= ri.hasNext()?r.getUnitSize():r.getLastUnitSize();
 					}
 				}
 				// Using copy to find the break point so that only the required data is rendered
@@ -249,15 +259,15 @@ public class PageSequenceBuilder2 {
 								)*limit-in;
 					};
 					spec = sph.find(current.getFlowHeight(), copy, cost, force?StandardSplitOption.ALLOW_FORCE:null);
-					if (sph.split(spec, copy).getHead().stream().limit(flowHeight).filter(r->r.isLastRowGroupInBlock()).findFirst().isPresent()) {
+					if (hasBlockInScope(sph.split(spec, copy).getHead(), flowHeight)) {
 						// reset and retry with the new limit
 						copy = new RowGroupDataSource(data);
-						spec = sph.find(flowHeight, copy, cost, force?StandardSplitOption.ALLOW_FORCE:null);
+						spec = sph.find(flowHeight, copy, cost, transitionContent.isPresent()?StandardSplitOption.NO_LAST_UNIT_SIZE:null, force?StandardSplitOption.ALLOW_FORCE:null);
 					} else {
 						addTransition = false;
 					}
 				} else {
-					spec = sph.find(flowHeight, copy, force?StandardSplitOption.ALLOW_FORCE:null);
+					spec = sph.find(flowHeight, copy, transitionContent.isPresent()?StandardSplitOption.NO_LAST_UNIT_SIZE:null, force?StandardSplitOption.ALLOW_FORCE:null);
 				}
 				// Now apply the information to the live data
 				data.setHyphenateLastLine(hyphenateLastLine);
@@ -290,16 +300,7 @@ public class PageSequenceBuilder2 {
 					head = res.getHead();
 				}
 				addRows(head, current);
-				boolean hasBlock = false;
-				double blockOffset = 0;
-				for (RowGroup r : res.getHead()) {
-					if (r.isLastRowGroupInBlock()) {
-						hasBlock = true;
-						break;
-					} else {
-						blockOffset += r.getUnitSize();
-					}
-				}
+				boolean hasBlock = res.getHead().stream().filter(r->r.isLastRowGroupInBlock()).findFirst().isPresent();
 				VolumeKeepPriority p = getVolumeKeepPriority(res.getDiscarded(), getVolumeKeepPriority(res.getHead(), VolumeKeepPriority.empty()));
 				current.setAvoidVolumeBreakAfter(p);
 				current.setHasBlock(hasBlock);
@@ -320,6 +321,33 @@ public class PageSequenceBuilder2 {
 			}
 		}
 		return current;
+	}
+	
+	/**
+	 * Returns true if there is a block boundary before or at the specified limit and
+	 * some data cannot fit within the limit.
+	 * @param groups the data
+	 * @param limit the size limit
+	 * @return true if there is a block boundary within the limit and there is some data
+	 * cannot fit within the limit
+	 */
+	private static boolean hasBlockInScope(List<RowGroup> groups, double limit) {
+		// TODO: In Java 9, use takeWhile
+		//return groups.stream().limit((int)Math.ceil(limit)).filter(r->r.isLastRowGroupInBlock()).findFirst().isPresent();
+		double h = 0;
+		Iterator<RowGroup> rg = groups.iterator();
+		RowGroup r;
+		while (rg.hasNext()) {
+			r=rg.next();
+			h += rg.hasNext()?r.getUnitSize():r.getLastUnitSize();
+			if (h>limit) {//||!rg.hasNext()) {
+				// we've passed the limit
+				return false;
+			} else if (r.isLastRowGroupInBlock()) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private void addRows(List<RowGroup> head, PageImpl p) {
