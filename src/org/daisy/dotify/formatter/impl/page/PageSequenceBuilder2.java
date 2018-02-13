@@ -124,11 +124,10 @@ public class PageSequenceBuilder2 {
 	
 	/**
 	 * Gets a new PageId representing the next page in this sequence.
-	 * @param initialOffset
-	 * @param offset
-	 * @return
+	 * @param offset the offset
+	 * @return returns the next page Id
 	 */
-	public PageId nextPageId(int initialOffset, int offset) {
+	public PageId nextPageId(int offset) {
 		return new PageId(pageCount+offset, getGlobalStartIndex(), seqId);
 	}
 

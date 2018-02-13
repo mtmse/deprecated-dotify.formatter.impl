@@ -231,7 +231,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 							transition = context.getTransitionBuilder().getInterruptTransition();
 						} else if (context.getTransitionBuilder().getProperties().getApplicationRange()==ApplicationRange.SHEET) {
 							// This id is the same id as the one created below in the call to nextPage
-							PageId thisPageId = psb.nextPageId(initialPageOffset, 0);
+							PageId thisPageId = psb.nextPageId(0);
 							// This gets the page details for the next page in this sequence (if any)
 							Optional<PageDetails> next = rcontext.getRefs().findNextPageInSequence(thisPageId);
 							// If there is a page details in this sequence and volume break is preferred on this page
