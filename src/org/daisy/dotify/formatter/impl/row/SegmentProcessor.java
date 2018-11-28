@@ -135,7 +135,7 @@ class SegmentProcessor implements SegmentProcessing {
 			groupIdentifiers.add(blockId);
 		}
 		// produce group markers and anchors
-		getNext(false, false);
+		getNext(false, false, 0);
 	}
 
 	boolean couldTriggerNewRow() {
@@ -188,15 +188,15 @@ class SegmentProcessor implements SegmentProcessing {
 		return significantContent;
 	}
 	
-	Optional<RowImpl> getNext(boolean wholeWordsOnly) {
-		return getNext(true, wholeWordsOnly);
+	Optional<RowImpl> getNext(boolean wholeWordsOnly, int spareWidth) {
+		return getNext(true, wholeWordsOnly, spareWidth);
 	}
 
-	private Optional<RowImpl> getNext(boolean produceRow, boolean wholeWordsOnly) {
+	private Optional<RowImpl> getNext(boolean produceRow, boolean wholeWordsOnly, int spareWidth) {
 		while (true) {
 			if (cr!=null && cr.hasNext(this)) {
 				try {
-					Optional<RowImpl> ret = cr.process(this, wholeWordsOnly);
+					Optional<RowImpl> ret = cr.process(this, wholeWordsOnly, spareWidth);
 					if (ret.isPresent()) {
 						if (!produceRow) {
 							// there is a test below that verifies that the current segment cannot produce a row result

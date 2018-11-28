@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl.page;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
 import org.daisy.dotify.common.splitter.DefaultSplitResult;
@@ -37,6 +38,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 	private final List<Block> blocks;
 	private List<RowGroup> groups;
 	private BlockContext bc;
+	private Function<Integer, Integer> spareWidths = x->0;
 	private int blockIndex;
 	private boolean allowHyphenateLastLine;
 
@@ -75,6 +77,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 		this.vs = template.vs;
 		this.blockIndex = template.blockIndex;
 		this.allowHyphenateLastLine = template.allowHyphenateLastLine;
+		this.spareWidths = template.spareWidths;
 	}
 	
 	static RowGroupDataSource copyUnlessNull(RowGroupDataSource template) {
@@ -140,6 +143,10 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 		this.bc = c;
 	}
 	
+	void setSpareWidths(Function<Integer, Integer> func) {
+		this.spareWidths = func;
+	}
+	
 	/**
 	 * <p>Sets the hyphenate last line property.</p>
 	 * 
@@ -173,7 +180,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 			// This is reasonable: The very last line in a result would never be hyphenated, so suppressing
 			// hyphenation is unnecessary. Also, actively doing this would be difficult, because we do not know
 			// if the line produced below is the last line or not, until after the call has already been made.
-			processNextRowGroup(bc, !allowHyphenateLastLine && index>-1 && groupSize()>=index-1);
+			processNextRowGroup(bc, !allowHyphenateLastLine && index>-1 && groupSize()>=index-1, spareWidths.apply(countRows()));
 		}
 		return true;
 	}
@@ -229,5 +236,9 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 	
 	private int groupSize() {
 		return groups==null?0:groups.size();
+	}
+	
+	private int countRows() {
+		return groups==null?0:groups.stream().mapToInt(v->v.getRows().size()).sum();
 	}
 }

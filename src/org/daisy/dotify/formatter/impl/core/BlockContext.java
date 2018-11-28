@@ -87,6 +87,10 @@ public class BlockContext extends DefaultContext {
 	public FormatterContext getFcontext() {
 		return fcontext;
 	}
+	
+	public int getSpareWidth(int pos) {
+		return 0;
+	}
 
 	@Override
 	public int hashCode() {

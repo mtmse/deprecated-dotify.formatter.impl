@@ -29,9 +29,9 @@ class NewLineResult implements CurrentResult {
 	}
 
 	@Override
-	public Optional<RowImpl> process(SegmentProcessing spi, boolean wholeWordsOnly) {
+	public Optional<RowImpl> process(SegmentProcessing spi, boolean wholeWordsOnly, int spareWidth) {
 		if (cr.isPresent() && cr.get().hasNext(spi)) {
-			return cr.get().process(spi, wholeWordsOnly);
+			return cr.get().process(spi, wholeWordsOnly, spareWidth);
 		} else if (newLine) {
 			newLine = false;
 			try {
