@@ -54,7 +54,7 @@ class TableBlockContentManager extends AbstractBlockContentManager {
     }
 	
 	@Override
-	public Optional<RowImpl> getNext(boolean wholeWordsOnly) {
+	public Optional<RowImpl> getNext(boolean wholeWordsOnly, int spareWidth) {
 		if (rowIndex<rows.size()) {
 			RowImpl ret = rows.get(rowIndex);
 			rowIndex++;
