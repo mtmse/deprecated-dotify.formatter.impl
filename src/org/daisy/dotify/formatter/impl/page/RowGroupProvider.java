@@ -86,16 +86,16 @@ class RowGroupProvider {
 		return bcm;
 	}
 	
-	public RowGroup next(DefaultContext context, boolean wholeWordsOnly) {
+	public RowGroup next(DefaultContext context, boolean wholeWordsOnly, int spareWidth) {
 		if (this.context==null || !this.context.equals(context)) {
 			this.context = g.contextWithMeta(context);
 			bcm.setContext(this.context);
 		}
-		RowGroup b = nextInner(wholeWordsOnly);
+		RowGroup b = nextInner(wholeWordsOnly, spareWidth);
 		return b;
 	}
 
-	private RowGroup nextInner(boolean wholeWordsOnly) {
+	private RowGroup nextInner(boolean wholeWordsOnly, int spareWidth) {
 		if (phase==0) {
 			phase++;
 			//if there is a row group, return it (otherwise, try next phase)
@@ -126,7 +126,7 @@ class RowGroupProvider {
 		}
 		if (phase==3) {
 			Optional<RowImpl> rt;
-			if ((rt=bcm.getNext(wholeWordsOnly)).isPresent()) {
+			if ((rt=bcm.getNext(wholeWordsOnly, spareWidth)).isPresent()) {
 				RowImpl r = rt.get();
 				rowIndex++;
 				boolean hasNext = bcm.hasNext(); 
