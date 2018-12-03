@@ -47,6 +47,9 @@ public class PageImpl implements Page {
 	private VolumeKeepPriority volumeBreakAfterPriority;
 	private final BrailleTranslator filter;
 	
+	private int renderedHeaderRows;
+	private boolean topPageAreaProcessed;
+	
 	public PageImpl(FieldResolver fieldResolver, PageDetails details, LayoutMaster master, FormatterContext fcontext, PageAreaContent pageAreaTemplate) {
 		this.fieldResolver = fieldResolver;
 		this.details = details;
@@ -66,31 +69,8 @@ public class PageImpl implements Page {
 		this.finalRows = new BorderManager(master, fcontext, pageMargin);
 		this.hasRows = false;
 		this.filter = fcontext.getDefaultTranslator();
-	}
-	
-	public PageImpl(PageImpl template) {
-		this.fieldResolver = template.fieldResolver;
-		this.details = template.details;
-		this.master = template.master;
-		this.fcontext = template.fcontext;
-		this.pageAreaTemplate = template.pageAreaTemplate;
-	    this.pageArea = new ArrayList<>(template.pageArea);
-	    this.anchors = new ArrayList<>(template.anchors);
-	    this.identifiers = new ArrayList<>(template.identifiers);
-		this.flowHeight = template.flowHeight;
-		this.template = template.template;
-		this.pageMargin = template.pageMargin;
-		this.finalRows = new BorderManager(template.finalRows);
-
-		this.hasRows = template.hasRows;
-		this.isVolBreakAllowed = template.isVolBreakAllowed;
-		this.keepPreviousSheets = template.keepPreviousSheets;
-		this.volumeBreakAfterPriority = template.volumeBreakAfterPriority;
-		this.filter = template.filter;
-	}
-	
-	public static PageImpl copyUnlessNull(PageImpl page) {
-		return page==null?null:new PageImpl(page);
+		this.renderedHeaderRows = 0;
+		this.topPageAreaProcessed = false;
 	}
 
 	void addToPageArea(List<RowImpl> block) {
@@ -100,15 +80,43 @@ public class PageImpl implements Page {
 		pageArea.addAll(block);
 	}
 	
+	//if not all header rows have been rendered
+	// 		while next header can't combine with text
+	//			render it
+	//		if not all header rows have been rendered
+	//			render one combined with the row text
+	//			return
+	//if all header rows have been rendered
+	//		if the page area hasn't been rendered, render it
+	//		if body rows left
+	//			add
+	//			return
+	//		else if not all footer rows have been rendered
+	// 		while next footer can't combine with text
+	//			render it
+	//		if not all footer rows have been rendered
+	//			render one combined with the row text
+	//			return
+	//		else throw exception
 	void newRow(RowImpl r) {
-		if (addHeaderIfNotAdded()) {
-			getDetails().startsContentMarkers();
-			hasRows = true;
+		while (renderedHeaderRows<template.getHeader().size()) {
+			FieldList fields = template.getHeader().get(renderedHeaderRows);
+			renderedHeaderRows++;
+			finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter));
 		}
-		finalRows.addRow(r);
-		getDetails().getMarkers().addAll(r.getMarkers());
-		anchors.addAll(r.getAnchors());
-		identifiers.addAll(r.getIdentifiers());
+		
+		if (renderedHeaderRows>=template.getHeader().size()) {
+			if (!topPageAreaProcessed) {
+				addTopPageArea();
+				getDetails().startsContentMarkers();
+				hasRows = true;
+				topPageAreaProcessed = true;
+			}
+			finalRows.addRow(r);
+			getDetails().getMarkers().addAll(r.getMarkers());
+			anchors.addAll(r.getAnchors());
+			identifiers.addAll(r.getIdentifiers());
+		}
 	}
 	
 	void addMarkers(List<Marker> m) {
