@@ -59,16 +59,21 @@ class FieldResolver implements PageShape {
 		ArrayList<String> chunkF = new ArrayList<>();
 		for (Field f : chunks.getFields()) {
 			DefaultTextAttribute.Builder b = new DefaultTextAttribute.Builder(null);
-            String resolved = softHyphen.matcher(resolveField(f, p, b)).replaceAll("");
-			Translatable.Builder tr = Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?resolved:resolved.toLowerCase()).
-										hyphenate(false);
-			if (resolved.length()>0) {
-				tr.attributes(b.build(resolved.length()));
-			}
-			try {
-				chunkF.add(translator.translate(tr.build()).getTranslatedRemainder());
-			} catch (TranslationException e) {
-				throw new PaginatorToolsException(e);
+			String unresolved = resolveField(f, p, b);
+			if (unresolved==null) {
+				chunkF.add(null);
+			} else {
+	            String resolved = softHyphen.matcher(unresolved).replaceAll("");
+				Translatable.Builder tr = Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?resolved:resolved.toLowerCase()).
+											hyphenate(false);
+				if (resolved.length()>0) {
+					tr.attributes(b.build(resolved.length()));
+				}
+				try {
+					chunkF.add(translator.translate(tr.build()).getTranslatedRemainder());
+				} catch (TranslationException e) {
+					throw new PaginatorToolsException(e);
+				}
 			}
 		}
 		return chunkF;
@@ -89,7 +94,7 @@ class FieldResolver implements PageShape {
 	 */
 	private String resolveField(Field field, PageDetails p, DefaultTextAttribute.Builder b) {
 		if (field instanceof NoField) {
-			return "";
+			return null;
 		}
 		String ret;
 		DefaultTextAttribute.Builder b2 = new DefaultTextAttribute.Builder(field.getTextStyle());
@@ -141,7 +146,7 @@ class FieldResolver implements PageShape {
 		return getWidth(detailsTemplate.with(pagenum-1), rowOffset);
 	}
 
-	int getWidth(PageDetails details, int rowOffset) {
+	private int getWidth(PageDetails details, int rowOffset) {
 		PageTemplate p = master.getTemplate(details.getPageNumber());
 		int flowHeader = p.validateAndAnalyzeHeader();
 		int flowFooter = p.validateAndAnalyzeFooter();
@@ -167,7 +172,7 @@ class FieldResolver implements PageShape {
 	private int getAvailableForNoField(PageDetails details, FieldList list) {
 		try {
 			List<String> parts = resolveField(details, list, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", fcontext.getDefaultTranslator());
-			int size = parts.stream().mapToInt(str -> str.length()).sum();
+			int size = parts.stream().mapToInt(str -> str==null?0:str.length()).sum();
 			return master.getFlowWidth()-size;
 		} catch (PaginatorToolsException e) {
 			throw new RuntimeException("", e);
