@@ -3,9 +3,11 @@ package org.daisy.dotify.formatter.impl.page;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.FieldList;
 import org.daisy.dotify.api.formatter.Marker;
+import org.daisy.dotify.api.formatter.NoField;
 import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.translator.BrailleTranslator;
 import org.daisy.dotify.api.writer.Row;
@@ -102,7 +104,12 @@ public class PageImpl implements Page {
 		while (renderedHeaderRows<template.getHeader().size()) {
 			FieldList fields = template.getHeader().get(renderedHeaderRows);
 			renderedHeaderRows++;
-			finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter));
+			if (fields.getFields().stream().anyMatch(v->v instanceof NoField)) {
+				finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.of(r)));
+				break;
+			} else {
+				finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.empty()));
+			}
 		}
 		
 		if (renderedHeaderRows>=template.getHeader().size()) {
@@ -194,7 +201,7 @@ public class PageImpl implements Page {
 		if (!hasRows) { // the header hasn't been added yet 
 			//add the header
 			for (FieldList fields : template.getHeader()) {
-				finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter));
+				finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.empty()));
 			}
 			//add top page area
 			addTopPageArea();
@@ -202,6 +209,31 @@ public class PageImpl implements Page {
 		} else {
 			return false;
 		}
+	}
+	
+	/**
+	 * Adds the footer area if not already added. Note that this area also contains the page area if aligned to be the bottom.
+	 */
+	private void addBottomPageAreaAndFooterIfNotAdded() {
+		if (!template.getFooter().isEmpty() || finalRows.hasBorder() || (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty())) {
+			while (hasBodyRowsLeft()) {
+				finalRows.addRow(new RowImpl());
+			}
+			if (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty()) {
+				finalRows.addAll(pageAreaTemplate.getBefore());
+				finalRows.addAll(pageArea);
+				finalRows.addAll(pageAreaTemplate.getAfter());
+			}
+			for (FieldList fields : template.getFooter()) {
+				finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.empty()));
+			}
+		}
+	}
+	
+	private boolean hasBodyRowsLeft() {
+		float headerHeight = template.getHeaderHeight();
+		float areaSize = (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM ? pageAreaSpaceNeeded() : 0);
+		return Math.ceil(finalRows.getOffsetHeight() + areaSize) < getFlowHeight() + headerHeight;
 	}
 
 	/*
@@ -213,21 +245,7 @@ public class PageImpl implements Page {
 		try {
 			if (!finalRows.isClosed()) {
 				addHeaderIfNotAdded();
-		        float headerHeight = template.getHeaderHeight();
-		        if (!template.getFooter().isEmpty() || finalRows.hasBorder() || (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty())) {
-		            float areaSize = (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM ? pageAreaSpaceNeeded() : 0);
-		            while (Math.ceil(finalRows.getOffsetHeight() + areaSize) < getFlowHeight() + headerHeight) {
-						finalRows.addRow(new RowImpl());
-					}
-					if (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty()) {
-						finalRows.addAll(pageAreaTemplate.getBefore());
-						finalRows.addAll(pageArea);
-						finalRows.addAll(pageAreaTemplate.getAfter());
-					}
-					for (FieldList fields : template.getFooter()) {
-						finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter));
-					}
-				}
+				addBottomPageAreaAndFooterIfNotAdded();
 			}
 			return finalRows.getRows();
 		} catch (PaginatorException e) {
