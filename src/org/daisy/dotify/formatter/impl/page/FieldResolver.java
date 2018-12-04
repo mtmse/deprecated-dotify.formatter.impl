@@ -2,6 +2,7 @@ package org.daisy.dotify.formatter.impl.page;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -36,16 +37,8 @@ class FieldResolver implements PageShape {
 		this.crh = crh;
 		this.detailsTemplate = detailsTemplate;
 	}
-	
-    List<RowImpl> renderFields(PageDetails p, List<FieldList> fields, BrailleTranslator translator) throws PaginatorException {
-        ArrayList<RowImpl> ret = new ArrayList<>();
-		for (FieldList row : fields) {
-            ret.add(renderField(p, row, translator));
-		}
-		return ret;
-	}
     
-    RowImpl renderField(PageDetails p, FieldList field, BrailleTranslator translator) throws PaginatorException {
+    RowImpl renderField(PageDetails p, FieldList field, BrailleTranslator translator, Optional<RowImpl> r) throws PaginatorException {
     	try {
             return new RowImpl.Builder(distribute(p, field, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", translator))
             		.rowSpacing(field.getRowSpacing())
