@@ -40,7 +40,7 @@ class FieldResolver implements PageShape {
     
     RowImpl renderField(PageDetails p, FieldList field, BrailleTranslator translator, Optional<RowImpl> r) throws PaginatorException {
     	try {
-            return new RowImpl.Builder(distribute(p, field, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", translator))
+            return new RowImpl.Builder(distribute(p, field, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", translator, r))
             		.rowSpacing(field.getRowSpacing())
             		.build();
         } catch (PaginatorToolsException e) {
@@ -48,11 +48,11 @@ class FieldResolver implements PageShape {
 		}
     }
     
-    private List<String> resolveField(PageDetails p, FieldList chunks, int width, String padding, BrailleTranslator translator) throws PaginatorToolsException {
+    private List<String> resolveField(PageDetails p, FieldList chunks, int width, String padding, BrailleTranslator translator, Optional<RowImpl> noField) throws PaginatorToolsException {
 		ArrayList<String> chunkF = new ArrayList<>();
 		for (Field f : chunks.getFields()) {
 			DefaultTextAttribute.Builder b = new DefaultTextAttribute.Builder(null);
-			String unresolved = resolveField(f, p, b);
+			String unresolved = resolveField(f, p, b, noField);
 			if (unresolved==null) {
 				chunkF.add(null);
 			} else {
@@ -72,8 +72,8 @@ class FieldResolver implements PageShape {
 		return chunkF;
     }
 	
-    private String distribute(PageDetails p, FieldList chunks, int width, String padding, BrailleTranslator translator) throws PaginatorToolsException {
-    	List<String> chunkF = resolveField(p, chunks, width, padding, translator);
+    private String distribute(PageDetails p, FieldList chunks, int width, String padding, BrailleTranslator translator, Optional<RowImpl> noField) throws PaginatorToolsException {
+    	List<String> chunkF = resolveField(p, chunks, width, padding, translator, noField);
         return PaginatorTools.distribute(chunkF, width, padding,
                 fcontext.getConfiguration().isAllowingTextOverflowTrimming()?
                 PaginatorTools.DistributeMode.EQUAL_SPACING_TRUNCATE:
@@ -85,14 +85,14 @@ class FieldResolver implements PageShape {
 	 * Note that the result of this function is not constant because getPageInSequenceWithOffset(),
 	 * getPageInVolumeWithOffset() and shouldAdjustOutOfBounds() are not constant.
 	 */
-	private String resolveField(Field field, PageDetails p, DefaultTextAttribute.Builder b) {
+	private String resolveField(Field field, PageDetails p, DefaultTextAttribute.Builder b, Optional<RowImpl> noField) {
 		if (field instanceof NoField) {
-			return null;
+			return noField.map(v->v.getChars()).orElse("");
 		}
 		String ret;
 		DefaultTextAttribute.Builder b2 = new DefaultTextAttribute.Builder(field.getTextStyle());
 		if (field instanceof CompoundField) {
-			ret = resolveCompoundField((CompoundField)field, p, b2);
+			ret = resolveCompoundField((CompoundField)field, p, b2, noField);
 		} else if (field instanceof MarkerReferenceField) {
 			ret = crh.findMarker(p.getPageId(), (MarkerReferenceField)field);
 		} else if (field instanceof CurrentPageField) {
@@ -106,8 +106,8 @@ class FieldResolver implements PageShape {
 		return ret;
 	}
 
-	private String resolveCompoundField(CompoundField f, PageDetails p, DefaultTextAttribute.Builder b) {
-		return f.stream().map(f2 -> resolveField(f2, p, b)).collect(Collectors.joining());
+	private String resolveCompoundField(CompoundField f, PageDetails p, DefaultTextAttribute.Builder b, Optional<RowImpl> noField) {
+		return f.stream().map(f2 -> resolveField(f2, p, b, noField)).collect(Collectors.joining());
 	}
 	
 	private static String resolveCurrentPageField(CurrentPageField f, PageDetails p) {
@@ -164,7 +164,7 @@ class FieldResolver implements PageShape {
 
 	private int getAvailableForNoField(PageDetails details, FieldList list) {
 		try {
-			List<String> parts = resolveField(details, list, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", fcontext.getDefaultTranslator());
+			List<String> parts = resolveField(details, list, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", fcontext.getDefaultTranslator(), Optional.empty());
 			int size = parts.stream().mapToInt(str -> str==null?0:str.length()).sum();
 			return master.getFlowWidth()-size;
 		} catch (PaginatorToolsException e) {
