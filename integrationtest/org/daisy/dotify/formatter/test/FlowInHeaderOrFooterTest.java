@@ -35,4 +35,10 @@ public class FlowInHeaderOrFooterTest extends AbstractFormatterEngineTest {
 	public void testFlowInHeaderFooter_01() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
 		testPEF("resource-files/flow-in-header-footer1-input.obfl", "resource-files/flow-in-header-footer1-expected.pef", false);
 	}
+	
+	@Test
+	public void testFlowInHeaderFooter_02() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
+		testPEF("resource-files/flow-in-header-footer2-input.obfl", "resource-files/flow-in-header-footer2-expected.pef", false);
+	}
+	
 }
