@@ -198,8 +198,22 @@ public class PageImpl implements Page {
 			&& !pageArea.isEmpty();
 	}
 	
+	private boolean hasBottomPageArea() {
+		return master.getPageArea()!=null
+			&& master.getPageArea().getAlignment() == PageAreaProperties.Alignment.BOTTOM
+			&& !pageArea.isEmpty();
+	}
+	
 	private void addTopPageArea() {
 		if (hasTopPageArea()) {
+			finalRows.addAll(pageAreaTemplate.getBefore());
+			finalRows.addAll(pageArea);
+			finalRows.addAll(pageAreaTemplate.getAfter());
+		}
+	}
+	
+	private void addBottomPageArea() {
+		if (hasBottomPageArea()) {
 			finalRows.addAll(pageAreaTemplate.getBefore());
 			finalRows.addAll(pageArea);
 			finalRows.addAll(pageAreaTemplate.getAfter());
