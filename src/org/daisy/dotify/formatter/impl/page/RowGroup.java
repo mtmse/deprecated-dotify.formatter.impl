@@ -245,8 +245,12 @@ class RowGroup implements SplitPointUnit {
 
 	@Override
 	public String toString() {
-		return "RowGroup [rows=" + rows + ", unitSize=" + unitSize + ", breakable=" + breakable + ", skippable="
-				+ skippable + ", collapsible=" + collapsible + ", ids=" + ids + ", identifiers=" + identifiers + "]";
+		return "RowGroup [rows=" + rows + ", variableWidth=" + variableWidth + ", markers=" + markers + ", anchors="
+				+ anchors + ", identifiers=" + identifiers + ", unitSize=" + unitSize + ", lastUnitSize=" + lastUnitSize
+				+ ", breakable=" + breakable + ", skippable=" + skippable + ", collapsible=" + collapsible
+				+ ", lazyCollapse=" + lazyCollapse + ", ids=" + ids + ", keepWithNextSheets=" + keepWithNextSheets
+				+ ", keepWithPreviousSheets=" + keepWithPreviousSheets + ", avoidVolumeBreakAfterPriority="
+				+ avoidVolumeBreakAfterPriority + ", lastInBlock=" + lastInBlock + "]";
 	}
 
 	@Override
