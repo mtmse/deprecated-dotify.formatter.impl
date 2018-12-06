@@ -215,6 +215,10 @@ public class PageSequenceBuilder2 {
 					.flowWidth(master.getFlowWidth() - master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth())
 					.build();
 			data.setContext(bc);
+			data.setSpareWidths(x->{
+				int y = master.getFlowWidth()-fieldResolver.getWidth(current.getPageNumber(), x);
+				return y;
+				});
 			Optional<Boolean> blockBoundary = Optional.empty();
 			if (!data.isEmpty()) {
 				RowGroupDataSource copy = new RowGroupDataSource(data);

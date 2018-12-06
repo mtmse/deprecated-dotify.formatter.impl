@@ -125,6 +125,7 @@ class RowGroupProvider {
 			}
 		}
 		if (phase==3) {
+			
 			Optional<RowImpl> rt;
 			if ((rt=bcm.getNext(wholeWordsOnly, spareWidth)).isPresent()) {
 				RowImpl r = rt.get();
@@ -168,6 +169,12 @@ class RowGroupProvider {
 		}
 		return null;
 	}
+	/*
+	private boolean hasBorder() {
+		return g.getRowDataProperties().getLeadingDecoration()!=null
+				|| g.getRowDataProperties().getTrailingDecoration()!=null
+				|| g.getRowDataProperties().getLeftMargin().
+	}*/
 	
 	private boolean shouldAddGroupForEmptyContent() {
 		return !bcm.hasSignificantContent() && otherData;
