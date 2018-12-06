@@ -77,6 +77,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 		this.vs = template.vs;
 		this.blockIndex = template.blockIndex;
 		this.allowHyphenateLastLine = template.allowHyphenateLastLine;
+		this.spareWidths = template.spareWidths;
 	}
 	
 	static RowGroupDataSource copyUnlessNull(RowGroupDataSource template) {

@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.FallbackRule;
@@ -215,10 +216,10 @@ public class PageSequenceBuilder2 {
 					.flowWidth(master.getFlowWidth() - master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth())
 					.build();
 			data.setContext(bc);
-			data.setSpareWidths(x->{
-				int y = master.getFlowWidth()-fieldResolver.getWidth(current.getPageNumber(), x);
-				return y;
-				});
+			Function<Integer, Integer> spareWidths = x->{
+				return master.getFlowWidth()-fieldResolver.getWidth(current.getPageNumber(), x);
+			}; 
+			data.setSpareWidths(spareWidths);
 			Optional<Boolean> blockBoundary = Optional.empty();
 			if (!data.isEmpty()) {
 				RowGroupDataSource copy = new RowGroupDataSource(data);
@@ -277,13 +278,20 @@ public class PageSequenceBuilder2 {
 						addTransition = false;
 					}
 				} else {
+					SplitPointCost<RowGroup> cost = (SplitPointDataSource<RowGroup, ?> units, int in, int limit)->{
+							double variableWidthCost = (spareWidths.apply(in)>0 && !units.get(in).supportsVariableWidth())?1000:0;
+							return (
+										(units.get(in).isBreakable()?1:2) + variableWidthCost
+									)*limit-in;
+					};
 					float seqHeight = 0;
 					if (wasSplitInSequence) {
 						seqHeight = height(seqTransitionText, false);
 					}
 					// Either RESUME, or no transition on this page.
 					float flowHeight = current.getFlowHeight() - anyHeight - seqHeight;
-					spec = sph.find(flowHeight, copy, force?StandardSplitOption.ALLOW_FORCE:null);
+					//
+					spec = sph.find(flowHeight, copy, cost, force?StandardSplitOption.ALLOW_FORCE:null);
 				}
 				// Now apply the information to the live data
 				data.setAllowHyphenateLastLine(hyphenateLastLine);
@@ -553,7 +561,7 @@ public class PageSequenceBuilder2 {
 		@Override
 		public RowGroup get(String id) {
 			if (collection!=null) {
-				RowGroup.Builder b = new RowGroup.Builder(master.getRowSpacing());
+				RowGroup.Builder b = new RowGroup.Builder(master.getRowSpacing(), false);
 				for (Block g : collection.getBlocks(id)) {
 					AbstractBlockContentManager bcm = g.getBlockContentManager(c);
 					b.addAll(bcm.getCollapsiblePreContentRows());

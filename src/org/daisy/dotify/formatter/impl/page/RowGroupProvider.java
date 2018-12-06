@@ -97,13 +97,15 @@ class RowGroupProvider {
 
 	private RowGroup nextInner(boolean wholeWordsOnly, int spareWidth) {
 		if (spareWidth>0 && !bcm.supportsVariableWidth()) {
-			return new RowGroup.Builder(master.getRowSpacing()).add(new RowImpl()).build();
+			return new RowGroup.Builder(master.getRowSpacing(), false)
+					.add(new RowImpl())
+					.collapsible(false).skippable(false).breakable(false).build();
 		}
 		if (phase==0) {
 			phase++;
 			//if there is a row group, return it (otherwise, try next phase)
 			if (bcm.hasCollapsiblePreContentRows()) {
-				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), bcm.getCollapsiblePreContentRows()).
+				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), true, bcm.getCollapsiblePreContentRows()).
 										collapsible(true).skippable(false).breakable(false), hasNext(), g).build();
 			}
 		}
@@ -111,7 +113,7 @@ class RowGroupProvider {
 			phase++;
 			//if there is a row group, return it (otherwise, try next phase)
 			if (bcm.hasInnerPreContentRows()) {
-				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), bcm.getInnerPreContentRows()).
+				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), false, bcm.getInnerPreContentRows()).
 										collapsible(false).skippable(false).breakable(false), hasNext(), g).build();
 			}
 		}
@@ -120,7 +122,7 @@ class RowGroupProvider {
 			//TODO: Does this interfere with collapsing margins?
 			if (shouldAddGroupForEmptyContent()) {
 				RowGroup.Builder rgb = setPropertiesForFirstContentRowGroup(
-					new RowGroup.Builder(master.getRowSpacing(), new ArrayList<RowImpl>()), 
+					new RowGroup.Builder(master.getRowSpacing(), true, new ArrayList<RowImpl>()), 
 					bc.getRefs(),
 					g
 				);
@@ -139,7 +141,7 @@ class RowGroupProvider {
 					keepWithNext = g.getKeepWithNext();
 					bc.getRefs().setRowCount(g.getBlockAddress(), bcm.getRowCount());
 				}
-				RowGroup.Builder rgb = new RowGroup.Builder(master.getRowSpacing()).add(r).
+				RowGroup.Builder rgb = new RowGroup.Builder(master.getRowSpacing(), bcm.supportsVariableWidth()).add(r).
 						collapsible(false).skippable(false).breakable(
 								r.allowsBreakAfter()&&
 								owc.allowsBreakAfter(rowIndex-1)&&
@@ -159,14 +161,14 @@ class RowGroupProvider {
 		if (phase==4) {
 			phase++;
 			if (bcm.hasPostContentRows()) {
-				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), bcm.getPostContentRows()).
+				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), false, bcm.getPostContentRows()).
 					collapsible(false).skippable(false).breakable(keepWithNext<0), hasNext(), g).build();
 			}
 		}
 		if (phase==5) {
 			phase++;
 			if (bcm.hasSkippablePostContentRows()) {
-				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), bcm.getSkippablePostContentRows()).
+				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), true, bcm.getSkippablePostContentRows()).
 					collapsible(true).skippable(true).breakable(keepWithNext<0), hasNext(), g).build();
 			}
 		}

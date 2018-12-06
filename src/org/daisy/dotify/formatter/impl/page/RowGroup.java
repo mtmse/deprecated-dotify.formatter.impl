@@ -14,6 +14,7 @@ import org.daisy.dotify.formatter.impl.row.RowImpl;
 
 class RowGroup implements SplitPointUnit {
 	private final List<RowImpl> rows;
+	private final boolean variableWidth;
 	private final List<Marker> markers;
 	private final List<String> anchors;
 	private final List<String> identifiers;
@@ -26,6 +27,7 @@ class RowGroup implements SplitPointUnit {
 	
 	static class Builder {
 		private final List<RowImpl> rows;
+		private final boolean variableWidth;
 		private List<Marker> markers;
 		private List<String> anchors;
 		private List<String> identifiers;
@@ -35,14 +37,15 @@ class RowGroup implements SplitPointUnit {
 		private boolean lazyCollapse = true;
 		private VolumeKeepPriority avoidVolumeBreakAfterPriority = VolumeKeepPriority.empty();
 		private boolean lastInBlock = false;
-		Builder(float rowDefault, RowImpl ... rows) {
-			this(rowDefault, Arrays.asList(rows));
+		Builder(float rowDefault, boolean variableWidth, RowImpl ... rows) {
+			this(rowDefault, variableWidth, Arrays.asList(rows));
 		}
-		Builder(float rowDefault) {
-			this(rowDefault, new ArrayList<RowImpl>());
+		Builder(float rowDefault, boolean variableWidth) {
+			this(rowDefault, variableWidth, new ArrayList<RowImpl>());
 		}
-		Builder(float rowDefault, List<RowImpl> rows) {
+		Builder(float rowDefault, boolean variableWidth, List<RowImpl> rows) {
 			this.rows = rows;
+			this.variableWidth = variableWidth;
 			this.rowDefault = rowDefault;
 			this.markers = new ArrayList<>();
 			this.anchors = new ArrayList<>();
@@ -112,6 +115,7 @@ class RowGroup implements SplitPointUnit {
 	
 	private RowGroup(Builder builder) {
 		this.rows = builder.rows;
+		this.variableWidth = builder.variableWidth;
 		this.markers = builder.markers;
 		this.anchors = builder.anchors;
 		this.identifiers = builder.identifiers;
@@ -137,6 +141,7 @@ class RowGroup implements SplitPointUnit {
 	 */
 	RowGroup(RowGroup template) {
 		this.rows = new ArrayList<>(template.rows);
+		this.variableWidth = template.variableWidth;
 		this.markers = new ArrayList<>(template.markers);
 		this.anchors = new ArrayList<>(template.anchors);
 		this.identifiers = new ArrayList<>(template.identifiers);
@@ -167,6 +172,10 @@ class RowGroup implements SplitPointUnit {
 	
 	List<RowImpl> getRows() {
 		return Collections.unmodifiableList(rows);
+	}
+	
+	boolean supportsVariableWidth() {
+		return variableWidth;
 	}
 
 	@Override
