@@ -101,6 +101,7 @@ class RowGroupProvider {
 			//if there is a row group, return it (otherwise, try next phase)
 			if (bcm.hasCollapsiblePreContentRows()) {
 				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), bcm.getCollapsiblePreContentRows()).
+										mergeable(true).
 										collapsible(true).skippable(false).breakable(false), hasNext(), g).build();
 			}
 		}
@@ -109,6 +110,7 @@ class RowGroupProvider {
 			//if there is a row group, return it (otherwise, try next phase)
 			if (bcm.hasInnerPreContentRows()) {
 				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), bcm.getInnerPreContentRows()).
+										mergeable(false).
 										collapsible(false).skippable(false).breakable(false), hasNext(), g).build();
 			}
 		}
@@ -117,7 +119,7 @@ class RowGroupProvider {
 			//TODO: Does this interfere with collapsing margins?
 			if (shouldAddGroupForEmptyContent()) {
 				RowGroup.Builder rgb = setPropertiesForFirstContentRowGroup(
-					new RowGroup.Builder(master.getRowSpacing(), new ArrayList<RowImpl>()), 
+					new RowGroup.Builder(master.getRowSpacing(), new ArrayList<RowImpl>()).mergeable(true), 
 					bc.getRefs(),
 					g
 				);
@@ -136,6 +138,7 @@ class RowGroupProvider {
 					bc.getRefs().setRowCount(g.getBlockAddress(), bcm.getRowCount());
 				}
 				RowGroup.Builder rgb = new RowGroup.Builder(master.getRowSpacing()).add(r).
+						mergeable(bcm.supportsVariableWidth()).
 						collapsible(false).skippable(false).breakable(
 								r.allowsBreakAfter()&&
 								owc.allowsBreakAfter(rowIndex-1)&&
@@ -156,6 +159,7 @@ class RowGroupProvider {
 			phase++;
 			if (bcm.hasPostContentRows()) {
 				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), bcm.getPostContentRows()).
+					mergeable(false).
 					collapsible(false).skippable(false).breakable(keepWithNext<0), hasNext(), g).build();
 			}
 		}
@@ -163,6 +167,7 @@ class RowGroupProvider {
 			phase++;
 			if (bcm.hasSkippablePostContentRows()) {
 				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), bcm.getSkippablePostContentRows()).
+					mergeable(true).
 					collapsible(true).skippable(true).breakable(keepWithNext<0), hasNext(), g).build();
 			}
 		}
