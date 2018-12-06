@@ -97,7 +97,7 @@ class RowGroupProvider {
 
 	private RowGroup nextInner(boolean wholeWordsOnly, int spareWidth) {
 		if (spareWidth>0 && !bcm.supportsVariableWidth()) {
-			return new RowGroup.Builder(master.getRowSpacing()).add(new RowImpl("")).build();
+			return new RowGroup.Builder(master.getRowSpacing()).add(new RowImpl()).build();
 		}
 		if (phase==0) {
 			phase++;
