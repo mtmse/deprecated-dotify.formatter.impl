@@ -12,54 +12,54 @@ public class FlowInHeaderOrFooterTest extends AbstractFormatterEngineTest {
 	
 	@Test
 	public void testFlowInFooter() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-		testPEF("resource-files/flow-in-footer-input.obfl",
-		        "resource-files/flow-in-footer-expected.pef",
+		testPEF("resource-files/header-footer/flow-in-footer-input.obfl",
+		        "resource-files/header-footer/flow-in-footer-expected.pef",
 		        false);
 	}
 	
 	@Test
 	public void testFlowInFooterWithMarkerReference() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-		testPEF("resource-files/flow-in-footer-with-marker-reference-input.obfl",
-		        "resource-files/flow-in-footer-with-marker-reference-expected.pef",
+		testPEF("resource-files/header-footer/flow-in-footer-with-marker-reference-input.obfl",
+		        "resource-files/header-footer/flow-in-footer-with-marker-reference-expected.pef",
 		        false);
 	}
 	
 	@Test
 	public void testFlowInHeader() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-		testPEF("resource-files/flow-in-header-input.obfl",
-		        "resource-files/flow-in-header-expected.pef",
+		testPEF("resource-files/header-footer/flow-in-header-input.obfl",
+		        "resource-files/header-footer/flow-in-header-expected.pef",
 		        false);
 	}
 	
 	
 	@Test
 	public void testFlowInHeaderFooter_01() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-		testPEF("resource-files/flow-in-header-footer1-input.obfl", "resource-files/flow-in-header-footer1-expected.pef", false);
+		testPEF("resource-files/header-footer/flow-in-header-footer1-input.obfl", "resource-files/header-footer/flow-in-header-footer1-expected.pef", false);
 	}
 	
 	@Test
 	public void testFlowInHeaderFooter_02() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-		testPEF("resource-files/flow-in-header-footer2-input.obfl", "resource-files/flow-in-header-footer2-expected.pef", false);
+		testPEF("resource-files/header-footer/flow-in-header-footer2-input.obfl", "resource-files/header-footer/flow-in-header-footer2-expected.pef", false);
 	}
 	
 	@Test
 	public void testFlowInHeaderFooter_03() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-		testPEF("resource-files/flow-in-header-footer3-input.obfl", "resource-files/flow-in-header-footer3-expected.pef", false);
+		testPEF("resource-files/header-footer/flow-in-header-footer3-input.obfl", "resource-files/header-footer/flow-in-header-footer3-expected.pef", false);
 	}
 	
 	@Test
 	public void testFlowInHeaderFooter_04() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-		testPEF("resource-files/flow-in-header-footer4-input.obfl", "resource-files/flow-in-header-footer4-expected.pef", false);
+		testPEF("resource-files/header-footer/flow-in-header-footer4-input.obfl", "resource-files/header-footer/flow-in-header-footer4-expected.pef", false);
 	}
 	
 	@Test
 	public void testFlowInHeaderFooter_05() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-		testPEF("resource-files/flow-in-header-footer5-input.obfl", "resource-files/flow-in-header-footer5-expected.pef", false);
+		testPEF("resource-files/header-footer/flow-in-header-footer5-input.obfl", "resource-files/header-footer/flow-in-header-footer5-expected.pef", false);
 	}
 	
 	@Test
 	public void testFlowInHeaderFooter_06() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-		testPEF("resource-files/flow-in-header-footer6-input.obfl", "resource-files/flow-in-header-footer6-expected.pef", false);
+		testPEF("resource-files/header-footer/flow-in-header-footer6-input.obfl", "resource-files/header-footer/flow-in-header-footer6-expected.pef", false);
 	}
 	
 }
