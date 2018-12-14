@@ -81,13 +81,14 @@ class FieldResolver implements PageShape {
 						.build());
 				return bm.getRows().get(0).getChars();
 			});
-    		String data = distribute(p, field, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", translator, x);
+    		String data = distribute(p, field, master.getFlowWidth()-mr, fcontext.getSpaceCharacter()+"", translator, x);
     		
     		RowImpl.Builder builder = r.map(v->
     				new RowImpl.Builder(data)
     					.addAnchors(v.getAnchors())
     					.addMarkers(v.getMarkers())
     					.addIdentifiers(v.getIdentifiers())
+    					.adjustedForMargin(true)
     					//.leftMargin(v.getLeftMargin())
     					//.rightMargin(v.getRightMargin())
     				)

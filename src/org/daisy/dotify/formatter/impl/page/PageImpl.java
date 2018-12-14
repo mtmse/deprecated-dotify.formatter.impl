@@ -6,10 +6,14 @@ import java.util.List;
 import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.FieldList;
+import org.daisy.dotify.api.formatter.MarginRegion;
 import org.daisy.dotify.api.formatter.Marker;
+import org.daisy.dotify.api.formatter.MarkerIndicatorRegion;
 import org.daisy.dotify.api.formatter.NoField;
 import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.translator.BrailleTranslator;
+import org.daisy.dotify.api.translator.Translatable;
+import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.formatter.impl.core.BorderManager;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
@@ -18,6 +22,8 @@ import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 import org.daisy.dotify.formatter.impl.core.PageTemplate;
 import org.daisy.dotify.formatter.impl.core.PaginatorException;
 import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
+import org.daisy.dotify.formatter.impl.page.PageSequenceBuilder2.MarkerRef;
+import org.daisy.dotify.formatter.impl.row.MarginProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.formatter.impl.writer.Page;
@@ -92,7 +98,9 @@ public class PageImpl implements Page {
 			FieldList fields = template.getHeader().get(renderedHeaderRows);
 			renderedHeaderRows++;
 			if (fields.getFields().stream().anyMatch(v->v instanceof NoField)) {
-				finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.of(r)));
+				//
+				RowImpl r2 = fieldResolver.renderField(getDetails(), fields, filter, Optional.of(r));
+				finalRows.addRow(r2.shouldAdjustForMargin()?addMarginRegion(r2):r2);
 				addRowDetails(r);
 				return;
 			} else {
@@ -106,7 +114,8 @@ public class PageImpl implements Page {
 				topPageAreaProcessed = true;
 			}
 			if (hasBodyRowsLeft()) {
-				finalRows.addRow(r);
+				//
+				finalRows.addRow(r.shouldAdjustForMargin()?addMarginRegion(r):r);
 			} else {
 				if (!bottomPageAreaProcessed) {
 					addBottomPageArea();
@@ -116,7 +125,9 @@ public class PageImpl implements Page {
 					FieldList fields = template.getFooter().get(renderedFooterRows);
 					renderedFooterRows++;
 					if (fields.getFields().stream().anyMatch(v->v instanceof NoField)) {
-						finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.of(r)));
+						//
+						RowImpl r2 = fieldResolver.renderField(getDetails(), fields, filter, Optional.of(r));
+						finalRows.addRow(r2.shouldAdjustForMargin()?addMarginRegion(r2):r2);
 						addRowDetails(r);
 						return;
 					} else {
