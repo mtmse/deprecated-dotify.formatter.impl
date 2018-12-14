@@ -128,6 +128,61 @@ public class PageImpl implements Page {
 		}
 	}
 	
+	private RowImpl addMarginRegion(RowImpl r) {
+		RowImpl.Builder b = new RowImpl.Builder(r);
+		MarkerRef rf = r::hasMarkerWithName;
+		MarginProperties margin = r.getLeftMargin();
+		for (MarginRegion mr : getPageTemplate().getLeftMarginRegion()) {
+			margin = getMarginRegionValue(mr, rf, false).append(margin);
+		}
+		b.leftMargin(margin);
+		margin = r.getRightMargin();
+		for (MarginRegion mr : getPageTemplate().getRightMarginRegion()) {
+			margin = margin.append(getMarginRegionValue(mr, rf, true));
+		}
+		b.rightMargin(margin);
+		return b.build();
+	}
+	
+	private MarginProperties getMarginRegionValue(MarginRegion mr, MarkerRef r, boolean rightSide) throws PaginatorException {
+		String ret = "";
+		int w = mr.getWidth();
+		if (mr instanceof MarkerIndicatorRegion) {
+			ret = firstMarkerForRow(r, (MarkerIndicatorRegion)mr);
+			if (ret.length()>0) {
+				try {
+					ret = fcontext.getDefaultTranslator().translate(Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?ret:ret.toLowerCase()).build()).getTranslatedRemainder();
+				} catch (TranslationException e) {
+					throw new PaginatorException("Failed to translate: " + ret, e);
+				}
+			}
+			boolean spaceOnly = ret.length()==0;
+			if (ret.length()<w) {
+				StringBuilder sb = new StringBuilder();
+				if (rightSide) {
+					while (sb.length()<w-ret.length()) { sb.append(fcontext.getSpaceCharacter()); }
+					sb.append(ret);
+				} else {
+					sb.append(ret);				
+					while (sb.length()<w) { sb.append(fcontext.getSpaceCharacter()); }
+				}
+				ret = sb.toString();
+			} else if (ret.length()>w) {
+				throw new PaginatorException("Cannot fit " + ret + " into a margin-region of size "+ mr.getWidth());
+			}
+			return new MarginProperties(ret, spaceOnly);
+		} else {
+			throw new PaginatorException("Unsupported margin-region type: " + mr.getClass().getName());
+		}
+	}
+	
+	private String firstMarkerForRow(MarkerRef r, MarkerIndicatorRegion mrr) {
+		return mrr.getIndicators().stream()
+				.filter(mi -> r.hasMarkerWithName(mi.getName()))
+				.map(mi -> mi.getIndicator())
+				.findFirst().orElse("");
+	}
+	
 	private void addRowDetails(RowImpl r) {
 		getDetails().getMarkers().addAll(r.getMarkers());
 		anchors.addAll(r.getAnchors());
