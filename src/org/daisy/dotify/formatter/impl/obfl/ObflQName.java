@@ -26,6 +26,7 @@ interface ObflQName {
 	static final QName STYLE = new QName(OBFL_NS, "style");
 	 static final QName TOC_BLOCK = new QName(OBFL_NS, "toc-block");
 	 static final QName TOC_ENTRY = new QName(OBFL_NS, "toc-entry");
+    static final QName TOC_ENTRY_ON_RESUMED = new QName(OBFL_NS, "toc-entry-on-resumed");
 	 static final QName LEADER = new QName(OBFL_NS, "leader");
 	 static final QName MARKER = new QName(OBFL_NS, "marker");
 	 static final QName ANCHOR = new QName(OBFL_NS, "anchor");
