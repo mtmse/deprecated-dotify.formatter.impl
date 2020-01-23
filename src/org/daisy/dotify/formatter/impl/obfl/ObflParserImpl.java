@@ -1165,6 +1165,8 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 				parseTocBlock(event, input, toc, tp);
 			} else if (equalsStart(event, ObflQName.TOC_ENTRY)) {
 				parseTocEntry(event, input, toc, tp);
+			} else if (equalsStart(event, ObflQName.TOC_ENTRY_ON_RESUMED)) {
+				parseTocEntryOnResumed(event, input, toc, tp);
 			} else if (equalsEnd(event, ObflQName.TABLE_OF_CONTENTS)) {
 				break;
 			} else {
@@ -1218,6 +1220,25 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 				//done!
 			} else if (equalsEnd(event, ObflQName.TOC_ENTRY)) {
 				toc.endEntry();
+				break;
+			} else {
+				report(event);
+			}
+		}
+	}
+
+	private void parseTocEntryOnResumed(XMLEvent event, XMLEventIterator input, TableOfContents toc, TextProperties tp) throws XMLStreamException {
+		String range = getAttr(event, "range");
+		tp = getTextProperties(event, tp);
+		toc.startEntryOnResumed(range);
+		while (input.hasNext()) {
+			event=input.nextEvent();
+			if (event.isCharacters()) {
+				toc.getEntryOnResumedStack().peek().addChars(event.asCharacters().getData(), tp);
+			} else if (processAsBlockContents(toc.getEntryOnResumedStack().peek(), event, input, tp)) {
+				//done!
+			} else if (equalsEnd(event, ObflQName.TOC_ENTRY_ON_RESUMED)) {
+				toc.endEntryOnResumed();
 				break;
 			} else {
 				report(event);
