@@ -1164,8 +1164,10 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 			if (equalsStart(event, ObflQName.TOC_BLOCK)) {
 				parseTocBlock(event, input, toc, tp);
 			} else if (equalsStart(event, ObflQName.TOC_ENTRY)) {
+                // this will throw a runtime exception, because a toc-entry must reside inside a toc-block
 				parseTocEntry(event, input, toc, tp);
 			} else if (equalsStart(event, ObflQName.TOC_ENTRY_ON_RESUMED)) {
+                // this will throw a runtime exception, because a toc-entry-on-resumed must reside inside a toc-block
 				parseTocEntryOnResumed(event, input, toc, tp);
 			} else if (equalsEnd(event, ObflQName.TABLE_OF_CONTENTS)) {
 				break;
@@ -1199,6 +1201,8 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 				parseTocBlock(event, input, toc, tp);
 			} else if (equalsStart(event, ObflQName.TOC_ENTRY)) {
 				parseTocEntry(event, input, toc, tp);
+			} else if (equalsStart(event, ObflQName.TOC_ENTRY_ON_RESUMED)) {
+				parseTocEntryOnResumed(event, input, toc, tp);
 			} else if (equalsEnd(event, ObflQName.TOC_BLOCK)) {
 				toc.endBlock();
 				break;
@@ -1234,8 +1238,8 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		while (input.hasNext()) {
 			event=input.nextEvent();
 			if (event.isCharacters()) {
-				toc.getEntryOnResumedStack().peek().addChars(event.asCharacters().getData(), tp);
-			} else if (processAsBlockContents(toc.getEntryOnResumedStack().peek(), event, input, tp)) {
+				toc.getEntryOnResumed().addChars(event.asCharacters().getData(), tp);
+			} else if (processAsBlockContents(toc.getEntryOnResumed(), event, input, tp)) {
 				//done!
 			} else if (equalsEnd(event, ObflQName.TOC_ENTRY_ON_RESUMED)) {
 				toc.endEntryOnResumed();

@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,19 +35,22 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 	 * 
 	 */
 	private static final long serialVersionUID = -2198713822437968076L;
-    private final FormatterCoreContext fc;
 	/* remember all the ref-id attributes in order to verify that they are unique */
 	private final Set<String> refIds;
 	/* every toc-entry maps exactly to one block in the resulting sequence of blocks */
 	private final Map<Block,String> refIdForBlock;
+	/* every toc-entry-on-resumed maps exactly to one block in the resulting sequence of toc-entry-on-resumed blocks */
+	private final Map<Block,TocEntryOnResumedRange> entryOnResumedForResumedBlock;
 	/* mapping from block in the resulting sequence of blocks to the toc-block element that it came from */
 	private final Map<Block,Object> tocBlockForBlock;
+	/* mapping from block in the resulting sequence of toc-entry-on-resumed blocks to the toc-block element that it came from */
+	private final Map<Block,Object> tocBlockForResumedBlock;
 	/* parent-child relationships of toc-block elements */
 	private final Map<Object,Object> parentTocBlockForTocBlock;
 	/* current stack of ancestor toc-block elements */
 	private final Stack<Object> currentAncestorTocBlocks;
     /* stack of toc-entry-on-resumed elements */
-    private final Stack<TocEntryOnResumed> tocEntryOnResumedStack;
+    private final FormatterCoreImpl tocEntryOnResumedBlocks;
 	/* whether we are currently inside a toc-entry */
 	private boolean inTocEntry = false;
     /* whether we are currently inside a toc-entry-on-resumed */
@@ -56,23 +58,35 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 
 	public TableOfContentsImpl(FormatterCoreContext fc) {
 		super(fc);
-        this.fc = fc;
 		this.refIds = new HashSet<>();
 		this.refIdForBlock = new IdentityHashMap<>();
+        this.entryOnResumedForResumedBlock = new IdentityHashMap<>();
 		this.tocBlockForBlock = new IdentityHashMap<>();
+		this.tocBlockForResumedBlock = new IdentityHashMap<>();
 		this.parentTocBlockForTocBlock = new LinkedHashMap<>();
 		this.currentAncestorTocBlocks = new Stack<>();
-        this.tocEntryOnResumedStack = new Stack<>();
+        this.tocEntryOnResumedBlocks = new FormatterCoreImpl(fc);
 	}
 
 	@Override
 	public void startBlock(BlockProperties p, String blockId) {
+		if (inTocEntry || inTocEntryOnResumed) {
+			throw new RuntimeException("a block cannot be started within a toc-entry or toc-entry-on-resumed");
+		}
+        
 		Object tocBlock = new Object();
 		if (!currentAncestorTocBlocks.isEmpty()) {
 			parentTocBlockForTocBlock.put(tocBlock, currentAncestorTocBlocks.peek());
 		}
 		currentAncestorTocBlocks.push(tocBlock);
+        
+        inTocEntry = true;  // set the context for creating a new block
 		super.startBlock(p, blockId);
+        inTocEntry = false;
+        
+        inTocEntryOnResumed = true;  // set the context for creating a new block
+        tocEntryOnResumedBlocks.startBlock(p);
+        inTocEntryOnResumed = false;
 	}
 
 	@Override
@@ -83,9 +97,18 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 
 	@Override
 	public Block newBlock(String blockId, RowDataProperties rdp) {
+        if (!inTocEntry && !inTocEntryOnResumed) {
+            // this should never happen
+            throw new RuntimeException("A block must be created in the context of either a toc-entry or a toc-entry-on-resumed");
+        }
         Block b = super.newBlock(blockId, rdp);
 		if (!currentAncestorTocBlocks.isEmpty()) {
-			tocBlockForBlock.put(b, currentAncestorTocBlocks.peek());
+            if (inTocEntry) {
+                tocBlockForBlock.put(b, currentAncestorTocBlocks.peek());
+            }
+            if (inTocEntryOnResumed) {
+                tocBlockForResumedBlock.put(b, currentAncestorTocBlocks.peek());
+            }
 		}
 		return b;
 	}
@@ -114,9 +137,9 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 	}
 
     @Override
-    public Stack<TocEntryOnResumed> getEntryOnResumedStack() {
+    public FormatterCoreImpl getEntryOnResumed() {
         assertInTocEntryOnResumed();
-        return tocEntryOnResumedStack;
+        return tocEntryOnResumedBlocks;
     }
 
     @Override
@@ -126,8 +149,8 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 		}
 		inTocEntryOnResumed = true;
         
-        String startRefId = "";
-        String endRefId = "";
+        String startRefId = null;
+        String endRefId = null;
         /*
          * parse the range attribute
          * the pattern matches only if the range is in one of these forms:
@@ -144,12 +167,18 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
                 throw new UnsupportedOperationException(String.format("Found range %s. Ranges in the form [startRefId,endRefId] are unsupported. Please use this form: [startRefId,endRefId)", range));
             }
             endRefId = endRefId.substring(0, endRefId.length() - 1).trim();
+            if (endRefId.length() == 0) {
+                endRefId = null;
+            }
         }
-        if (startRefId.length() == 0) {
+        if (startRefId == null) {
             throw new RuntimeException(String.format("Could not parse this range: %s", range));
         }
-
-        tocEntryOnResumedStack.push(new TocEntryOnResumed(fc, startRefId, endRefId));        
+        TocEntryOnResumedRange entryOnResumed = new TocEntryOnResumedRange(startRefId, endRefId);
+		if (entryOnResumedForResumedBlock.put(tocEntryOnResumedBlocks.getCurrentBlock(), entryOnResumed) != null) {
+			// note that this is not strictly forbidden by OBFL, but it simplifies the implementation
+			throw new RuntimeException("No two toc-entry-on-resumed's may be contained in the same block");
+		}
 	}
 	
 	@Override
@@ -208,19 +237,44 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 	}
     
     /**
-     * Return a list of resumed blocks for a bi-predicate that takes as argument ranges in the form [ref-id1, ref-id2)
+     * Return a list of resumed blocks for a range in the form [ref-id1, ref-id2)
      * The blocks are returned in the order in which they were parsed
      * 
-     * @param filter bi-predicate that takes as argument a range: a start ref-id (inclusive) and an end ref-id (exclusive)
+     * @param filter predicate that takes as argument a range: a start ref-id (inclusive) and an end ref-id (exclusive)
      * @return collection of blocks
      */
-    public Collection<Block> getResumedBlocks(BiPredicate<String,String> filter) {
-        List<Block> resumedBlocks = new ArrayList<>();
-        tocEntryOnResumedStack
-                .stream()
-                .filter(tocEntryOnResumed -> filter.test(tocEntryOnResumed.getStartRefId(), tocEntryOnResumed.getEndRefId()))
-                .forEachOrdered(resumedBlocks::addAll);
-        return resumedBlocks;
+    public Collection<Block> getResumedBlocks(Predicate<TocEntryOnResumedRange> filter) {
+		List<Block> filtered = new ArrayList<>();
+		Set<Object> tocBlocksWithDescendantTocEntry = new HashSet<>();
+		for (Block b : tocEntryOnResumedBlocks) {
+			if (entryOnResumedForResumedBlock.containsKey(b)) {
+				if (!filter.test(entryOnResumedForResumedBlock.get(b))) {
+					continue;
+				}
+				if (tocBlockForResumedBlock.containsKey(b)) {
+					Object tocBlock = tocBlockForResumedBlock.get(b);
+					tocBlocksWithDescendantTocEntry.add(tocBlock);
+					while (parentTocBlockForTocBlock.containsKey(tocBlock)) {
+						tocBlock = parentTocBlockForTocBlock.get(tocBlock);
+						tocBlocksWithDescendantTocEntry.add(tocBlock);
+					}
+				}
+			}
+			filtered.add(b);
+		}
+		Iterator<Block> i = filtered.iterator();
+		while (i.hasNext()) {
+			Block b = i.next();
+			if (entryOnResumedForResumedBlock.containsKey(b)) {
+				continue;
+			}
+			if (tocBlockForResumedBlock.containsKey(b) // this should always be true
+			    && tocBlocksWithDescendantTocEntry.contains(tocBlockForResumedBlock.get(b))) {
+				continue;
+			}
+			i.remove();
+		}
+		return filtered;
     }
 
     private void assertInTocEntry() {
