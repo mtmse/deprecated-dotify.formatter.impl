@@ -40,7 +40,7 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 	/* every toc-entry maps exactly to one block in the resulting sequence of blocks */
 	private final Map<Block,String> refIdForBlock;
 	/* every toc-entry-on-resumed maps exactly to one block in the resulting sequence of toc-entry-on-resumed blocks */
-	private final Map<Block,TocEntryOnResumedRange> entryOnResumedForResumedBlock;
+	private final Map<Block,TocEntryOnResumedRange> rangeForResumedBlock;
 	/* mapping from block in the resulting sequence of blocks to the toc-block element that it came from */
 	private final Map<Block,Object> tocBlockForBlock;
 	/* mapping from block in the resulting sequence of toc-entry-on-resumed blocks to the toc-block element that it came from */
@@ -49,7 +49,7 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 	private final Map<Object,Object> parentTocBlockForTocBlock;
 	/* current stack of ancestor toc-block elements */
 	private final Stack<Object> currentAncestorTocBlocks;
-    /* stack of toc-entry-on-resumed elements */
+    /* toc-entry-on-resumed blocks */
     private final FormatterCoreImpl tocEntryOnResumedBlocks;
 	/* whether we are currently inside a toc-entry */
 	private boolean inTocEntry = false;
@@ -60,7 +60,7 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 		super(fc);
 		this.refIds = new HashSet<>();
 		this.refIdForBlock = new IdentityHashMap<>();
-        this.entryOnResumedForResumedBlock = new IdentityHashMap<>();
+        this.rangeForResumedBlock = new IdentityHashMap<>();
 		this.tocBlockForBlock = new IdentityHashMap<>();
 		this.tocBlockForResumedBlock = new IdentityHashMap<>();
 		this.parentTocBlockForTocBlock = new LinkedHashMap<>();
@@ -174,8 +174,8 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
         if (startRefId == null) {
             throw new RuntimeException(String.format("Could not parse this range: %s", range));
         }
-        TocEntryOnResumedRange entryOnResumed = new TocEntryOnResumedRange(startRefId, endRefId);
-		if (entryOnResumedForResumedBlock.put(tocEntryOnResumedBlocks.getCurrentBlock(), entryOnResumed) != null) {
+        TocEntryOnResumedRange entryOnResumedRange = new TocEntryOnResumedRange(startRefId, endRefId);
+		if (rangeForResumedBlock.put(tocEntryOnResumedBlocks.getCurrentBlock(), entryOnResumedRange) != null) {
 			// note that this is not strictly forbidden by OBFL, but it simplifies the implementation
 			throw new RuntimeException("No two toc-entry-on-resumed's may be contained in the same block");
 		}
@@ -202,7 +202,7 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
      * @param filter predicate that takes as argument a ref-id
      * @return collection of blocks
 	 */
-	public Collection<Block> filter(Predicate<String> filter) {
+	public Collection<Block> filterEntry(Predicate<String> filter) {
 		List<Block> filtered = new ArrayList<>();
 		Set<Object> tocBlocksWithDescendantTocEntry = new HashSet<>();
 		for (Block b : this) {
@@ -238,17 +238,17 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
     
     /**
      * Return a list of resumed blocks for a range in the form [ref-id1, ref-id2)
-     * The blocks are returned in the order in which they were parsed
+     * This is similar to method filterEntry.
      * 
      * @param filter predicate that takes as argument a range: a start ref-id (inclusive) and an end ref-id (exclusive)
      * @return collection of blocks
      */
-    public Collection<Block> getResumedBlocks(Predicate<TocEntryOnResumedRange> filter) {
+    public Collection<Block> filterEntryOnResumed(Predicate<TocEntryOnResumedRange> filter) {
 		List<Block> filtered = new ArrayList<>();
 		Set<Object> tocBlocksWithDescendantTocEntry = new HashSet<>();
 		for (Block b : tocEntryOnResumedBlocks) {
-			if (entryOnResumedForResumedBlock.containsKey(b)) {
-				if (!filter.test(entryOnResumedForResumedBlock.get(b))) {
+			if (rangeForResumedBlock.containsKey(b)) {
+				if (!filter.test(rangeForResumedBlock.get(b))) {
 					continue;
 				}
 				if (tocBlockForResumedBlock.containsKey(b)) {
@@ -265,7 +265,7 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 		Iterator<Block> i = filtered.iterator();
 		while (i.hasNext()) {
 			Block b = i.next();
-			if (entryOnResumedForResumedBlock.containsKey(b)) {
+			if (rangeForResumedBlock.containsKey(b)) {
 				continue;
 			}
 			if (tocBlockForResumedBlock.containsKey(b) // this should always be true
