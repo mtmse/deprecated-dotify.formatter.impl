@@ -224,14 +224,17 @@ public class VolumeProvider {
 
 		pageIndex += pageCount;
 		SectionBuilder sb = new SectionBuilder();
+        boolean atFirstPageOfContents = true;
 		for (Sheet sheet : contents) {
 			for (PageImpl p : sheet.getPages()) {
 				for (String id : p.getIdentifiers()) {
 					crh.setVolumeNumber(id, volumeNumber);
+                    crh.setAtStartOfVolumeContents(id, atFirstPageOfContents);
 				}
 				if (p.getAnchors().size()>0) {
 					ad.add(new AnchorData(p.getAnchors(), p.getPageNumber()));
 				}
+                atFirstPageOfContents = false;
 			}
 			sb.addSheet(sheet);
 		}
@@ -264,6 +267,7 @@ public class VolumeProvider {
 				for (PageImpl p : ps.getPages()) {
 					for (String id : p.getIdentifiers()) {
 						crh.setVolumeNumber(id, volumeNumber);
+                        crh.setAtStartOfVolumeContents(id, false);
 					}
 					if (p.getAnchors().size()>0) {
 						ad.add(new AnchorData(p.getAnchors(), p.getPageNumber()));

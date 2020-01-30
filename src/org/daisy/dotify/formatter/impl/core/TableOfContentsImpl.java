@@ -2,6 +2,7 @@ package org.daisy.dotify.formatter.impl.core;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -42,19 +43,21 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 	/* every toc-entry-on-resumed maps exactly to one block in the resulting sequence of toc-entry-on-resumed blocks */
 	private final Map<Block,TocEntryOnResumedRange> rangeForResumedBlock;
 	/* mapping from block in the resulting sequence of blocks to the toc-block element that it came from */
-	private final Map<Block,Object> tocBlockForBlock;
+	private final Map<Block,TocBlock> tocBlockForBlock;
 	/* mapping from block in the resulting sequence of toc-entry-on-resumed blocks to the toc-block element that it came from */
-	private final Map<Block,Object> tocBlockForResumedBlock;
+	private final Map<Block,TocBlock> tocBlockForResumedBlock;
 	/* parent-child relationships of toc-block elements */
-	private final Map<Object,Object> parentTocBlockForTocBlock;
+	private final Map<TocBlock,TocBlock> parentTocBlockForTocBlock;
 	/* current stack of ancestor toc-block elements */
-	private final Stack<Object> currentAncestorTocBlocks;
-    /* toc-entry-on-resumed blocks */
+	private final Stack<TocBlock> currentAncestorTocBlocks;
+    /* toc-entry-on-resumed blocks. Invariant: this.size() == tocEntryOnResumedBlocks.size() */
     private final FormatterCoreImpl tocEntryOnResumedBlocks;
 	/* whether we are currently inside a toc-entry */
 	private boolean inTocEntry = false;
     /* whether we are currently inside a toc-entry-on-resumed */
     private boolean inTocEntryOnResumed = false;
+    /* optimisation for the case that there is no toc-entry-on-resumed */
+    private boolean hasTocEntryOnResumed = false;
 
 	public TableOfContentsImpl(FormatterCoreContext fc) {
 		super(fc);
@@ -74,7 +77,7 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 			throw new RuntimeException("a block cannot be started within a toc-entry or toc-entry-on-resumed");
 		}
         
-		Object tocBlock = new Object();
+		TocBlock tocBlock = new TocBlock();
 		if (!currentAncestorTocBlocks.isEmpty()) {
 			parentTocBlockForTocBlock.put(tocBlock, currentAncestorTocBlocks.peek());
 		}
@@ -148,10 +151,11 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 			throw new RuntimeException("toc-entry and toc-entry-on-resumed may not be nested");
 		}
 		inTocEntryOnResumed = true;
+        hasTocEntryOnResumed = true;
         
         String startRefId = null;
         String endRefId = null;
-        /*
+        /**
          * parse the range attribute
          * the pattern matches only if the range is in one of these forms:
          * [startRefId,endRefId] (unsupported) or [startRefId,endRefId) or [startRefId,)
@@ -194,7 +198,7 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 	 * create the volume range toc. toc-block that have all their descendant toc-entry filtered out
 	 * are also omitted.
 	 *
-	 * Note that, because this is implemented by filtering a fixed sequence of blocks, and because
+	 * <p>Note that, because this is implemented by filtering a fixed sequence of blocks, and because
 	 * of the way the sequence of blocks is constructed, we are potentially throwing away borders
 	 * and margins that should be kept. That said, the previous implementation did not handle
 	 * borders and margins correctly either, so fixing this issue can be seen as an optimization.
@@ -203,56 +207,44 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
      * @return collection of blocks
 	 */
 	public Collection<Block> filterEntry(Predicate<String> filter) {
-		List<Block> filtered = new ArrayList<>();
-		Set<Object> tocBlocksWithDescendantTocEntry = new HashSet<>();
-		for (Block b : this) {
-			if (refIdForBlock.containsKey(b)) {
-				if (!filter.test(refIdForBlock.get(b))) {
-					continue;
-				}
-				if (tocBlockForBlock.containsKey(b)) {
-					Object tocBlock = tocBlockForBlock.get(b);
-					tocBlocksWithDescendantTocEntry.add(tocBlock);
-					while (parentTocBlockForTocBlock.containsKey(tocBlock)) {
-						tocBlock = parentTocBlockForTocBlock.get(tocBlock);
-						tocBlocksWithDescendantTocEntry.add(tocBlock);
-					}
-				}
-			}
-			filtered.add(b);
-		}
-		Iterator<Block> i = filtered.iterator();
-		while (i.hasNext()) {
-			Block b = i.next();
-			if (refIdForBlock.containsKey(b)) {
-				continue;
-			}
-			if (tocBlockForBlock.containsKey(b) // this should always be true
-			    && tocBlocksWithDescendantTocEntry.contains(tocBlockForBlock.get(b))) {
-				continue;
-			}
-			i.remove();
-		}
-		return filtered;
-	}
+        return filterBlocks(filter, this, refIdForBlock, tocBlockForBlock);
+    }
     
     /**
-     * Return a list of resumed blocks for a range in the form [ref-id1, ref-id2)
+     * Return a list of resumed blocks for a range in the form [ref-id1,ref-id2)
      * This is similar to method filterEntry.
      * 
      * @param filter predicate that takes as argument a range: a start ref-id (inclusive) and an end ref-id (exclusive)
      * @return collection of blocks
      */
     public Collection<Block> filterEntryOnResumed(Predicate<TocEntryOnResumedRange> filter) {
+        if (!hasTocEntryOnResumed) {
+            /* skip the traversing of the tocEntryOnResumedBlocks */
+            return Collections.EMPTY_LIST;
+        }
+        return filterBlocks(filter, tocEntryOnResumedBlocks, rangeForResumedBlock, tocBlockForResumedBlock);
+    }
+    
+    /**
+     * Filter out the entries with an identification that does not satisfy the predicate.
+     * 
+     * @param <T> identification of an entry
+     * @param filter predicate that takes as argument an entry identification
+     * @param blocks list of blocks
+     * @param entryIdForBlock maps a block to its entry identification
+     * @param entryTocBlockForBlock maps a block to its toc block
+     * @return list of filtered blocks
+     */
+    private <T> Collection<Block> filterBlocks (Predicate<T> filter, FormatterCoreImpl blocks, Map<Block,T> entryIdForBlock, Map<Block,TocBlock> entryTocBlockForBlock) {
 		List<Block> filtered = new ArrayList<>();
-		Set<Object> tocBlocksWithDescendantTocEntry = new HashSet<>();
-		for (Block b : tocEntryOnResumedBlocks) {
-			if (rangeForResumedBlock.containsKey(b)) {
-				if (!filter.test(rangeForResumedBlock.get(b))) {
+		Set<TocBlock> tocBlocksWithDescendantTocEntry = new HashSet<>();
+		for (Block b : blocks) {
+			if (entryIdForBlock.containsKey(b)) {
+				if (!filter.test(entryIdForBlock.get(b))) {
 					continue;
 				}
-				if (tocBlockForResumedBlock.containsKey(b)) {
-					Object tocBlock = tocBlockForResumedBlock.get(b);
+				if (entryTocBlockForBlock.containsKey(b)) {
+					TocBlock tocBlock = entryTocBlockForBlock.get(b);
 					tocBlocksWithDescendantTocEntry.add(tocBlock);
 					while (parentTocBlockForTocBlock.containsKey(tocBlock)) {
 						tocBlock = parentTocBlockForTocBlock.get(tocBlock);
@@ -265,11 +257,11 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 		Iterator<Block> i = filtered.iterator();
 		while (i.hasNext()) {
 			Block b = i.next();
-			if (rangeForResumedBlock.containsKey(b)) {
+			if (entryIdForBlock.containsKey(b)) {
 				continue;
 			}
-			if (tocBlockForResumedBlock.containsKey(b) // this should always be true
-			    && tocBlocksWithDescendantTocEntry.contains(tocBlockForResumedBlock.get(b))) {
+			if (entryTocBlockForBlock.containsKey(b) // this should always be true
+			    && tocBlocksWithDescendantTocEntry.contains(entryTocBlockForBlock.get(b))) {
 				continue;
 			}
 			i.remove();
@@ -354,4 +346,8 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 		assertInTocEntry();
 		super.insertEvaluate(exp, t);
 	}
+    
+    class TocBlock {
+        // empty class
+    }
 }

@@ -12,25 +12,36 @@
    </layout-master>
    <table-of-contents name="toc">
       <toc-block>
-         <toc-entry ref-id="ch_1">⠿⠿⠿ ⠄⠄⠄⠄⠄⠄⠄⠄ <page-number ref-id="ch_1" number-format="default"/></toc-entry>
+         <toc-entry ref-id="ch_1">⠿ ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄ <page-number ref-id="ch_1" number-format="default"/></toc-entry>
          <toc-entry-on-resumed range="[ch_1,ch_2)">⠶</toc-entry-on-resumed>
       </toc-block>
       <toc-block>
-         <toc-entry ref-id="ch_2">⠿⠿⠿ ⠄⠄⠄⠄⠄⠄⠄⠄ <page-number ref-id="ch_2" number-format="default"/></toc-entry>
-         <toc-entry-on-resumed range="[ch_2,)">⠶⠶</toc-entry-on-resumed>
+         <toc-entry ref-id="ch_2">⠿⠿ ⠄⠄⠄⠄⠄⠄⠄⠄⠄ <page-number ref-id="ch_2" number-format="default"/></toc-entry>
+         <toc-entry-on-resumed range="[ch_1,ch_3)">⠶⠶</toc-entry-on-resumed>
+      </toc-block>
+      <toc-block>
+         <toc-entry ref-id="ch_3">⠿⠿⠿ ⠄⠄⠄⠄⠄⠄⠄⠄ <page-number ref-id="ch_2" number-format="default"/></toc-entry>
+         <toc-entry-on-resumed range="[ch_1,)">⠶⠶⠶</toc-entry-on-resumed>
       </toc-block>
    </table-of-contents>
-   <volume-template sheets-in-volume-max="100">
+   <volume-template sheets-in-volume-max="3">
       <pre-content>
          <toc-sequence toc="toc" master="main" range="volume"/>
       </pre-content>
    </volume-template>
    <sequence master="main">
-      <block id="ch_1" translate="">⠿⠿ </block>
+      <block id="ch_1" translate="">⠿ </block>
+      <block>⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
+              ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
+              ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
+              ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
+              ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
+            </block>
+      <block id="ch_2" translate="">⠿⠿ </block>
       <block>⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
               ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
             </block>
-      <block id="ch_2" translate="">⠿⠿ </block>
+      <block id="ch_3" translate="">⠿⠿⠿ </block>
       <block>⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
               ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
             </block>
