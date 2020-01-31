@@ -22,6 +22,7 @@ import org.daisy.dotify.formatter.impl.page.BlockSequence;
 import org.daisy.dotify.formatter.impl.search.BlockAddress;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
+import org.daisy.dotify.formatter.impl.search.VolumeData;
 
 class TocSequenceEventImpl implements VolumeSequence {
 	private final TocProperties props;
@@ -192,7 +193,7 @@ class TocSequenceEventImpl implements VolumeSequence {
     private Predicate<TocEntryOnResumedRange> rangeToVolume(int vol, CrossReferenceHandler crh) {
         return range -> {
             /* startVol is the volume where the range starts */
-            int startVol = defaultOne(crh.getVolumeNumber(range.getStartRefId()));
+            int startVol = getVolumeNumber(range.getStartRefId(), crh);
             if (startVol >= vol) {
                 return false;
             }
@@ -203,8 +204,8 @@ class TocSequenceEventImpl implements VolumeSequence {
             }
             
             /* endVol is the volume where the last block of the range starts */
-            int endVol = defaultOne(crh.getVolumeNumber(endRefId));
-            if (defaultTrue(crh.isAtStartOfVolumeContents(endRefId))) {
+            int endVol = getVolumeNumber(endRefId, crh);
+            if (isAtStartOfVolumeContents(endRefId, crh)) {
                 return vol < endVol;
             } else {
                 return vol <= endVol;
@@ -212,10 +213,13 @@ class TocSequenceEventImpl implements VolumeSequence {
         };
     }
     
-    private int defaultOne(Integer i) {
-        return i != null ? i : 1;
+    private int getVolumeNumber(String refId, CrossReferenceHandler crh) {
+        VolumeData volumeData = crh.getVolumeData(refId);
+        return volumeData != null ? volumeData.getVolumeNumber() : 1;
     }
-    private boolean defaultTrue(Boolean b) {
-        return b != null ? b : true;
+
+    private boolean isAtStartOfVolumeContents(String refId, CrossReferenceHandler crh) {
+        VolumeData volumeData = crh.getVolumeData(refId);
+        return volumeData != null ? volumeData.isAtStartOfVolumeContents() : true;
     }
 }

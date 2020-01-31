@@ -14,10 +14,7 @@ import org.daisy.dotify.api.formatter.MarkerReferenceField;
 
 public class CrossReferenceHandler {
 	private final LookupHandler<String, Integer> pageRefs;
-	private final LookupHandler<String, Integer> volumeRefs;
-    // @todo combine with volumeRefs - so that volumeRefs is a LookupHandler<String, VolumeDetails>
-    // where VolumeDetails consists of a volumeNumber and a boolean isAtStartOfVolume
-    private final Map<String, Boolean> isAtStartOfVolumeContentsMap;
+	private final LookupHandler<String, VolumeData> volumeRefs;
 	private final LookupHandler<Integer, Iterable<AnchorData>> anchorRefs;
 	private final LookupHandler<String, Integer> variables;
 	private final LookupHandler<SheetIdentity, Boolean> breakable;
@@ -42,7 +39,6 @@ public class CrossReferenceHandler {
 	public CrossReferenceHandler() {
 		this.pageRefs = new LookupHandler<>();
 		this.volumeRefs = new LookupHandler<>();
-        this.isAtStartOfVolumeContentsMap = new HashMap<>();
 		this.anchorRefs = new LookupHandler<>();
 		this.variables = new LookupHandler<>();
 		this.breakable = new LookupHandler<>();
@@ -67,33 +63,19 @@ public class CrossReferenceHandler {
 	}
 	
 	/**
-	 * Gets the volume for the specified identifier.
+	 * Gets the volume data for the specified identifier.
 	 * @param refid the identifier to get the volume for
 	 * @return returns the volume number, one-based
 	 */
-	public Integer getVolumeNumber(String refid) {
+	public VolumeData getVolumeData(String refid) {
 		return volumeRefs.get(refid, null, readOnly);
 	}
 	
-	public void setVolumeNumber(String refid, int volume) {
+	public void setVolumeData(String refid, VolumeData volumeData) {
 		if (readOnly) { return; }
-		volumeRefs.put(refid, volume);
+		volumeRefs.put(refid, volumeData);
 	}
-	
-    /**
-     * Returns true when the specified identifier is at the start of the contents of a volume.
-     * @param refid the identifier
-     * @return returns whether the identifier is at the start of the contents of a volume
-     */
-    public Boolean isAtStartOfVolumeContents(String refid) {
-        return isAtStartOfVolumeContentsMap.get(refid);
-    }
-    
-    public void setAtStartOfVolumeContents(String refid, boolean isAtStartOfVolume) {
-        if (readOnly) { return; }
-        isAtStartOfVolumeContentsMap.put(refid, isAtStartOfVolume);
-    }
-    
+	    
 	/**
 	 * Gets the page number for the specified identifier.
 	 * @param refid the identifier to get the page for
