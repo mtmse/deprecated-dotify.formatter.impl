@@ -23,6 +23,7 @@ import org.daisy.dotify.formatter.impl.search.AnchorData;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.Space;
+import org.daisy.dotify.formatter.impl.search.VolumeData;
 import org.daisy.dotify.formatter.impl.search.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.sheet.PageCounter;
 import org.daisy.dotify.formatter.impl.sheet.SectionBuilder;
@@ -228,8 +229,7 @@ public class VolumeProvider {
 		for (Sheet sheet : contents) {
 			for (PageImpl p : sheet.getPages()) {
 				for (String id : p.getIdentifiers()) {
-					crh.setVolumeNumber(id, volumeNumber);
-                    crh.setAtStartOfVolumeContents(id, atFirstPageOfContents);
+                    crh.setVolumeData(id, new VolumeData(volumeNumber, atFirstPageOfContents));
 				}
 				if (p.getAnchors().size()>0) {
 					ad.add(new AnchorData(p.getAnchors(), p.getPageNumber()));
@@ -266,8 +266,7 @@ public class VolumeProvider {
 			for (Sheet ps : ret) {
 				for (PageImpl p : ps.getPages()) {
 					for (String id : p.getIdentifiers()) {
-						crh.setVolumeNumber(id, volumeNumber);
-                        crh.setAtStartOfVolumeContents(id, false);
+                        crh.setVolumeData(id, new VolumeData(volumeNumber, false));
 					}
 					if (p.getAnchors().size()>0) {
 						ad.add(new AnchorData(p.getAnchors(), p.getPageNumber()));
