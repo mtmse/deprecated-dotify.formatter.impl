@@ -40,22 +40,16 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 	private final Set<String> refIds;
 	/* every toc-entry maps exactly to one block in the resulting sequence of blocks */
 	private final Map<Block,String> refIdForBlock;
-	/* every toc-entry-on-resumed maps exactly to one block in the resulting sequence of toc-entry-on-resumed blocks */
-	private final Map<Block,TocEntryOnResumedRange> rangeForResumedBlock;
+	/* every toc-entry-on-resumed maps exactly to one block in the resulting sequence of blocks */
+	private final Map<Block,TocEntryOnResumedRange> rangeForBlock;
 	/* mapping from block in the resulting sequence of blocks to the toc-block element that it came from */
 	private final Map<Block,TocBlock> tocBlockForBlock;
-	/* mapping from block in the resulting sequence of toc-entry-on-resumed blocks to the toc-block element that it came from */
-	private final Map<Block,TocBlock> tocBlockForResumedBlock;
-	/* parent-child relationships of toc-block elements */
+    /* mapping from block in the resulting sequence of toc-entry-on-resumed blocks to the toc-block element that it came from */
 	private final Map<TocBlock,TocBlock> parentTocBlockForTocBlock;
 	/* current stack of ancestor toc-block elements */
 	private final Stack<TocBlock> currentAncestorTocBlocks;
-    /* toc-entry-on-resumed blocks. Invariant: this.size() == tocEntryOnResumedBlocks.size() */
-    private final FormatterCoreImpl tocEntryOnResumedBlocks;
-	/* whether we are currently inside a toc-entry */
-	private boolean inTocEntry = false;
-    /* whether we are currently inside a toc-entry-on-resumed */
-    private boolean inTocEntryOnResumed = false;
+    /* whether we are currently inside an entry */
+    private boolean inEntry = false;
     /* optimisation for the case that there is no toc-entry-on-resumed */
     private boolean hasTocEntryOnResumed = false;
 
@@ -63,33 +57,21 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 		super(fc);
 		this.refIds = new HashSet<>();
 		this.refIdForBlock = new IdentityHashMap<>();
-        this.rangeForResumedBlock = new IdentityHashMap<>();
+        this.rangeForBlock = new IdentityHashMap<>();
 		this.tocBlockForBlock = new IdentityHashMap<>();
-		this.tocBlockForResumedBlock = new IdentityHashMap<>();
 		this.parentTocBlockForTocBlock = new LinkedHashMap<>();
 		this.currentAncestorTocBlocks = new Stack<>();
-        this.tocEntryOnResumedBlocks = new FormatterCoreImpl(fc);
 	}
 
 	@Override
 	public void startBlock(BlockProperties p, String blockId) {
-		if (inTocEntry || inTocEntryOnResumed) {
-			throw new RuntimeException("a block cannot be started within a toc-entry or toc-entry-on-resumed");
-		}
-        
 		TocBlock tocBlock = new TocBlock();
 		if (!currentAncestorTocBlocks.isEmpty()) {
 			parentTocBlockForTocBlock.put(tocBlock, currentAncestorTocBlocks.peek());
 		}
 		currentAncestorTocBlocks.push(tocBlock);
         
-        inTocEntry = true;  // set the context for creating a new block
 		super.startBlock(p, blockId);
-        inTocEntry = false;
-        
-        inTocEntryOnResumed = true;  // set the context for creating a new block
-        tocEntryOnResumedBlocks.startBlock(p);
-        inTocEntryOnResumed = false;
 	}
 
 	@Override
@@ -100,57 +82,29 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 
 	@Override
 	public Block newBlock(String blockId, RowDataProperties rdp) {
-        if (!inTocEntry && !inTocEntryOnResumed) {
-            // this should never happen
-            throw new RuntimeException("A block must be created in the context of either a toc-entry or a toc-entry-on-resumed");
-        }
         Block b = super.newBlock(blockId, rdp);
 		if (!currentAncestorTocBlocks.isEmpty()) {
-            if (inTocEntry) {
-                tocBlockForBlock.put(b, currentAncestorTocBlocks.peek());
-            }
-            if (inTocEntryOnResumed) {
-                tocBlockForResumedBlock.put(b, currentAncestorTocBlocks.peek());
-            }
+            tocBlockForBlock.put(b, currentAncestorTocBlocks.peek());
 		}
 		return b;
 	}
 
 	@Override
 	public void startEntry(String refId) {
-		if (inTocEntry || inTocEntryOnResumed) {
-			throw new RuntimeException("toc-entry and toc-entry-on-resumed may not be nested");
-		}
-		inTocEntry = true;
+		inEntry = true;
 		if (!refIds.add(refId)) {
 			throw new RuntimeException("ref-id is not unique: " + refId);
 		}
-		if (refIdForBlock.put(getCurrentBlock(), refId) != null) {
+        Block currentBlock = getCurrentBlock();
+		if (refIdForBlock.put(currentBlock, refId) != null || rangeForBlock.containsKey(currentBlock)) {
 			// note that this is not strictly forbidden by OBFL, but it simplifies the implementation
-			throw new RuntimeException("No two toc-entry's may be contained in the same block");
+			throw new RuntimeException("No two entries may be contained in the same block");
 		}
 	}
 	
-	@Override
-	public void endEntry() {
-        if (!inTocEntry) {
-            throw new RuntimeException("Unexpected end of toc-entry");
-        }
-		inTocEntry = false;
-	}
-
-    @Override
-    public FormatterCoreImpl getEntryOnResumed() {
-        assertInTocEntryOnResumed();
-        return tocEntryOnResumedBlocks;
-    }
-
     @Override
 	public void startEntryOnResumed(String range) {
-		if (inTocEntry || inTocEntryOnResumed) {
-			throw new RuntimeException("toc-entry and toc-entry-on-resumed may not be nested");
-		}
-		inTocEntryOnResumed = true;
+		inEntry = true;
         hasTocEntryOnResumed = true;
         
         String startRefId = null;
@@ -179,18 +133,19 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
             throw new RuntimeException(String.format("Could not parse this range: %s", range));
         }
         TocEntryOnResumedRange entryOnResumedRange = new TocEntryOnResumedRange(startRefId, endRefId);
-		if (rangeForResumedBlock.put(tocEntryOnResumedBlocks.getCurrentBlock(), entryOnResumedRange) != null) {
+        Block currentBlock = getCurrentBlock();
+		if (rangeForBlock.put(currentBlock, entryOnResumedRange) != null || refIdForBlock.containsKey(currentBlock)) {
 			// note that this is not strictly forbidden by OBFL, but it simplifies the implementation
-			throw new RuntimeException("No two toc-entry-on-resumed's may be contained in the same block");
+			throw new RuntimeException("No two entries may be contained in the same block");
 		}
 	}
 	
 	@Override
-	public void endEntryOnResumed() {
-        if (!inTocEntryOnResumed) {
-            throw new RuntimeException("Unexpected end of toc-entry-on-resumed");
+	public void endEntry() {
+        if (!inEntry) {
+            throw new RuntimeException("Unexpected end of entry");
         }
-        inTocEntryOnResumed = false;
+		inEntry = false;
 	}
 
 	/**
@@ -207,7 +162,7 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
      * @return collection of blocks
 	 */
 	public Collection<Block> filterEntry(Predicate<String> filter) {
-        return filterBlocks(filter, this, refIdForBlock, tocBlockForBlock);
+        return filterBlocks(filter, refIdForBlock);
     }
     
     /**
@@ -222,29 +177,27 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
             /* skip the traversing of the tocEntryOnResumedBlocks */
             return Collections.EMPTY_LIST;
         }
-        return filterBlocks(filter, tocEntryOnResumedBlocks, rangeForResumedBlock, tocBlockForResumedBlock);
+        return filterBlocks(filter, rangeForBlock);
     }
     
     /**
      * Filter out the entries with an identification that does not satisfy the predicate.
      * 
-     * @param <T> identification of an entry
+     * @param <T> entry identification type
      * @param filter predicate that takes as argument an entry identification
-     * @param blocks list of blocks
      * @param entryIdForBlock maps a block to its entry identification
-     * @param entryTocBlockForBlock maps a block to its toc block
      * @return list of filtered blocks
      */
-    private <T> Collection<Block> filterBlocks (Predicate<T> filter, FormatterCoreImpl blocks, Map<Block,T> entryIdForBlock, Map<Block,TocBlock> entryTocBlockForBlock) {
+    private <T> Collection<Block> filterBlocks (Predicate<T> filter, Map<Block,T> entryIdForBlock) {
 		List<Block> filtered = new ArrayList<>();
 		Set<TocBlock> tocBlocksWithDescendantTocEntry = new HashSet<>();
-		for (Block b : blocks) {
+		for (Block b : this) {
 			if (entryIdForBlock.containsKey(b)) {
 				if (!filter.test(entryIdForBlock.get(b))) {
 					continue;
 				}
-				if (entryTocBlockForBlock.containsKey(b)) {
-					TocBlock tocBlock = entryTocBlockForBlock.get(b);
+				if (tocBlockForBlock.containsKey(b)) {
+					TocBlock tocBlock = tocBlockForBlock.get(b);
 					tocBlocksWithDescendantTocEntry.add(tocBlock);
 					while (parentTocBlockForTocBlock.containsKey(tocBlock)) {
 						tocBlock = parentTocBlockForTocBlock.get(tocBlock);
@@ -260,8 +213,8 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 			if (entryIdForBlock.containsKey(b)) {
 				continue;
 			}
-			if (entryTocBlockForBlock.containsKey(b) // this should always be true
-			    && tocBlocksWithDescendantTocEntry.contains(entryTocBlockForBlock.get(b))) {
+			if (tocBlockForBlock.containsKey(b) // this should always be true
+			    && tocBlocksWithDescendantTocEntry.contains(tocBlockForBlock.get(b))) {
 				continue;
 			}
 			i.remove();
@@ -269,85 +222,79 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 		return filtered;
     }
 
-    private void assertInTocEntry() {
-		if (!inTocEntry) {
-			throw new RuntimeException("This inline content is only allowed within toc-entry");
-		}
-	}
-
-	private void assertInTocEntryOnResumed() {
-		if (!inTocEntryOnResumed) {
-			throw new RuntimeException("This inline content is only allowed within toc-entry-on-resumed");
+    private void assertInEntry() {
+		if (!inEntry) {
+			throw new RuntimeException("Inline content is only allowed within an entry");
 		}
 	}
 
 	@Override
 	public void insertMarker(Marker marker) {
-		assertInTocEntry();
+		assertInEntry();
 		super.insertMarker(marker);
 	}
 
 	@Override
 	public void insertAnchor(String ref) {
-		assertInTocEntry();
+		assertInEntry();
 		super.insertAnchor(ref);
 	}
 
 	@Override
 	public void insertLeader(Leader leader) {
-		assertInTocEntry();
+		assertInEntry();
 		super.insertLeader(leader);
 	}
 
 	@Override
 	public void addChars(CharSequence chars, TextProperties props) {
-		assertInTocEntry();
+		assertInEntry();
 		super.addChars(chars, props);
 	}
 
 	@Override
 	public void startStyle(String style) {
-		assertInTocEntry();
+		assertInEntry();
 		super.startStyle(style);
 	}
 
 	@Override
 	public void endStyle() {
-		assertInTocEntry();
+		assertInEntry();
 		super.endStyle();
 	}
 
 	@Override
 	public void startSpan(SpanProperties props) {
-		assertInTocEntry();
+		assertInEntry();
 		super.startSpan(props);
 	}
 
 	@Override
 	public void endSpan() {
-		assertInTocEntry();
+		assertInEntry();
 		super.endSpan();
 	}
 
 	@Override
 	public void newLine() {
-		assertInTocEntry();
+		assertInEntry();
 		super.newLine();
 	}
 
 	@Override
 	public void insertReference(String identifier, NumeralStyle numeralStyle) {
-		assertInTocEntry();
+		assertInEntry();
 		super.insertReference(identifier, numeralStyle);
 	}
 
 	@Override
 	public void insertEvaluate(DynamicContent exp, TextProperties t) {
-		assertInTocEntry();
+		assertInEntry();
 		super.insertEvaluate(exp, t);
 	}
     
-    class TocBlock {
+    private class TocBlock {
         // empty class
     }
 }

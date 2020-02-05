@@ -1238,11 +1238,11 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		while (input.hasNext()) {
 			event=input.nextEvent();
 			if (event.isCharacters()) {
-				toc.getEntryOnResumed().addChars(event.asCharacters().getData(), tp);
-			} else if (processAsBlockContents(toc.getEntryOnResumed(), event, input, tp)) {
+				toc.addChars(event.asCharacters().getData(), tp);
+			} else if (processAsBlockContents(toc, event, input, tp)) {
 				//done!
 			} else if (equalsEnd(event, ObflQName.TOC_ENTRY_ON_RESUMED)) {
-				toc.endEntryOnResumed();
+				toc.endEntry();
 				break;
 			} else {
 				report(event);
