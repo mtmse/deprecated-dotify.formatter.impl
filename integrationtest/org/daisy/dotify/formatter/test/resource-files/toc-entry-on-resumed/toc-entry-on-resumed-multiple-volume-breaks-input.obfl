@@ -13,6 +13,8 @@
    <table-of-contents name="toc">
       <toc-block>
          <toc-entry ref-id="ch_1">⠿ ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄ <page-number ref-id="ch_1" number-format="default"/></toc-entry>
+      </toc-block>
+      <toc-block>
          <toc-entry-on-resumed range="[ch_1,ch_2)">⠶</toc-entry-on-resumed>
       </toc-block>
       <toc-block>

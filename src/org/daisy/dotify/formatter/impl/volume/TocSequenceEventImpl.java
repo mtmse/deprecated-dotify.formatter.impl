@@ -211,6 +211,6 @@ class TocSequenceEventImpl implements VolumeSequence {
 
     private boolean isAtStartOfVolumeContents(String refId, CrossReferenceHandler crh) {
         VolumeData volumeData = crh.getVolumeData(refId);
-        return volumeData != null ? volumeData.isAtStartOfVolumeContents() : true;
+        return volumeData == null || volumeData.isAtStartOfVolumeContents();
     }
 }
