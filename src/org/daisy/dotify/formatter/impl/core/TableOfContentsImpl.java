@@ -144,10 +144,10 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 	}
 	
 	/**
-	 * Return a list of resumed blocks for a range in the form [ref-id1,ref-id2)
-	 * This is similar to method filterEntry.
+	 * <p>Return a list of resumed blocks for a range in the form [ref-id1,ref-id2) or [ref-id,)
+	 * This is similar to method filterEntry.</p>
 	 * 
-	 * @param filter predicate that takes as argument a range: a start ref-id (inclusive) and an end ref-id (exclusive)
+	 * @param filter predicate that takes as argument a range: a start ref-id and an optional end ref-id
 	 * @return collection of blocks
 	 */
 	public Collection<Block> filterEntryOnResumed(Predicate<TocEntryOnResumedRange> filter) {
