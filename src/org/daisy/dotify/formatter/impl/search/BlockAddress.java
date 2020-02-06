@@ -1,7 +1,7 @@
 package org.daisy.dotify.formatter.impl.search;
 
 public final class BlockAddress {
-	private final static Object NEXT_GROUP_NUMBER_SYNCHRONIZER = new Object();
+	private static final Object NEXT_GROUP_NUMBER_SYNCHRONIZER = new Object();
 
 	private static long nextGroupNumber = 0;
 	private final long groupNumber;
