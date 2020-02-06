@@ -73,6 +73,7 @@ import org.daisy.dotify.api.formatter.TableCellProperties;
 import org.daisy.dotify.api.formatter.TableOfContents;
 import org.daisy.dotify.api.formatter.TableProperties;
 import org.daisy.dotify.api.formatter.TextProperties;
+import org.daisy.dotify.api.formatter.TocEntryOnResumedRange;
 import org.daisy.dotify.api.formatter.TocProperties;
 import org.daisy.dotify.api.formatter.TransitionBuilder;
 import org.daisy.dotify.api.formatter.TransitionBuilderProperties;
@@ -444,7 +445,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 				if ("true".equals(allowTextFlow)) {
 					if (!compound.isEmpty()) {
 						throw new RuntimeException("No content supported in " + ObflQName.FIELD + " element when "
-						                           + ObflQName.ATTR_ALLOW_TEXT_FLOW + " is 'true'");
+												   + ObflQName.ATTR_ALLOW_TEXT_FLOW + " is 'true'");
 					}
 					compound.add(NoField.getInstance());
 				}
@@ -610,7 +611,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		try {
 			Document d = fm.getDocumentBuilderFactory().newDocumentBuilder().newDocument();
 			dr = new DOMResult(d);
-	        XMLEventWriter ew = fm.getXmlOutputFactory().createXMLEventWriter(dr);
+			XMLEventWriter ew = fm.getXmlOutputFactory().createXMLEventWriter(dr);
 			while (input.hasNext()) {
 				event=input.nextEvent();
 				if (equalsEnd(event, ObflQName.XML_DATA)) {
@@ -690,7 +691,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		try {
 			Document d = fm.getDocumentBuilderFactory().newDocumentBuilder().newDocument();
 			dr = new DOMResult(d);
-	        XMLEventWriter ew = fm.getXmlOutputFactory().createXMLEventWriter(dr);
+			XMLEventWriter ew = fm.getXmlOutputFactory().createXMLEventWriter(dr);
 			while (input.hasNext()) {
 				event=input.nextEvent();
 				if (equalsEnd(event, ObflQName.FILE_REFERENCE)) {
@@ -713,7 +714,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		try {
 			Document d = fm.getDocumentBuilderFactory().newDocumentBuilder().newDocument();
 			dr = new DOMResult(d);
-	        XMLEventWriter ew = fm.getXmlOutputFactory().createXMLEventWriter(dr);
+			XMLEventWriter ew = fm.getXmlOutputFactory().createXMLEventWriter(dr);
 			while (input.hasNext()) {
 				event=input.nextEvent();
 				if (equalsEnd(event, ObflQName.XML_PROCESSOR)) {
@@ -1163,12 +1164,6 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 			event=input.nextEvent();
 			if (equalsStart(event, ObflQName.TOC_BLOCK)) {
 				parseTocBlock(event, input, toc, tp);
-			} else if (equalsStart(event, ObflQName.TOC_ENTRY)) {
-                // this will throw a runtime exception, because a toc-entry must reside inside a toc-block
-				parseTocEntry(event, input, toc, tp);
-			} else if (equalsStart(event, ObflQName.TOC_ENTRY_ON_RESUMED)) {
-                // this will throw a runtime exception, because a toc-entry-on-resumed must reside inside a toc-block
-				parseTocEntryOnResumed(event, input, toc, tp);
 			} else if (equalsEnd(event, ObflQName.TABLE_OF_CONTENTS)) {
 				break;
 			} else {
@@ -1232,7 +1227,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 	}
 
 	private void parseTocEntryOnResumed(XMLEvent event, XMLEventIterator input, TableOfContents toc, TextProperties tp) throws XMLStreamException {
-		String range = getAttr(event, "range");
+		TocEntryOnResumedRange range = new TocEntryOnResumedRange(getAttr(event, "range"));
 		tp = getTextProperties(event, tp);
 		toc.startEntryOnResumed(range);
 		while (input.hasNext()) {

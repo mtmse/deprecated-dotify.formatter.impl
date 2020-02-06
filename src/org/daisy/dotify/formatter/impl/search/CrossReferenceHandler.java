@@ -19,20 +19,20 @@ public class CrossReferenceHandler {
 	private final LookupHandler<String, Integer> variables;
 	private final LookupHandler<SheetIdentity, Boolean> breakable;
 	private final LookupHandler<BlockAddress, Integer> rowCount;
-    private final LookupHandler<BlockAddress, List<String>> groupAnchors;
-    private final LookupHandler<BlockAddress, List<Marker>> groupMarkers;
-    private final LookupHandler<BlockAddress, List<String>> groupIdentifiers;
+	private final LookupHandler<BlockAddress, List<String>> groupAnchors;
+	private final LookupHandler<BlockAddress, List<Marker>> groupMarkers;
+	private final LookupHandler<BlockAddress, List<String>> groupIdentifiers;
 	private final LookupHandler<BlockLineLocation, TransitionProperties> transitionProperties;
 	private final LookupHandler<BlockLineLocation, PageDetails> nextPageDetails;
 	private final Map<Integer, Overhead> volumeOverhead;
-    private final Map<String, Integer> counters;
+	private final Map<String, Integer> counters;
 	private final SearchInfo searchInfo;
 	private static final String VOLUMES_KEY = "volumes";
 	private static final String SHEETS_IN_VOLUME = "sheets-in-volume-";
 	private static final String SHEETS_IN_DOCUMENT = "sheets-in-document";
 	private static final String PAGES_IN_VOLUME = "pages-in-volume-";
 	private static final String PAGES_IN_DOCUMENT = "pages-in-document";
-    private Set<String> pageIds;
+	private Set<String> pageIds;
 	private boolean overheadDirty = false;
 	private boolean readOnly = false;
 	
@@ -43,15 +43,15 @@ public class CrossReferenceHandler {
 		this.variables = new LookupHandler<>();
 		this.breakable = new LookupHandler<>();
 		this.rowCount = new LookupHandler<>();
-        this.groupAnchors = new LookupHandler<>();
-        this.groupMarkers = new LookupHandler<>();
-        this.groupIdentifiers = new LookupHandler<>();
+		this.groupAnchors = new LookupHandler<>();
+		this.groupMarkers = new LookupHandler<>();
+		this.groupIdentifiers = new LookupHandler<>();
 		this.transitionProperties = new LookupHandler<>();
 		this.nextPageDetails = new LookupHandler<>();
 		this.volumeOverhead = new HashMap<>();
 		this.counters = new HashMap<>();
 		this.searchInfo = new SearchInfo();
-        this.pageIds = new HashSet<>();
+		this.pageIds = new HashSet<>();
 	}
 	
 	public void setReadOnly() {
@@ -75,7 +75,7 @@ public class CrossReferenceHandler {
 		if (readOnly) { return; }
 		volumeRefs.put(refid, volumeData);
 	}
-	    
+		
 	/**
 	 * Gets the page number for the specified identifier.
 	 * @param refid the identifier to get the page for
@@ -87,9 +87,9 @@ public class CrossReferenceHandler {
 	
 	public void setPageNumber(String refid, int page) {
 		if (readOnly) { return; }
-        if (!pageIds.add(refid)) {
-            throw new IllegalArgumentException("Identifier not unique: " + refid);
-        }
+		if (!pageIds.add(refid)) {
+			throw new IllegalArgumentException("Identifier not unique: " + refid);
+		}
 		pageRefs.put(refid, page);
 	}
 	
@@ -351,9 +351,9 @@ public class CrossReferenceHandler {
 		counters.clear();
 	}
 
-    public void resetUniqueChecks() {
+	public void resetUniqueChecks() {
 		if (readOnly) { return; }
-        pageIds = new HashSet<>();
-    }
+		pageIds = new HashSet<>();
+	}
 
 }

@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl.volume;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -11,13 +12,13 @@ import org.daisy.dotify.api.formatter.Condition;
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.FormatterCore;
 import org.daisy.dotify.api.formatter.SequenceProperties;
+import org.daisy.dotify.api.formatter.TocEntryOnResumedRange;
 import org.daisy.dotify.api.formatter.TocProperties;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 import org.daisy.dotify.formatter.impl.core.Block;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
 import org.daisy.dotify.formatter.impl.core.FormatterCoreImpl;
 import org.daisy.dotify.formatter.impl.core.TableOfContentsImpl;
-import org.daisy.dotify.formatter.impl.core.TocEntryOnResumedRange;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
 import org.daisy.dotify.formatter.impl.search.BlockAddress;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
@@ -123,22 +124,22 @@ class TocSequenceEventImpl implements VolumeSequence {
 					getSequenceProperties());
 			fsm.appendGroup(getTocStart(vars));
 			if (getRange()==TocProperties.TocRange.VOLUME) {
-                int currentVolume = vars.getCurrentVolume();
-                Collection<Block> resumedBlocks = data.filterEntryOnResumed(rangeToVolume(currentVolume, crh));
+				int currentVolume = vars.getCurrentVolume();
+				Collection<Block> resumedBlocks = data.filterEntryOnResumed(rangeToVolume(currentVolume, crh));
 				Collection<Block> volumeToc = data.filterEntry(refToVolume(currentVolume, crh));
-                if (resumedBlocks.isEmpty() && volumeToc.isEmpty()) {
+				if (resumedBlocks.isEmpty() && volumeToc.isEmpty()) {
 					return null;
 				}
-                if (!resumedBlocks.isEmpty()) {
-                    fsm.appendGroup(resumedBlocks);
-                }
+				if (!resumedBlocks.isEmpty()) {
+					fsm.appendGroup(resumedBlocks);
+				}
 				if (!volumeToc.isEmpty()) {
 					fsm.appendGroup(volumeToc);
 				}
 			} else if (getRange()==TocProperties.TocRange.DOCUMENT) {
 				for (int vol = 1; vol <= crh.getVolumeCount(); vol++) {
-                    Collection<Block> resumedBlocks = data.filterEntryOnResumed(rangeToVolume(vol, crh));
-                    Collection<Block> volumeToc = data.filterEntry(refToVolume(vol, crh));
+					Collection<Block> resumedBlocks = data.filterEntryOnResumed(rangeToVolume(vol, crh));
+					Collection<Block> volumeToc = data.filterEntry(refToVolume(vol, crh));
 					if (!(resumedBlocks.isEmpty() && volumeToc.isEmpty())) {
 						Context varsWithVolume = DefaultContext.from(vars).metaVolume(vol).build();
 						Iterable<Block> volumeStart = getVolumeStart(varsWithVolume);
@@ -150,12 +151,12 @@ class TocSequenceEventImpl implements VolumeSequence {
 							b.setMetaVolume(vol);
 						}
 						fsm.appendGroup(volumeStart);
-                        if (!resumedBlocks.isEmpty()) {
-                            fsm.appendGroup(resumedBlocks);
-                        }
-                        if (!volumeToc.isEmpty()) {
-                            fsm.appendGroup(volumeToc);
-                        }
+						if (!resumedBlocks.isEmpty()) {
+							fsm.appendGroup(resumedBlocks);
+						}
+						if (!volumeToc.isEmpty()) {
+							fsm.appendGroup(volumeToc);
+						}
 						fsm.appendGroup(volumeEnd);
 					}
 				}
@@ -173,44 +174,44 @@ class TocSequenceEventImpl implements VolumeSequence {
 	private Predicate<String> refToVolume(int vol, CrossReferenceHandler crh) {
 		return refId -> vol == getVolumeNumber(refId, crh);
 	}
-    
-    /**
-     * Determines whether a range is part of a volume
-     * 
-     * @param vol volume
-     * @param crh cross-reference handler
-     * @return 
-     */
-    private Predicate<TocEntryOnResumedRange> rangeToVolume(int vol, CrossReferenceHandler crh) {
-        return range -> {
-            /* startVol is the volume where the range starts */
-            int startVol = getVolumeNumber(range.getStartRefId(), crh);
-            if (startVol >= vol) {
-                return false;
-            }
-            
-            String endRefId = range.getEndRefId();
-            if (endRefId == null) {
-                return true;
-            }
-            
-            /* endVol is the volume where the last block of the range starts */
-            int endVol = getVolumeNumber(endRefId, crh);
-            if (isAtStartOfVolumeContents(endRefId, crh)) {
-                return vol < endVol;
-            } else {
-                return vol <= endVol;
-            }
-        };
-    }
-    
-    private int getVolumeNumber(String refId, CrossReferenceHandler crh) {
-        VolumeData volumeData = crh.getVolumeData(refId);
-        return volumeData != null ? volumeData.getVolumeNumber() : 1;
-    }
+	
+	/**
+	 * Determines whether a range is part of a volume
+	 * 
+	 * @param vol volume
+	 * @param crh cross-reference handler
+	 * @return 
+	 */
+	private Predicate<TocEntryOnResumedRange> rangeToVolume(int vol, CrossReferenceHandler crh) {
+		return range -> {
+			/* startVol is the volume where the range starts */
+			int startVol = getVolumeNumber(range.getStartRefId(), crh);
+			if (startVol >= vol) {
+				return false;
+			}
+			
+			Optional<String> endRefId = range.getEndRefId();
+			if (endRefId.isEmpty()) {
+				return true;
+			}
+			
+			/* endVol is the volume where the last block of the range starts */
+			int endVol = getVolumeNumber(endRefId.get(), crh);
+			if (isAtStartOfVolumeContents(endRefId.get(), crh)) {
+				return vol < endVol;
+			} else {
+				return vol <= endVol;
+			}
+		};
+	}
+	
+	private int getVolumeNumber(String refId, CrossReferenceHandler crh) {
+		VolumeData volumeData = crh.getVolumeData(refId);
+		return volumeData != null ? volumeData.getVolumeNumber() : 1;
+	}
 
-    private boolean isAtStartOfVolumeContents(String refId, CrossReferenceHandler crh) {
-        VolumeData volumeData = crh.getVolumeData(refId);
-        return volumeData == null || volumeData.isAtStartOfVolumeContents();
-    }
+	private boolean isAtStartOfVolumeContents(String refId, CrossReferenceHandler crh) {
+		VolumeData volumeData = crh.getVolumeData(refId);
+		return volumeData == null || volumeData.isAtStartOfVolumeContents();
+	}
 }

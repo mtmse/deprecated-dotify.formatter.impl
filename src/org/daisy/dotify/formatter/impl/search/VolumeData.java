@@ -3,6 +3,11 @@ package org.daisy.dotify.formatter.impl.search;
 /**
  * <p>Provides basic volume data for identifiers.</p>
  * 
+ * <p>Identifiers are used to mark data in the content so that it is possible
+ * to refer to the place in the content where the identifier occurs after the
+ * document has been processed. This class lists the volume related properties
+ * of identifiers that we need elsewhere in the code.</p>
+ * 
  * @author Paul Rambags
  */
 public final class VolumeData {
@@ -10,8 +15,8 @@ public final class VolumeData {
 	private final boolean atStartOfVolumeContents;
 	
 	public VolumeData(int volumeNumber, boolean atStartOfVolumeContents) {
-        this.volumeNumber = volumeNumber;
-        this.atStartOfVolumeContents = atStartOfVolumeContents;
+		this.volumeNumber = volumeNumber;
+		this.atStartOfVolumeContents = atStartOfVolumeContents;
 	}
 	
 	public int getVolumeNumber() {

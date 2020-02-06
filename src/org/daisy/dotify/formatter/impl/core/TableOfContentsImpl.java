@@ -12,8 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.daisy.dotify.api.formatter.BlockProperties;
 import org.daisy.dotify.api.formatter.DynamicContent;
@@ -22,6 +20,7 @@ import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.NumeralStyle;
 import org.daisy.dotify.api.formatter.SpanProperties;
 import org.daisy.dotify.api.formatter.TableOfContents;
+import org.daisy.dotify.api.formatter.TocEntryOnResumedRange;
 import org.daisy.dotify.api.formatter.TextProperties;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 import org.daisy.dotify.formatter.impl.row.RowDataProperties;
@@ -44,20 +43,20 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 	private final Map<Block,TocEntryOnResumedRange> rangeForBlock;
 	/* mapping from block in the resulting sequence of blocks to the toc-block element that it came from */
 	private final Map<Block,TocBlock> tocBlockForBlock;
-    /* mapping from block in the resulting sequence of toc-entry-on-resumed blocks to the toc-block element that it came from */
+	/* parent-child relationships of toc-block elements */
 	private final Map<TocBlock,TocBlock> parentTocBlockForTocBlock;
 	/* current stack of ancestor toc-block elements */
 	private final Stack<TocBlock> currentAncestorTocBlocks;
-    /* whether we are currently inside an entry */
-    private boolean inEntry = false;
-    /* optimisation for the case that there is no toc-entry-on-resumed */
-    private boolean hasTocEntryOnResumed = false;
+	/* whether we are currently inside an entry */
+	private boolean inEntry = false;
+	/* optimisation for the case that there is no toc-entry-on-resumed */
+	private boolean hasTocEntryOnResumed = false;
 
 	public TableOfContentsImpl(FormatterCoreContext fc) {
 		super(fc);
 		this.refIds = new HashSet<>();
 		this.refIdForBlock = new IdentityHashMap<>();
-        this.rangeForBlock = new IdentityHashMap<>();
+		this.rangeForBlock = new IdentityHashMap<>();
 		this.tocBlockForBlock = new IdentityHashMap<>();
 		this.parentTocBlockForTocBlock = new LinkedHashMap<>();
 		this.currentAncestorTocBlocks = new Stack<>();
@@ -70,7 +69,7 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 			parentTocBlockForTocBlock.put(tocBlock, currentAncestorTocBlocks.peek());
 		}
 		currentAncestorTocBlocks.push(tocBlock);
-        
+		
 		super.startBlock(p, blockId);
 	}
 
@@ -82,59 +81,38 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 
 	@Override
 	public Block newBlock(String blockId, RowDataProperties rdp) {
-        Block b = super.newBlock(blockId, rdp);
+		Block b = super.newBlock(blockId, rdp);
 		if (!currentAncestorTocBlocks.isEmpty()) {
-            tocBlockForBlock.put(b, currentAncestorTocBlocks.peek());
+			tocBlockForBlock.put(b, currentAncestorTocBlocks.peek());
 		}
 		return b;
 	}
 
 	@Override
 	public void startEntry(String refId) {
+		if (inEntry) {
+			throw new RuntimeException("Entries may not be nested");
+		}
 		inEntry = true;
 		if (!refIds.add(refId)) {
 			throw new RuntimeException("ref-id is not unique: " + refId);
 		}
-        Block currentBlock = getCurrentBlock();
+		Block currentBlock = getCurrentBlock();
 		if (refIdForBlock.put(currentBlock, refId) != null || rangeForBlock.containsKey(currentBlock)) {
 			// note that this is not strictly forbidden by OBFL, but it simplifies the implementation
 			throw new RuntimeException("No two entries may be contained in the same block");
 		}
 	}
 	
-    @Override
-	public void startEntryOnResumed(String range) {
+	@Override
+	public void startEntryOnResumed(TocEntryOnResumedRange range) {
+		if (inEntry) {
+			throw new RuntimeException("Entries may not be nested");
+		}
 		inEntry = true;
-        hasTocEntryOnResumed = true;
-        
-        String startRefId = null;
-        String endRefId = null;
-        /**
-         * parse the range attribute
-         * the pattern matches only if the range is in one of these forms:
-         * [startRefId,endRefId] (unsupported) or [startRefId,endRefId) or [startRefId,)
-         * if it matches, it returns two groups: the first one is startRefId and
-         * the second one is endRefId followed by either a ']' or a ')' character
-         */
-        Pattern p = Pattern.compile("^\\[([^,\\[\\]\\)]+),([^,\\[\\]\\)]+\\]|[^,\\[\\]\\)]*\\))$");
-        Matcher m = p.matcher(range);
-        if (m.find()) {
-            startRefId = m.group(1).trim();
-            endRefId = m.group(2);
-            if (endRefId.endsWith("]")) {
-                throw new UnsupportedOperationException(String.format("Found range %s. Ranges in the form [startRefId,endRefId] are unsupported. Please use this form: [startRefId,endRefId)", range));
-            }
-            endRefId = endRefId.substring(0, endRefId.length() - 1).trim();
-            if (endRefId.length() == 0) {
-                endRefId = null;
-            }
-        }
-        if (startRefId == null) {
-            throw new RuntimeException(String.format("Could not parse this range: %s", range));
-        }
-        TocEntryOnResumedRange entryOnResumedRange = new TocEntryOnResumedRange(startRefId, endRefId);
-        Block currentBlock = getCurrentBlock();
-		if (rangeForBlock.put(currentBlock, entryOnResumedRange) != null || refIdForBlock.containsKey(currentBlock)) {
+		hasTocEntryOnResumed = true;
+		Block currentBlock = getCurrentBlock();
+		if (rangeForBlock.put(currentBlock, range) != null || refIdForBlock.containsKey(currentBlock)) {
 			// note that this is not strictly forbidden by OBFL, but it simplifies the implementation
 			throw new RuntimeException("No two entries may be contained in the same block");
 		}
@@ -142,53 +120,53 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 	
 	@Override
 	public void endEntry() {
-        if (!inEntry) {
-            throw new RuntimeException("Unexpected end of entry");
-        }
+		if (!inEntry) {
+			throw new RuntimeException("Unexpected end of entry");
+		}
 		inEntry = false;
 	}
 
 	/**
-	 * Filter out the toc-entry with a ref-id that does not satisfy the predicate. This is used to
+	 * <p>Filter out the toc-entry with a ref-id that does not satisfy the predicate. This is used to
 	 * create the volume range toc. toc-block that have all their descendant toc-entry filtered out
-	 * are also omitted.
+	 * are also omitted.</p>
 	 *
 	 * <p>Note that, because this is implemented by filtering a fixed sequence of blocks, and because
 	 * of the way the sequence of blocks is constructed, we are potentially throwing away borders
 	 * and margins that should be kept. That said, the previous implementation did not handle
-	 * borders and margins correctly either, so fixing this issue can be seen as an optimization.
-     * 
-     * @param filter predicate that takes as argument a ref-id
-     * @return collection of blocks
+	 * borders and margins correctly either, so fixing this issue can be seen as an optimization.</p>
+	 * 
+	 * @param filter predicate that takes as argument a ref-id
+	 * @return collection of blocks
 	 */
 	public Collection<Block> filterEntry(Predicate<String> filter) {
-        return filterBlocks(filter, refIdForBlock);
-    }
-    
-    /**
-     * Return a list of resumed blocks for a range in the form [ref-id1,ref-id2)
-     * This is similar to method filterEntry.
-     * 
-     * @param filter predicate that takes as argument a range: a start ref-id (inclusive) and an end ref-id (exclusive)
-     * @return collection of blocks
-     */
-    public Collection<Block> filterEntryOnResumed(Predicate<TocEntryOnResumedRange> filter) {
-        if (!hasTocEntryOnResumed) {
-            /* skip the traversing of the tocEntryOnResumedBlocks */
-            return Collections.EMPTY_LIST;
-        }
-        return filterBlocks(filter, rangeForBlock);
-    }
-    
-    /**
-     * Filter out the entries with an identification that does not satisfy the predicate.
-     * 
-     * @param <T> entry identification type
-     * @param filter predicate that takes as argument an entry identification
-     * @param entryIdForBlock maps a block to its entry identification
-     * @return list of filtered blocks
-     */
-    private <T> Collection<Block> filterBlocks (Predicate<T> filter, Map<Block,T> entryIdForBlock) {
+		return filterBlocks(filter, refIdForBlock);
+	}
+	
+	/**
+	 * Return a list of resumed blocks for a range in the form [ref-id1,ref-id2)
+	 * This is similar to method filterEntry.
+	 * 
+	 * @param filter predicate that takes as argument a range: a start ref-id (inclusive) and an end ref-id (exclusive)
+	 * @return collection of blocks
+	 */
+	public Collection<Block> filterEntryOnResumed(Predicate<TocEntryOnResumedRange> filter) {
+		if (!hasTocEntryOnResumed) {
+			/* skip the traversing of the tocEntryOnResumedBlocks */
+			return Collections.EMPTY_LIST;
+		}
+		return filterBlocks(filter, rangeForBlock);
+	}
+	
+	/**
+	 * Filter out the entries with an identification that does not satisfy the predicate.
+	 * 
+	 * @param <T> entry identification type
+	 * @param filter predicate that takes as argument an entry identification
+	 * @param entryIdForBlock maps a block to its entry identification
+	 * @return list of filtered blocks
+	 */
+	private <T> Collection<Block> filterBlocks (Predicate<T> filter, Map<Block,T> entryIdForBlock) {
 		List<Block> filtered = new ArrayList<>();
 		Set<TocBlock> tocBlocksWithDescendantTocEntry = new HashSet<>();
 		for (Block b : this) {
@@ -214,15 +192,15 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 				continue;
 			}
 			if (tocBlockForBlock.containsKey(b) // this should always be true
-			    && tocBlocksWithDescendantTocEntry.contains(tocBlockForBlock.get(b))) {
+				&& tocBlocksWithDescendantTocEntry.contains(tocBlockForBlock.get(b))) {
 				continue;
 			}
 			i.remove();
 		}
 		return filtered;
-    }
+	}
 
-    private void assertInEntry() {
+	private void assertInEntry() {
 		if (!inEntry) {
 			throw new RuntimeException("Inline content is only allowed within an entry");
 		}
@@ -293,8 +271,8 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 		assertInEntry();
 		super.insertEvaluate(exp, t);
 	}
-    
-    private class TocBlock {
-        // empty class
-    }
+	
+	private class TocBlock {
+		// empty class
+	}
 }

@@ -12,17 +12,17 @@ public class TocEntryOnResumedTest extends AbstractFormatterEngineTest {
 	@Test
 	public void testTocEntryOnResumedWithVolumeRange() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
 		testPEF("resource-files/toc-entry-on-resumed/toc-entry-on-resumed-volume-range-input.obfl",
-		        "resource-files/toc-entry-on-resumed/toc-entry-on-resumed-volume-range-expected.pef", false);
+				"resource-files/toc-entry-on-resumed/toc-entry-on-resumed-volume-range-expected.pef", false);
 	}
 	@Test
 	public void testTocEntryOnResumedWithDocumentRange() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
 		testPEF("resource-files/toc-entry-on-resumed/toc-entry-on-resumed-document-range-input.obfl",
-		        "resource-files/toc-entry-on-resumed/toc-entry-on-resumed-document-range-expected.pef", false);
+				"resource-files/toc-entry-on-resumed/toc-entry-on-resumed-document-range-expected.pef", false);
 	}
 	@Test
 	public void testTocEntryOnResumedWithMultipleVolumeBreaks() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
 		testPEF("resource-files/toc-entry-on-resumed/toc-entry-on-resumed-multiple-volume-breaks-input.obfl",
-		        "resource-files/toc-entry-on-resumed/toc-entry-on-resumed-multiple-volume-breaks-expected.pef", false);
+				"resource-files/toc-entry-on-resumed/toc-entry-on-resumed-multiple-volume-breaks-expected.pef", false);
 	}
 
 }
