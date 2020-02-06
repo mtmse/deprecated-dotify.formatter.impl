@@ -1,5 +1,6 @@
 package org.daisy.dotify.formatter.impl.obfl;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -1156,7 +1157,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		}
 	}
 	
-	private void parseTableOfContents(XMLEvent event, XMLEventIterator input, TextProperties tp) throws XMLStreamException {
+	private void parseTableOfContents(XMLEvent event, XMLEventIterator input, TextProperties tp) throws XMLStreamException, ObflParserException {
 		String tocName = getAttr(event, ObflQName.ATTR_NAME);
 		tp = getTextProperties(event, tp);
 		TableOfContents toc = formatter.newToc(tocName);
@@ -1187,7 +1188,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		}
 	}
 
-	private void parseTocBlock(XMLEvent event, XMLEventIterator input, TableOfContents toc, TextProperties tp) throws XMLStreamException {
+	private void parseTocBlock(XMLEvent event, XMLEventIterator input, TableOfContents toc, TextProperties tp) throws XMLStreamException, ObflParserException {
 		toc.startBlock(blockBuilder(event.asStartElement()));
 		tp = getTextProperties(event, tp);
 		while (input.hasNext()) {
@@ -1226,7 +1227,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		}
 	}
 
-	private void parseTocEntryOnResumed(XMLEvent event, XMLEventIterator input, TableOfContents toc, TextProperties tp) throws XMLStreamException {
+	private void parseTocEntryOnResumed(XMLEvent event, XMLEventIterator input, TableOfContents toc, TextProperties tp) throws XMLStreamException, ObflParserException {
 		TocEntryOnResumedRange range = new TocEntryOnResumedRange(getAttr(event, "range"));
 		tp = getTextProperties(event, tp);
 		toc.startEntryOnResumed(range);
