@@ -2,7 +2,6 @@ package org.daisy.dotify.formatter.impl.core;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -49,8 +48,6 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 	private final Stack<TocBlock> currentAncestorTocBlocks;
 	/* whether we are currently inside an entry */
 	private boolean inEntry = false;
-	/* optimisation for the case that there is no toc-entry-on-resumed */
-	private boolean hasTocEntryOnResumed = false;
 
 	public TableOfContentsImpl(FormatterCoreContext fc) {
 		super(fc);
@@ -110,7 +107,6 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 			throw new RuntimeException("Entries may not be nested");
 		}
 		inEntry = true;
-		hasTocEntryOnResumed = true;
 		Block currentBlock = getCurrentBlock();
 		if (rangeForBlock.put(currentBlock, range) != null || refIdForBlock.containsKey(currentBlock)) {
 			// note that this is not strictly forbidden by OBFL, but it simplifies the implementation
@@ -127,51 +123,28 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 	}
 
 	/**
-	 * <p>Filter out the toc-entry with a ref-id that does not satisfy the predicate. This is used to
-	 * create the volume range toc. toc-block that have all their descendant toc-entry filtered out
-	 * are also omitted.</p>
+	 * <p>Filter out the toc-entry with an identification that does not satisfy the corresponding
+	 * predicate. This is used to create the volume range toc. toc-block that have all their
+	 * descendant toc-entry filtered out are also omitted.</p>
 	 *
 	 * <p>Note that, because this is implemented by filtering a fixed sequence of blocks, and because
 	 * of the way the sequence of blocks is constructed, we are potentially throwing away borders
 	 * and margins that should be kept. That said, the previous implementation did not handle
 	 * borders and margins correctly either, so fixing this issue can be seen as an optimization.</p>
 	 * 
-	 * @param filter predicate that takes as argument a ref-id
+	 * @param refIdFilter predicate that takes as argument a ref-id
+	 * @param rangeFilter predicate that takes as argument a range
 	 * @return collection of blocks
 	 */
-	public Collection<Block> filterEntry(Predicate<String> filter) {
-		return filterBlocks(filter, refIdForBlock);
-	}
-	
-	/**
-	 * <p>Return a list of resumed blocks for a range in the form [ref-id1,ref-id2) or [ref-id,)
-	 * This is similar to method filterEntry.</p>
-	 * 
-	 * @param filter predicate that takes as argument a range: a start ref-id and an optional end ref-id
-	 * @return collection of blocks
-	 */
-	public Collection<Block> filterEntryOnResumed(Predicate<TocEntryOnResumedRange> filter) {
-		if (!hasTocEntryOnResumed) {
-			/* skip the traversing of the tocEntryOnResumedBlocks */
-			return Collections.EMPTY_LIST;
-		}
-		return filterBlocks(filter, rangeForBlock);
-	}
-	
-	/**
-	 * Filter out the entries with an identification that does not satisfy the predicate.
-	 * 
-	 * @param <T> entry identification type
-	 * @param filter predicate that takes as argument an entry identification
-	 * @param entryIdForBlock maps a block to its entry identification
-	 * @return list of filtered blocks
-	 */
-	private <T> Collection<Block> filterBlocks (Predicate<T> filter, Map<Block,T> entryIdForBlock) {
+	public Collection<Block> filter(Predicate<String> refIdFilter, Predicate<TocEntryOnResumedRange> rangeFilter) {
 		List<Block> filtered = new ArrayList<>();
 		Set<TocBlock> tocBlocksWithDescendantTocEntry = new HashSet<>();
 		for (Block b : this) {
-			if (entryIdForBlock.containsKey(b)) {
-				if (!filter.test(entryIdForBlock.get(b))) {
+			if (refIdForBlock.containsKey(b) || rangeForBlock.containsKey(b)) {
+				if (refIdForBlock.containsKey(b) && !refIdFilter.test(refIdForBlock.get(b))) {
+					continue;
+				}
+				if (rangeForBlock.containsKey(b) && !rangeFilter.test(rangeForBlock.get(b))) {
 					continue;
 				}
 				if (tocBlockForBlock.containsKey(b)) {
@@ -188,7 +161,7 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 		Iterator<Block> i = filtered.iterator();
 		while (i.hasNext()) {
 			Block b = i.next();
-			if (entryIdForBlock.containsKey(b)) {
+			if (refIdForBlock.containsKey(b) || rangeForBlock.containsKey(b)) {
 				continue;
 			}
 			if (tocBlockForBlock.containsKey(b) // this should always be true

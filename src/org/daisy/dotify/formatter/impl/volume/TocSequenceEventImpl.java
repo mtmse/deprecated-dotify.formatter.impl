@@ -125,22 +125,15 @@ class TocSequenceEventImpl implements VolumeSequence {
 			fsm.appendGroup(getTocStart(vars));
 			if (getRange()==TocProperties.TocRange.VOLUME) {
 				int currentVolume = vars.getCurrentVolume();
-				Collection<Block> resumedBlocks = data.filterEntryOnResumed(rangeToVolume(currentVolume, crh));
-				Collection<Block> volumeToc = data.filterEntry(refToVolume(currentVolume, crh));
-				if (resumedBlocks.isEmpty() && volumeToc.isEmpty()) {
+				Collection<Block> volumeToc = data.filter(refToVolume(currentVolume, crh), rangeToVolume(currentVolume, crh));
+				if (volumeToc.isEmpty()) {
 					return null;
 				}
-				if (!resumedBlocks.isEmpty()) {
-					fsm.appendGroup(resumedBlocks);
-				}
-				if (!volumeToc.isEmpty()) {
-					fsm.appendGroup(volumeToc);
-				}
+				fsm.appendGroup(volumeToc);
 			} else if (getRange()==TocProperties.TocRange.DOCUMENT) {
 				for (int vol = 1; vol <= crh.getVolumeCount(); vol++) {
-					Collection<Block> resumedBlocks = data.filterEntryOnResumed(rangeToVolume(vol, crh));
-					Collection<Block> volumeToc = data.filterEntry(refToVolume(vol, crh));
-					if (!(resumedBlocks.isEmpty() && volumeToc.isEmpty())) {
+					Collection<Block> volumeToc = data.filter(refToVolume(vol, crh), rangeToVolume(vol, crh));
+					if (!volumeToc.isEmpty()) {
 						Context varsWithVolume = DefaultContext.from(vars).metaVolume(vol).build();
 						Iterable<Block> volumeStart = getVolumeStart(varsWithVolume);
 						for (Block b : volumeStart) {
@@ -151,12 +144,7 @@ class TocSequenceEventImpl implements VolumeSequence {
 							b.setMetaVolume(vol);
 						}
 						fsm.appendGroup(volumeStart);
-						if (!resumedBlocks.isEmpty()) {
-							fsm.appendGroup(resumedBlocks);
-						}
-						if (!volumeToc.isEmpty()) {
-							fsm.appendGroup(volumeToc);
-						}
+						fsm.appendGroup(volumeToc);
 						fsm.appendGroup(volumeEnd);
 					}
 				}
@@ -200,7 +188,7 @@ class TocSequenceEventImpl implements VolumeSequence {
 			}
 			
 			Optional<String> endRefId = range.getEndRefId();
-			if (endRefId.isEmpty()) {
+			if (!endRefId.isPresent()) {
 				return true;
 			}
 			
