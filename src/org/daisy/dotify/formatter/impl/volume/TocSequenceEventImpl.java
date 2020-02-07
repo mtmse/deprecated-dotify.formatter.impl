@@ -145,6 +145,12 @@ class TocSequenceEventImpl implements VolumeSequence {
 						fsm.appendGroup(volumeEnd);
 					}
 				}
+				{
+					Collection<Block> volumeToc = data.filter(refToVolume(null, crh));
+					if (!volumeToc.isEmpty()) {
+						fsm.appendGroup(volumeToc);
+					}
+				}
 			} else {
 				throw new RuntimeException("Coding error");
 			}
@@ -156,11 +162,10 @@ class TocSequenceEventImpl implements VolumeSequence {
 		return null;
 	}
 
-	private Predicate<String> refToVolume(int vol, CrossReferenceHandler crh) {
+	private Predicate<String> refToVolume(Integer vol, CrossReferenceHandler crh) {
 		return refId -> {
 			Integer volNo = crh.getVolumeNumber(refId);
-			int v = volNo != null ? volNo : 1;
-			return v == vol;
+			return vol == null ? volNo == null : vol.equals(volNo);
 		};
 	}
 }
