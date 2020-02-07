@@ -19,10 +19,24 @@ public final class VolumeData {
 		this.atStartOfVolumeContents = atStartOfVolumeContents;
 	}
 	
+	/**
+	 * Get the volume number where an identifier is placed in the content.
+	 * 
+	 * @return the volume number
+	 */
 	public int getVolumeNumber() {
 		return volumeNumber;
 	}
 	
+	// TODO: Provide a correct link
+	/**
+	 * Indicates whether an identifier is placed at the start of the volume contents.
+	 * This information is used in the processing of
+	 * <a href="https://braillespecs.github.io/obfl/obfl-specification.html#L1105">toc-entry-on-resumed</a>
+	 * elements.
+	 * 
+	 * @return whether the location of an identifier is at the start of the volume contents
+	 */
 	public boolean isAtStartOfVolumeContents() {
 		return atStartOfVolumeContents;
 	}
