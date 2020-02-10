@@ -149,7 +149,7 @@ class TocSequenceEventImpl implements VolumeSequence {
 					}
 				}
 				{
-					Collection<Block> volumeToc = data.filter(refToVolume(null, crh));
+					Collection<Block> volumeToc = data.filter(refToVolume(null, crh), rangeToVolume(null, crh));
 					if (!volumeToc.isEmpty()) {
 						fsm.appendGroup(volumeToc);
 					}
@@ -167,8 +167,12 @@ class TocSequenceEventImpl implements VolumeSequence {
 
 	private Predicate<String> refToVolume(Integer vol, CrossReferenceHandler crh) {
 		return refId -> {
-			Integer volNo = crh.getVolumeNumber(refId);
-			return vol == null ? volNo == null : vol.equals(volNo);
+			VolumeData volumeData = crh.getVolumeData(refId);
+			if (vol == null || volumeData == null) {
+				return vol == null && volumeData == null;
+			} else {
+				return vol.equals(volumeData.getVolumeNumber());
+			}
 		};
 	}
 	
@@ -179,12 +183,18 @@ class TocSequenceEventImpl implements VolumeSequence {
 	 * @param crh cross-reference handler
 	 * @return 
 	 */
-	private Predicate<TocEntryOnResumedRange> rangeToVolume(int vol, CrossReferenceHandler crh) {
+	private Predicate<TocEntryOnResumedRange> rangeToVolume(Integer vol, CrossReferenceHandler crh) {
 		return range -> {
-			/* startVol is the volume where the range starts */
-			int startVol = getVolumeNumber(range.getStartRefId(), crh);
-			if (startVol >= vol) {
-				return false;
+			/* startVolumeData refers to the location where the range starts */
+			VolumeData startVolumeData = crh.getVolumeData(range.getStartRefId());
+			if (vol == null || startVolumeData == null) {
+				if (vol != null || startVolumeData != null) {
+					return false;
+				}
+			} else {
+				if (startVolumeData.getVolumeNumber() >= vol) {
+					return false;
+				}
 			}
 			
 			Optional<String> endRefId = range.getEndRefId();
@@ -192,23 +202,18 @@ class TocSequenceEventImpl implements VolumeSequence {
 				return true;
 			}
 			
-			/* endVol is the volume where the last block of the range starts */
-			int endVol = getVolumeNumber(endRefId.get(), crh);
-			if (isAtStartOfVolumeContents(endRefId.get(), crh)) {
-				return vol < endVol;
+			/* endVolumeData refers to the location where the last block of the range starts */
+			VolumeData endVolumeData = crh.getVolumeData(endRefId.get());
+			if (vol == null || endVolumeData == null) {
+				return vol == null && endVolumeData == null;
 			} else {
-				return vol <= endVol;
+				if (endVolumeData.isAtStartOfVolumeContents()) {
+					return vol < endVolumeData.getVolumeNumber();
+				} else {
+					return vol <= endVolumeData.getVolumeNumber();
+				}
 			}
 		};
 	}
 	
-	private int getVolumeNumber(String refId, CrossReferenceHandler crh) {
-		VolumeData volumeData = crh.getVolumeData(refId);
-		return volumeData != null ? volumeData.getVolumeNumber() : 1;
-	}
-
-	private boolean isAtStartOfVolumeContents(String refId, CrossReferenceHandler crh) {
-		VolumeData volumeData = crh.getVolumeData(refId);
-		return volumeData == null || volumeData.isAtStartOfVolumeContents();
-	}
 }
