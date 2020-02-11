@@ -444,8 +444,8 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 				ArrayList<Field> compound = parseField(event, input);
 				if ("true".equals(allowTextFlow)) {
 					if (!compound.isEmpty()) {
-						throw new RuntimeException("No content supported in " + ObflQName.FIELD + " element when "
-												   + ObflQName.ATTR_ALLOW_TEXT_FLOW + " is 'true'");
+						throw new RuntimeException("No content supported in " + ObflQName.FIELD
+								+ " element when " + ObflQName.ATTR_ALLOW_TEXT_FLOW + " is 'true'");
 					}
 					compound.add(NoField.getInstance());
 				}

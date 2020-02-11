@@ -149,7 +149,7 @@ class TocSequenceEventImpl implements VolumeSequence {
 					}
 				}
 				{
-					Collection<Block> volumeToc = data.filter(refToVolume(null, crh), rangeToVolume(null, crh));
+					Collection<Block> volumeToc = data.filter(refToVolume(null, crh), range -> false);
 					if (!volumeToc.isEmpty()) {
 						fsm.appendGroup(volumeToc);
 					}
@@ -183,18 +183,15 @@ class TocSequenceEventImpl implements VolumeSequence {
 	 * @param crh cross-reference handler
 	 * @return 
 	 */
-	private Predicate<TocEntryOnResumedRange> rangeToVolume(Integer vol, CrossReferenceHandler crh) {
+	private Predicate<TocEntryOnResumedRange> rangeToVolume(int vol, CrossReferenceHandler crh) {
 		return range -> {
 			/* startVolumeData refers to the location where the range starts */
 			VolumeData startVolumeData = crh.getVolumeData(range.getStartRefId());
-			if (vol == null || startVolumeData == null) {
-				if (vol != null || startVolumeData != null) {
-					return false;
-				}
-			} else {
-				if (startVolumeData.getVolumeNumber() >= vol) {
-					return false;
-				}
+			if (startVolumeData == null) {
+				return false;
+			}
+			if (startVolumeData.getVolumeNumber() >= vol) {
+				return false;
 			}
 			
 			Optional<String> endRefId = range.getEndRefId();
@@ -204,14 +201,13 @@ class TocSequenceEventImpl implements VolumeSequence {
 			
 			/* endVolumeData refers to the location where the last block of the range starts */
 			VolumeData endVolumeData = crh.getVolumeData(endRefId.get());
-			if (vol == null || endVolumeData == null) {
-				return vol == null && endVolumeData == null;
+			if (endVolumeData == null) {
+				return false;
+			}
+			if (endVolumeData.isAtStartOfVolumeContents()) {
+				return vol < endVolumeData.getVolumeNumber();
 			} else {
-				if (endVolumeData.isAtStartOfVolumeContents()) {
-					return vol < endVolumeData.getVolumeNumber();
-				} else {
-					return vol <= endVolumeData.getVolumeNumber();
-				}
+				return vol <= endVolumeData.getVolumeNumber();
 			}
 		};
 	}
