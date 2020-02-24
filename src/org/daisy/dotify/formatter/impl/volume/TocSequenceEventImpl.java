@@ -199,7 +199,7 @@ class TocSequenceEventImpl implements VolumeSequence {
 				return true;
 			}
 			
-			/* endVolumeData refers to the location where the last block of the range starts */
+			/* endVolumeData refers to the location where the first block after the range starts */
 			VolumeData endVolumeData = crh.getVolumeData(endRefId.get());
 			if (endVolumeData == null) {
 				return false;

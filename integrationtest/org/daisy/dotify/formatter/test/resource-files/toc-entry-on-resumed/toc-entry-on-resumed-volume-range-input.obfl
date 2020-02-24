@@ -36,18 +36,21 @@
       </pre-content>
    </volume-template>
    <sequence master="main">
-      <block id="ch_1" translate="">⠿ </block>
+     <block id="ch_1"/>
+      <block translate="">⠿ </block>
       <block>⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
               ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
               ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
               ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
               ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
             </block>
-      <block id="ch_2" translate="">⠿⠿ </block>
+      <block id="ch_2"/>
+      <block translate="">⠿⠿ </block>
       <block>⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
               ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
             </block>
-      <block id="ch_3" translate="">⠿⠿⠿ </block>
+      <block id="ch_3"/>
+      <block translate="">⠿⠿⠿ </block>
       <block>⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
               ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
             </block>

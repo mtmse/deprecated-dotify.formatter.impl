@@ -228,8 +228,16 @@ public class VolumeProvider {
 		boolean atFirstPageOfContents = true;
 		for (Sheet sheet : contents) {
 			for (PageImpl p : sheet.getPages()) {
-				for (String id : p.getIdentifiers()) {
-					crh.setVolumeData(id, new VolumeData(volumeNumber, atFirstPageOfContents));
+				if (atFirstPageOfContents) {
+					List<String> contentIdentifiers = p.getContentIdentifiers();
+					for (String id : p.getIdentifiers()) {
+						boolean atStartOfPage = !contentIdentifiers.contains(id);
+						crh.setVolumeData(id, new VolumeData(volumeNumber, atStartOfPage));
+					}
+				} else {
+					for (String id : p.getIdentifiers()) {
+						crh.setVolumeData(id, new VolumeData(volumeNumber, false));
+					}
 				}
 				if (p.getAnchors().size()>0) {
 					ad.add(new AnchorData(p.getAnchors(), p.getPageNumber()));

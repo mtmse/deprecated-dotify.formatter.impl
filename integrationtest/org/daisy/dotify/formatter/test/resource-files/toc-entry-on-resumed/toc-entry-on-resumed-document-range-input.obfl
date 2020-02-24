@@ -27,7 +27,7 @@
          <toc-entry ref-id="ch_2">⠿⠿ ⠄⠄⠄⠄⠄⠄⠄⠄⠄ <page-number ref-id="ch_2" number-format="default"/></toc-entry>
       </toc-block>
       <toc-block>
-         <toc-entry ref-id="ch_3">⠿⠿⠿ ⠄⠄⠄⠄⠄⠄⠄⠄ <page-number ref-id="ch_2" number-format="default"/></toc-entry>
+         <toc-entry ref-id="ch_3">⠿⠿⠿ ⠄⠄⠄⠄⠄⠄⠄⠄ <page-number ref-id="ch_3" number-format="default"/></toc-entry>
       </toc-block>
    </table-of-contents>
    <volume-template sheets-in-volume-max="2" use-when="(! (= $volume 1))"/>
@@ -37,18 +37,20 @@
       </pre-content>
    </volume-template>
    <sequence master="main">
-      <block id="ch_1" translate="">⠿ </block>
+      <block id="ch_1"/>
+      <block translate="">⠿ </block>
       <block>⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
               ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
               ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
               ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
               ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
             </block>
-      <block id="ch_2" translate="">⠿⠿ </block>
+      <block id="ch_2"/>
+      <block translate="">⠿⠿ </block>
       <block>⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
-              ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
             </block>
-      <block id="ch_3" translate="">⠿⠿⠿ </block>
+      <block id="ch_3"/>
+      <block translate="">⠿⠿⠿ </block>
       <block>⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
               ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤ ⠤⠤⠤⠤⠤
             </block>

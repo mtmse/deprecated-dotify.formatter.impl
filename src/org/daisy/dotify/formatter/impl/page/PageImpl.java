@@ -44,6 +44,7 @@ public class PageImpl implements Page {
     private final ArrayList<RowImpl> pageArea;
     private final ArrayList<String> anchors;
     private final ArrayList<String> identifiers;
+	private int contentIdentifiersBegin;
 	private final int flowHeight;
 	private final PageTemplate template;
 	private final BorderManager finalRows;
@@ -69,6 +70,7 @@ public class PageImpl implements Page {
 		this.pageArea = new ArrayList<>();
 		this.anchors = new ArrayList<>();
 		this.identifiers = new ArrayList<>();
+		this.contentIdentifiersBegin = 0;
 		this.template = master.getTemplate(details.getPageNumber());
         this.flowHeight = master.getFlowHeight(template);
 		this.isVolBreakAllowed = true;
@@ -113,6 +115,7 @@ public class PageImpl implements Page {
 			if (!topPageAreaProcessed) {
 				addTopPageArea();
 				getDetails().startsContentMarkers();
+				startsContentIdentifiers();
 				topPageAreaProcessed = true;
 			}
 			if (hasBodyRowsLeft()) {
@@ -221,6 +224,17 @@ public class PageImpl implements Page {
 	
 	public List<String> getIdentifiers() {
 		return identifiers;
+	}
+	
+	private void startsContentIdentifiers() {
+		contentIdentifiersBegin = getIdentifiers().size();
+	}
+	
+	/**
+	 * Get identifiers for this page excluding identifiers before text content
+	 */
+	public List<String> getContentIdentifiers() {
+		return getIdentifiers().subList(contentIdentifiersBegin, getIdentifiers().size());
 	}
 	
 	/**
