@@ -43,8 +43,6 @@ public class PageImpl implements Page {
 	private final PageAreaContent pageAreaTemplate;
     private final ArrayList<RowImpl> pageArea;
     private final ArrayList<String> anchors;
-    private final ArrayList<String> identifiers;
-	private int contentIdentifiersBegin;
 	private final int flowHeight;
 	private final PageTemplate template;
 	private final BorderManager finalRows;
@@ -69,8 +67,6 @@ public class PageImpl implements Page {
 
 		this.pageArea = new ArrayList<>();
 		this.anchors = new ArrayList<>();
-		this.identifiers = new ArrayList<>();
-		this.contentIdentifiersBegin = 0;
 		this.template = master.getTemplate(details.getPageNumber());
         this.flowHeight = master.getFlowHeight(template);
 		this.isVolBreakAllowed = true;
@@ -115,7 +111,7 @@ public class PageImpl implements Page {
 			if (!topPageAreaProcessed) {
 				addTopPageArea();
 				getDetails().startsContentMarkers();
-				startsContentIdentifiers();
+				getDetails().startsContentIdentifiers();
 				topPageAreaProcessed = true;
 			}
 			if (hasBodyRowsLeft()) {
@@ -207,7 +203,7 @@ public class PageImpl implements Page {
 	private void addRowDetails(RowImpl r) {
 		getDetails().getMarkers().addAll(r.getMarkers());
 		anchors.addAll(r.getAnchors());
-		identifiers.addAll(r.getIdentifiers());
+		getDetails().getIdentifiers().addAll(r.getIdentifiers());
 	}
 	
 	void addMarkers(List<Marker> m) {
@@ -219,22 +215,18 @@ public class PageImpl implements Page {
 	}
 	
 	void addIdentifiers(List<String> ids) {
-		identifiers.addAll(ids);
+		getDetails().getIdentifiers().addAll(ids);
 	}
 	
 	public List<String> getIdentifiers() {
-		return identifiers;
-	}
-	
-	private void startsContentIdentifiers() {
-		contentIdentifiersBegin = getIdentifiers().size();
+		return getDetails().getIdentifiers();
 	}
 	
 	/**
 	 * Get identifiers for this page excluding identifiers before text content
 	 */
 	public List<String> getContentIdentifiers() {
-		return getIdentifiers().subList(contentIdentifiersBegin, getIdentifiers().size());
+		return getDetails().getContentIdentifiers();
 	}
 	
 	/**
