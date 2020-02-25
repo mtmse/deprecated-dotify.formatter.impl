@@ -111,6 +111,11 @@ public class PageImpl implements Page {
 			if (!topPageAreaProcessed) {
 				addTopPageArea();
 				getDetails().startsContentMarkers();
+				// FIXME: When called here, the only identifiers that will be considered to come
+				// before text content on this page are the identifiers from skippable RowGroup
+				// (read: empty blocks) that were discarded (in PageSequenceBuilder2). But
+				// identifiers attached to the start of the first following RowGroup with text
+				// content (and any RowGroup in between) should be part of this as well.
 				getDetails().startsContentIdentifiers();
 				topPageAreaProcessed = true;
 			}
