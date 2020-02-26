@@ -26,79 +26,79 @@ import org.junit.Test;
 
 @SuppressWarnings("javadoc")
 public class BlockContentManagerTest {
-	
-	@Test
-	public void testHangingIndent() throws TranslatorConfigurationException {
-		//setup
-		FormatterContext c = new FormatterContext(BrailleTranslatorFactoryMaker.newInstance(), TextBorderFactoryMaker.newInstance(), FormatterConfiguration.with("sv-SE", TranslatorType.UNCONTRACTED.toString()).build());
-		Stack<Segment> segments = new Stack<>();
-		for (int i=0; i<6; i++) {
-			segments.push(new TextSegment("... ", new TextProperties.Builder("sv-SE").build(), true));
-		}
-		RowDataProperties rdp = new RowDataProperties.Builder().firstLineIndent(1).textIndent(3).build();
-		CrossReferenceHandler refs = mock(CrossReferenceHandler.class);
-		Context context = createContext();
-		AbstractBlockContentManager m = new BlockContentManager(null, 10, segments, rdp, refs, context, c);
 
-		//test
-		assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().get().getChars());
-		assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().get().getChars());
-		assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().get().getChars());
-		assertFalse(m.hasNext());
-	}
-	
-	@Test
-	public void testLeader() throws TranslatorConfigurationException {
-		//setup
-		FormatterContext c = new FormatterContext(BrailleTranslatorFactoryMaker.newInstance(), TextBorderFactoryMaker.newInstance(), FormatterConfiguration.with("sv-SE", TranslatorType.UNCONTRACTED.toString()).build());
-		Stack<Segment> segments = new Stack<>();
-		segments.push(new LeaderSegment(
-				new Leader.Builder().align(org.daisy.dotify.api.formatter.Leader.Alignment.RIGHT).pattern(" ").position(new Position(1.0, true)).build())
-		);
-		segments.push(new TextSegment("...", new TextProperties.Builder("sv-SE").build(), true));
+    @Test
+    public void testHangingIndent() throws TranslatorConfigurationException {
+        //setup
+        FormatterContext c = new FormatterContext(BrailleTranslatorFactoryMaker.newInstance(), TextBorderFactoryMaker.newInstance(), FormatterConfiguration.with("sv-SE", TranslatorType.UNCONTRACTED.toString()).build());
+        Stack<Segment> segments = new Stack<>();
+        for (int i=0; i<6; i++) {
+            segments.push(new TextSegment("... ", new TextProperties.Builder("sv-SE").build(), true));
+        }
+        RowDataProperties rdp = new RowDataProperties.Builder().firstLineIndent(1).textIndent(3).build();
+        CrossReferenceHandler refs = mock(CrossReferenceHandler.class);
+        Context context = createContext();
+        AbstractBlockContentManager m = new BlockContentManager(null, 10, segments, rdp, refs, context, c);
 
-		RowDataProperties rdp = new RowDataProperties.Builder().firstLineIndent(1).textIndent(3).build();
-		CrossReferenceHandler refs = mock(CrossReferenceHandler.class);
-		Context context = createContext();
-		AbstractBlockContentManager m = new BlockContentManager(null, 10, segments, rdp, refs, context, c);
+        //test
+        assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().get().getChars());
+        assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().get().getChars());
+        assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().get().getChars());
+        assertFalse(m.hasNext());
+    }
 
-		//test
-		assertEquals("⠀⠀⠀⠀⠀⠀⠀⠄⠄⠄", m.getNext().get().getChars());
-		assertFalse(m.hasNext());
-	}
-	
-	@Test
-	public void testNewLine() throws TranslatorConfigurationException {
-		//setup
-		FormatterContext c = new FormatterContext(BrailleTranslatorFactoryMaker.newInstance(), TextBorderFactoryMaker.newInstance(), FormatterConfiguration.with("sv-SE", TranslatorType.UNCONTRACTED.toString()).build());
-		Stack<Segment> segments = new Stack<>();
-		segments.push(new TextSegment("... ... ...", new TextProperties.Builder("sv-SE").build(), true));
-		segments.push(new NewLineSegment());
-		segments.push(new TextSegment("...", new TextProperties.Builder("sv-SE").build(), true));
-		segments.push(new NewLineSegment());
-		segments.push(new TextSegment("...", new TextProperties.Builder("sv-SE").build(), true));
+    @Test
+    public void testLeader() throws TranslatorConfigurationException {
+        //setup
+        FormatterContext c = new FormatterContext(BrailleTranslatorFactoryMaker.newInstance(), TextBorderFactoryMaker.newInstance(), FormatterConfiguration.with("sv-SE", TranslatorType.UNCONTRACTED.toString()).build());
+        Stack<Segment> segments = new Stack<>();
+        segments.push(new LeaderSegment(
+                new Leader.Builder().align(org.daisy.dotify.api.formatter.Leader.Alignment.RIGHT).pattern(" ").position(new Position(1.0, true)).build())
+        );
+        segments.push(new TextSegment("...", new TextProperties.Builder("sv-SE").build(), true));
 
-		RowDataProperties rdp = new RowDataProperties.Builder().firstLineIndent(1).textIndent(3).build();
-		CrossReferenceHandler refs = mock(CrossReferenceHandler.class);
-		Context context = createContext();
-		AbstractBlockContentManager m = new BlockContentManager(null, 10, segments, rdp, refs, context, c);
+        RowDataProperties rdp = new RowDataProperties.Builder().firstLineIndent(1).textIndent(3).build();
+        CrossReferenceHandler refs = mock(CrossReferenceHandler.class);
+        Context context = createContext();
+        AbstractBlockContentManager m = new BlockContentManager(null, 10, segments, rdp, refs, context, c);
 
-		//test
-		assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().get().getChars());
-		RowImpl r = m.getNext().get();
-		assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
-		r = m.getNext().get();
-		assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
-		r = m.getNext().get();
-		assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
-		assertFalse(m.hasNext());
-	}
+        //test
+        assertEquals("⠀⠀⠀⠀⠀⠀⠀⠄⠄⠄", m.getNext().get().getChars());
+        assertFalse(m.hasNext());
+    }
 
-	
-	private static Context createContext() {
-		CrossReferenceHandler crh = new CrossReferenceHandler();
-		crh.setVolumeCount(1);
-		return new DefaultContext.Builder(crh).currentVolume(1).build();
-	}
+    @Test
+    public void testNewLine() throws TranslatorConfigurationException {
+        //setup
+        FormatterContext c = new FormatterContext(BrailleTranslatorFactoryMaker.newInstance(), TextBorderFactoryMaker.newInstance(), FormatterConfiguration.with("sv-SE", TranslatorType.UNCONTRACTED.toString()).build());
+        Stack<Segment> segments = new Stack<>();
+        segments.push(new TextSegment("... ... ...", new TextProperties.Builder("sv-SE").build(), true));
+        segments.push(new NewLineSegment());
+        segments.push(new TextSegment("...", new TextProperties.Builder("sv-SE").build(), true));
+        segments.push(new NewLineSegment());
+        segments.push(new TextSegment("...", new TextProperties.Builder("sv-SE").build(), true));
+
+        RowDataProperties rdp = new RowDataProperties.Builder().firstLineIndent(1).textIndent(3).build();
+        CrossReferenceHandler refs = mock(CrossReferenceHandler.class);
+        Context context = createContext();
+        AbstractBlockContentManager m = new BlockContentManager(null, 10, segments, rdp, refs, context, c);
+
+        //test
+        assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().get().getChars());
+        RowImpl r = m.getNext().get();
+        assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
+        r = m.getNext().get();
+        assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
+        r = m.getNext().get();
+        assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
+        assertFalse(m.hasNext());
+    }
+
+
+    private static Context createContext() {
+        CrossReferenceHandler crh = new CrossReferenceHandler();
+        crh.setVolumeCount(1);
+        return new DefaultContext.Builder(crh).currentVolume(1).build();
+    }
 
 }

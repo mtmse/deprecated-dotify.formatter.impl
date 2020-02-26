@@ -8,9 +8,9 @@ import org.junit.Test;
 @SuppressWarnings("javadoc")
 public class FieldTest extends AbstractFormatterEngineTest {
 
-	@Test
-	public void testFieldStyle() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-		testPEF("resource-files/field-style-input.obfl", "resource-files/field-style-expected.pef", false);
-	}
+    @Test
+    public void testFieldStyle() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
+        testPEF("resource-files/field-style-input.obfl", "resource-files/field-style-expected.pef", false);
+    }
 
 }

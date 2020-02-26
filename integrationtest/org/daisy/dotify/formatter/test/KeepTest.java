@@ -8,9 +8,9 @@ import org.junit.Test;
 @SuppressWarnings("javadoc")
 public class KeepTest extends AbstractFormatterEngineTest {
 
-	@Test
-	public void testKeep() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-		testPEF("resource-files/keep-input.obfl", "resource-files/keep-expected.pef", false);
-	}
+    @Test
+    public void testKeep() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
+        testPEF("resource-files/keep-input.obfl", "resource-files/keep-expected.pef", false);
+    }
 
 }

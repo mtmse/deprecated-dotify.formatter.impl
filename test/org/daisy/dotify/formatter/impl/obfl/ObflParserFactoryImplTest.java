@@ -9,9 +9,9 @@ import org.junit.Test;
 @SuppressWarnings("javadoc")
 public class ObflParserFactoryImplTest {
 
-	@Test
-	public void testFactory() {
-		ObflParserFactoryService factory = ObflParserFactoryMaker.newInstance().getFactory();
-		assertNotNull(factory);
-	}
+    @Test
+    public void testFactory() {
+        ObflParserFactoryService factory = ObflParserFactoryMaker.newInstance().getFactory();
+        assertNotNull(factory);
+    }
 }

@@ -21,42 +21,42 @@ import org.daisy.dotify.api.writer.PagedMediaWriterConfigurationException;
 import org.daisy.dotify.api.writer.PagedMediaWriterFactoryMaker;
 
 abstract class AbstractFormatterEngineTest {
-	void testPEF(String input, String expected, boolean keep) throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-		testPEF(input, expected, keep?File.createTempFile("TestResult", ".tmp"):null);
-	}
-	
-	void testPEF(String input, String expected, File res) throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-		testPEF(FormatterEngineMaker.newInstance().newFormatterEngine("sv-SE",
-				TranslatorType.UNCONTRACTED.toString(), 
-				PagedMediaWriterFactoryMaker.newInstance().newPagedMediaWriter(MediaTypes.PEF_MEDIA_TYPE)), input, expected, res);
-	}
+    void testPEF(String input, String expected, boolean keep) throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
+        testPEF(input, expected, keep?File.createTempFile("TestResult", ".tmp"):null);
+    }
 
-	void testPEF(FormatterEngine engine, String input, String expected, File res) throws LayoutEngineException, IOException {
-		boolean keep = res!=null;
-		if (!keep) {
-			res = File.createTempFile("TestResult", ".tmp");
-			res.deleteOnExit();
-		}
+    void testPEF(String input, String expected, File res) throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
+        testPEF(FormatterEngineMaker.newInstance().newFormatterEngine("sv-SE",
+                TranslatorType.UNCONTRACTED.toString(),
+                PagedMediaWriterFactoryMaker.newInstance().newPagedMediaWriter(MediaTypes.PEF_MEDIA_TYPE)), input, expected, res);
+    }
 
-		engine.convert(this.getClass().getResourceAsStream(input), new FileOutputStream(res));
+    void testPEF(FormatterEngine engine, String input, String expected, File res) throws LayoutEngineException, IOException {
+        boolean keep = res!=null;
+        if (!keep) {
+            res = File.createTempFile("TestResult", ".tmp");
+            res.deleteOnExit();
+        }
 
-		try {
-			PEFFileCompare cmp = new PEFFileCompare();
-			cmp.compare(new StreamSource(this.getClass().getResourceAsStream(expected)), new StreamSource(new FileInputStream(res)));
-			assertEquals("Binary compare is equal", -1, cmp.getPos());
-		} catch (IOException e) {
-			e.printStackTrace();
-			fail();
-		} catch (PEFFileCompareException e) {
-			e.printStackTrace();
-			fail();
-		} finally {
-			if (!keep && !res.delete()) {
-				System.err.println("Delete failed.");
-			}
-			if (res.isFile()) {
-				System.out.println(res.getAbsolutePath());
-			}
-		}
-	}
+        engine.convert(this.getClass().getResourceAsStream(input), new FileOutputStream(res));
+
+        try {
+            PEFFileCompare cmp = new PEFFileCompare();
+            cmp.compare(new StreamSource(this.getClass().getResourceAsStream(expected)), new StreamSource(new FileInputStream(res)));
+            assertEquals("Binary compare is equal", -1, cmp.getPos());
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail();
+        } catch (PEFFileCompareException e) {
+            e.printStackTrace();
+            fail();
+        } finally {
+            if (!keep && !res.delete()) {
+                System.err.println("Delete failed.");
+            }
+            if (res.isFile()) {
+                System.out.println(res.getAbsolutePath());
+            }
+        }
+    }
 }

@@ -14,6 +14,7 @@ plugins {
 	id 'signing'
 	//id 'jacoco'
 	id 'pmd'
+	id 'checkstyle'
 }
 
 apply plugin: 'biz.aQute.bnd.builder'
@@ -246,6 +247,21 @@ publishing {
 			}
 		}
 	}
+}
+
+checkstyle {
+	toolVersion '7.8.1'
+	configFile file("checkstyle.xml")
+}
+checkstyleMain {
+	source = 'src'
+}
+checkstyleTest {
+	source = ['test', 'integrationtest']
+}
+
+tasks.withType(Checkstyle) {
+    exclude '**/resource-files/**'
 }
 
 pmd.ruleSets = [
