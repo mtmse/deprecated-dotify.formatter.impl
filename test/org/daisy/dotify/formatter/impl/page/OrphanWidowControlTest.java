@@ -1,11 +1,14 @@
 package org.daisy.dotify.formatter.impl.page;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Ignore;
 import org.junit.Test;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+/**
+ * TODO: Write java doc.
+ */
 @SuppressWarnings("javadoc")
 public class OrphanWidowControlTest {
 
@@ -64,14 +67,14 @@ public class OrphanWidowControlTest {
         assertTrue(owc.allowsBreakAfter(5));
     }
 
-    @Test (expected=IndexOutOfBoundsException.class)
-    @Ignore ("Ignored because it's currently not possible to check the upper index.")
+    @Test(expected = IndexOutOfBoundsException.class)
+    @Ignore("Ignored because it's currently not possible to check the upper index.")
     public void testOrphansWidows_06() {
         OrphanWidowControl owc = new OrphanWidowControl(1, 1, 6);
         owc.allowsBreakAfter(6);
     }
 
-    @Test (expected=IndexOutOfBoundsException.class)
+    @Test(expected = IndexOutOfBoundsException.class)
     public void testOrphansWidows_07() {
         OrphanWidowControl owc = new OrphanWidowControl(1, 1, 6);
         owc.allowsBreakAfter(-1);

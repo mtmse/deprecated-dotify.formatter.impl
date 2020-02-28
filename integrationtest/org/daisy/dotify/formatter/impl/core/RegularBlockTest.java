@@ -1,9 +1,5 @@
 package org.daisy.dotify.formatter.impl.core;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
 import org.daisy.dotify.api.formatter.BlockProperties;
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.DynamicContent;
@@ -23,6 +19,13 @@ import org.daisy.dotify.translator.impl.DefaultBrailleFinalizer;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+
+/**
+ * TODO: Write java doc.
+ */
 public class RegularBlockTest {
 
     @Test
@@ -32,6 +35,7 @@ public class RegularBlockTest {
         TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
         DynamicContent exp = new DynamicContent() {
             String str = "b";
+
             @Override
             public String render(Context context) {
                 return str;
@@ -39,13 +43,20 @@ public class RegularBlockTest {
 
             @Override
             public String render() {
-                return render(new Context() {});
+                return render(new Context() {
+                });
             }
         };
 
         DefaultMarkerProcessor mp = new DefaultMarkerProcessor.Builder()
-                .addDictionary("em", (String str, TextAttribute attributes)->new Marker("1>", "<1"))
-                .addDictionary("strong", (String str, TextAttribute attributes)->new Marker("2>", "<2"))
+                .addDictionary(
+                    "em",
+                    (String str, TextAttribute attributes) -> new Marker("1>", "<1")
+                )
+                .addDictionary(
+                    "strong",
+                    (String str, TextAttribute attributes) -> new Marker("2>", "<2")
+                )
                 .build();
 
         SimpleBrailleTranslator trr = new SimpleBrailleTranslator(
@@ -71,10 +82,14 @@ public class RegularBlockTest {
         f.endBlock();
         List<Block> b = f.getBlocks(null, null, null);
         Block bl = b.get(0);
-        AbstractBlockContentManager bcm = bl.getBlockContentManager(new BlockContext.Builder(new DefaultContext.Builder(null).build()).flowWidth(30).formatterContext(fc).build());
+        AbstractBlockContentManager bcm = bl.getBlockContentManager(
+            new BlockContext.Builder(
+                new DefaultContext.Builder(null).build()
+            ).flowWidth(30).formatterContext(fc).build()
+        );
         StringBuilder sb = new StringBuilder();
         while (bcm.hasNext()) {
-            bcm.getNext().ifPresent(v->sb.append(v.getChars()));
+            bcm.getNext().ifPresent(v -> sb.append(v.getChars()));
         }
         assertEquals("1>a2>b<2c<1", sb.toString());
     }

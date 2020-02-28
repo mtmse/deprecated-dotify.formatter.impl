@@ -1,10 +1,13 @@
 package org.daisy.dotify.formatter.impl.obfl;
 
-import static org.junit.Assert.assertEquals;
-
 import org.daisy.dotify.api.formatter.NumeralStyle;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+
+/**
+ * TODO: Write java doc.
+ */
 @SuppressWarnings("javadoc")
 public class OBFLParserImplTest {
 

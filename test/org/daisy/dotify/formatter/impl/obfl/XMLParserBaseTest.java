@@ -1,9 +1,12 @@
 package org.daisy.dotify.formatter.impl.obfl;
 
-import static org.junit.Assert.assertEquals;
-
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+
+/**
+ * TODO: Write java doc.
+ */
 @SuppressWarnings("javadoc")
 public class XMLParserBaseTest {
 

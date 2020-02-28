@@ -1,11 +1,15 @@
 package org.daisy.dotify.formatter.test;
 
-import java.io.IOException;
-
 import org.daisy.dotify.api.engine.LayoutEngineException;
 import org.daisy.dotify.api.writer.PagedMediaWriterConfigurationException;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.IOException;
+
+/**
+ * TODO: Write java doc.
+ */
 @SuppressWarnings("javadoc")
 public class PaddingTest extends AbstractFormatterEngineTest {
 

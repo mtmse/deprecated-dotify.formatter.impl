@@ -1,12 +1,15 @@
 package org.daisy.dotify.formatter.impl.core;
 
-import static org.junit.Assert.assertEquals;
-
 import org.daisy.dotify.api.formatter.TableCellProperties;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import static org.junit.Assert.assertEquals;
+
+/**
+ * TODO: Write java doc.
+ */
 @SuppressWarnings("javadoc")
 public class TableDataTest {
 

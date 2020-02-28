@@ -1,10 +1,5 @@
 package org.daisy.dotify.formatter.impl.core;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.daisy.dotify.api.formatter.BlockProperties;
 import org.daisy.dotify.api.formatter.FormatterConfiguration;
 import org.daisy.dotify.api.formatter.TextProperties;
@@ -16,9 +11,18 @@ import org.daisy.dotify.formatter.impl.row.MarginComponent;
 import org.daisy.dotify.formatter.impl.row.RowDataProperties;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+
+/**
+ * TODO: Write java doc.
+ */
 @SuppressWarnings("javadoc")
 public class FormatterCoreImplTest {
-    private final TextProperties UND_TEXT_PROPERTIES = new TextProperties.Builder("und").build();
+    private static final TextProperties UND_TEXT_PROPERTIES = new TextProperties.Builder("und").build();
     private final FormatterCoreContext context;
 
     public FormatterCoreImplTest() {
@@ -35,8 +39,12 @@ public class FormatterCoreImplTest {
         FormatterCoreContext context = Mockito.mock(FormatterCoreContext.class);
         Mockito.when(context.getSpaceCharacter()).thenReturn(' ');
         FormatterCoreImpl formatter = new FormatterCoreImpl(context);
-        formatter.startBlock(new BlockProperties.Builder().rowSpacing(1.0f).firstLineIndent(1).orphans(2).widows(2).build());
-        formatter.startBlock(new BlockProperties.Builder().rowSpacing(2.0f).firstLineIndent(2).orphans(3).widows(3).build());
+        formatter.startBlock(
+            new BlockProperties.Builder().rowSpacing(1.0f).firstLineIndent(1).orphans(2).widows(2).build()
+        );
+        formatter.startBlock(
+            new BlockProperties.Builder().rowSpacing(2.0f).firstLineIndent(2).orphans(3).widows(3).build()
+        );
         formatter.endBlock();
         formatter.endBlock();
         List<MarginComponent> leftComps = new ArrayList<>();
@@ -51,10 +59,12 @@ public class FormatterCoreImplTest {
         Margin leftInner = new Margin(Type.LEFT, leftComps);
         Margin rightInner = new Margin(Type.RIGHT, rightComps);
 
-        RowDataProperties expectedOuter = new RowDataProperties.Builder().rowSpacing(1.0f).firstLineIndent(1).orphans(2).widows(2)
+        RowDataProperties expectedOuter =
+                new RowDataProperties.Builder().rowSpacing(1.0f).firstLineIndent(1).orphans(2).widows(2)
                 .margins(new BlockMargin(left, right, ' '))
                 .build();
-        RowDataProperties expectedInner = new RowDataProperties.Builder().rowSpacing(2.0f).firstLineIndent(2).orphans(3).widows(3)
+        RowDataProperties expectedInner =
+                new RowDataProperties.Builder().rowSpacing(2.0f).firstLineIndent(2).orphans(3).widows(3)
                 .margins(new BlockMargin(leftInner, rightInner, ' '))
                 .build();
 
@@ -93,19 +103,19 @@ public class FormatterCoreImplTest {
         //Test
         assertEquals(5, formatter.size());
         // in block 1 before block 2: empty
-        assertEquals(1, (int)formatter.get(0).getAvoidVolumeBreakInsidePriority());
-        assertEquals(3, (int)formatter.get(0).getAvoidVolumeBreakAfterPriority());
+        assertEquals(1, (int) formatter.get(0).getAvoidVolumeBreakInsidePriority());
+        assertEquals(3, (int) formatter.get(0).getAvoidVolumeBreakAfterPriority());
         // in block 2 before block 3: empty
-        assertEquals(2, (int)formatter.get(1).getAvoidVolumeBreakInsidePriority());
-        assertEquals(3, (int)formatter.get(1).getAvoidVolumeBreakAfterPriority());
+        assertEquals(2, (int) formatter.get(1).getAvoidVolumeBreakInsidePriority());
+        assertEquals(3, (int) formatter.get(1).getAvoidVolumeBreakAfterPriority());
         // in block 3
-        assertEquals(3, (int)formatter.get(2).getAvoidVolumeBreakInsidePriority());
-        assertEquals(2, (int)formatter.get(2).getAvoidVolumeBreakAfterPriority());
+        assertEquals(3, (int) formatter.get(2).getAvoidVolumeBreakInsidePriority());
+        assertEquals(2, (int) formatter.get(2).getAvoidVolumeBreakAfterPriority());
         // in block 2 after block 3
-        assertEquals(2, (int)formatter.get(3).getAvoidVolumeBreakInsidePriority());
-        assertEquals(1, (int)formatter.get(3).getAvoidVolumeBreakAfterPriority());
+        assertEquals(2, (int) formatter.get(3).getAvoidVolumeBreakInsidePriority());
+        assertEquals(1, (int) formatter.get(3).getAvoidVolumeBreakAfterPriority());
         // in block 1 after block 2
-        assertEquals(1, (int)formatter.get(4).getAvoidVolumeBreakInsidePriority());
+        assertEquals(1, (int) formatter.get(4).getAvoidVolumeBreakInsidePriority());
         assertEquals(null, formatter.get(4).getAvoidVolumeBreakAfterPriority());
     }
 
@@ -123,13 +133,13 @@ public class FormatterCoreImplTest {
         //Test
         assertEquals(3, formatter.size());
         // in block 1: empty
-        assertEquals(1, (int)formatter.get(0).getAvoidVolumeBreakInsidePriority());
+        assertEquals(1, (int) formatter.get(0).getAvoidVolumeBreakInsidePriority());
         assertEquals(null, formatter.get(0).getAvoidVolumeBreakAfterPriority());
         // in block 2: empty
-        assertEquals(2, (int)formatter.get(1).getAvoidVolumeBreakInsidePriority());
+        assertEquals(2, (int) formatter.get(1).getAvoidVolumeBreakInsidePriority());
         assertEquals(null, formatter.get(1).getAvoidVolumeBreakAfterPriority());
         // in block 3: empty
-        assertEquals(3, (int)formatter.get(2).getAvoidVolumeBreakInsidePriority());
+        assertEquals(3, (int) formatter.get(2).getAvoidVolumeBreakInsidePriority());
         assertEquals(null, formatter.get(2).getAvoidVolumeBreakAfterPriority());
 
     }
@@ -152,25 +162,25 @@ public class FormatterCoreImplTest {
         //Test
         assertEquals(7, formatter.size());
         // in block 1 before block 2: empty
-        assertEquals(1, (int)formatter.get(0).getAvoidVolumeBreakInsidePriority());
-        assertEquals(2, (int)formatter.get(0).getAvoidVolumeBreakAfterPriority());
+        assertEquals(1, (int) formatter.get(0).getAvoidVolumeBreakInsidePriority());
+        assertEquals(2, (int) formatter.get(0).getAvoidVolumeBreakAfterPriority());
         // in block 2 before block 3: empty
-        assertEquals(2, (int)formatter.get(1).getAvoidVolumeBreakInsidePriority());
-        assertEquals(2, (int)formatter.get(1).getAvoidVolumeBreakAfterPriority());
+        assertEquals(2, (int) formatter.get(1).getAvoidVolumeBreakInsidePriority());
+        assertEquals(2, (int) formatter.get(1).getAvoidVolumeBreakAfterPriority());
         // in block 3: empty
-        assertEquals(2, (int)formatter.get(2).getAvoidVolumeBreakInsidePriority());
-        assertEquals(2, (int)formatter.get(2).getAvoidVolumeBreakAfterPriority());
+        assertEquals(2, (int) formatter.get(2).getAvoidVolumeBreakInsidePriority());
+        assertEquals(2, (int) formatter.get(2).getAvoidVolumeBreakAfterPriority());
         // in block 2 between block 3 and 4: empty
-        assertEquals(2, (int)formatter.get(3).getAvoidVolumeBreakInsidePriority());
-        assertEquals(2, (int)formatter.get(3).getAvoidVolumeBreakAfterPriority());
+        assertEquals(2, (int) formatter.get(3).getAvoidVolumeBreakInsidePriority());
+        assertEquals(2, (int) formatter.get(3).getAvoidVolumeBreakAfterPriority());
         // in block 4: empty
-        assertEquals(2, (int)formatter.get(4).getAvoidVolumeBreakInsidePriority());
-        assertEquals(2, (int)formatter.get(4).getAvoidVolumeBreakAfterPriority());
+        assertEquals(2, (int) formatter.get(4).getAvoidVolumeBreakInsidePriority());
+        assertEquals(2, (int) formatter.get(4).getAvoidVolumeBreakAfterPriority());
         // in block 2 after block 4
-        assertEquals(2, (int)formatter.get(5).getAvoidVolumeBreakInsidePriority());
-        assertEquals(1, (int)formatter.get(5).getAvoidVolumeBreakAfterPriority());
+        assertEquals(2, (int) formatter.get(5).getAvoidVolumeBreakInsidePriority());
+        assertEquals(1, (int) formatter.get(5).getAvoidVolumeBreakAfterPriority());
         // in block 1 after block 2
-        assertEquals(1, (int)formatter.get(6).getAvoidVolumeBreakInsidePriority());
+        assertEquals(1, (int) formatter.get(6).getAvoidVolumeBreakInsidePriority());
         assertEquals(null, formatter.get(6).getAvoidVolumeBreakAfterPriority());
     }
 
@@ -190,25 +200,25 @@ public class FormatterCoreImplTest {
         //Test
         assertEquals(7, formatter.size());
         // in block 1 before block 2: empty
-        assertEquals(1, (int)formatter.get(0).getAvoidVolumeBreakInsidePriority());
+        assertEquals(1, (int) formatter.get(0).getAvoidVolumeBreakInsidePriority());
         assertEquals(null, formatter.get(0).getAvoidVolumeBreakAfterPriority());
         // in block 2 before block 3: empty
-        assertEquals(2, (int)formatter.get(1).getAvoidVolumeBreakInsidePriority());
+        assertEquals(2, (int) formatter.get(1).getAvoidVolumeBreakInsidePriority());
         assertEquals(null, formatter.get(1).getAvoidVolumeBreakAfterPriority());
         // in block 3: empty
-        assertEquals(2, (int)formatter.get(2).getAvoidVolumeBreakInsidePriority());
+        assertEquals(2, (int) formatter.get(2).getAvoidVolumeBreakInsidePriority());
         assertEquals(null, formatter.get(2).getAvoidVolumeBreakAfterPriority());
         // in block 2 between block 3 and 4: empty
-        assertEquals(2, (int)formatter.get(3).getAvoidVolumeBreakInsidePriority());
+        assertEquals(2, (int) formatter.get(3).getAvoidVolumeBreakInsidePriority());
         assertEquals(null, formatter.get(3).getAvoidVolumeBreakAfterPriority());
         // in block 4: empty
-        assertEquals(2, (int)formatter.get(4).getAvoidVolumeBreakInsidePriority());
+        assertEquals(2, (int) formatter.get(4).getAvoidVolumeBreakInsidePriority());
         assertEquals(null, formatter.get(4).getAvoidVolumeBreakAfterPriority());
         // in block 2 after block 4: empty
-        assertEquals(2, (int)formatter.get(5).getAvoidVolumeBreakInsidePriority());
+        assertEquals(2, (int) formatter.get(5).getAvoidVolumeBreakInsidePriority());
         assertEquals(null, formatter.get(5).getAvoidVolumeBreakAfterPriority());
         // in block 1 after block 2: empty
-        assertEquals(1, (int)formatter.get(6).getAvoidVolumeBreakInsidePriority());
+        assertEquals(1, (int) formatter.get(6).getAvoidVolumeBreakInsidePriority());
         assertEquals(null, formatter.get(6).getAvoidVolumeBreakAfterPriority());
     }
 }

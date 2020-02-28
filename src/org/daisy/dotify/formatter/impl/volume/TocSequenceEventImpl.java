@@ -26,190 +26,195 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class TocSequenceEventImpl implements VolumeSequence {
-	private final TocProperties props;
-	
-	private final ArrayList<ConditionalBlock> tocStartEvents;
-	private final ArrayList<ConditionalBlock> volumeStartEvents;
-	private final ArrayList<ConditionalBlock> volumeEndEvents;
-	private final ArrayList<ConditionalBlock> tocEndEvents;
-	private final FormatterCoreContext fc;
-	private final long groupNumber;
-	private BlockAddress currentBlockAddress;
-	
-	TocSequenceEventImpl(FormatterCoreContext fc, TocProperties props) {
-		this.fc = fc;
-		this.props = props;
-		this.tocStartEvents = new ArrayList<>();
-		this.volumeStartEvents = new ArrayList<>();
-		this.volumeEndEvents = new ArrayList<>();
-		this.tocEndEvents = new ArrayList<>();
-		this.groupNumber = BlockAddress.getNextGroupNumber();
-	}
+    private final TocProperties props;
 
-	FormatterCore addTocStart(Condition condition) {
-		// we don't need a layout master here, because it will be replaced before rendering below
-		FormatterCoreImpl f = new FormatterCoreImpl(fc);
-		tocStartEvents.add(new ConditionalBlock(f, condition));
-		return f;
-	}
+    private final ArrayList<ConditionalBlock> tocStartEvents;
+    private final ArrayList<ConditionalBlock> volumeStartEvents;
+    private final ArrayList<ConditionalBlock> volumeEndEvents;
+    private final ArrayList<ConditionalBlock> tocEndEvents;
+    private final FormatterCoreContext fc;
+    private final long groupNumber;
+    private BlockAddress currentBlockAddress;
 
-	FormatterCore addVolumeStartEvents(Condition condition) {
-		FormatterCoreImpl f = new FormatterCoreImpl(fc);
-		volumeStartEvents.add(new ConditionalBlock(f, condition));
-		return f;
-	}
-	
-	FormatterCore addVolumeEndEvents(Condition condition) {
-		FormatterCoreImpl f = new FormatterCoreImpl(fc);
-		volumeEndEvents.add(new ConditionalBlock(f, condition));
-		return f;
-	}
-	
-	FormatterCore addTocEnd(Condition condition) {
-		// we don't need a layout master here, because it will be replaced before rendering below
-		FormatterCoreImpl f = new FormatterCoreImpl(fc);
-		tocEndEvents.add(new ConditionalBlock(f, condition));
-		return f;
-	}
+    TocSequenceEventImpl(FormatterCoreContext fc, TocProperties props) {
+        this.fc = fc;
+        this.props = props;
+        this.tocStartEvents = new ArrayList<>();
+        this.volumeStartEvents = new ArrayList<>();
+        this.volumeEndEvents = new ArrayList<>();
+        this.tocEndEvents = new ArrayList<>();
+        this.groupNumber = BlockAddress.getNextGroupNumber();
+    }
 
-	TocProperties.TocRange getRange() {
-		return props.getRange();
-	}
+    FormatterCore addTocStart(Condition condition) {
+        // we don't need a layout master here, because it will be replaced before rendering below
+        FormatterCoreImpl f = new FormatterCoreImpl(fc);
+        tocStartEvents.add(new ConditionalBlock(f, condition));
+        return f;
+    }
 
-	private Iterable<Block> getCompoundIterableB(Iterable<ConditionalBlock> events, Context vars) {
-		ArrayList<Block> it = new ArrayList<>();
-		for (ConditionalBlock ev : events) {
-			if (ev.appliesTo(vars)) {
-				Iterable<Block> tmp = ev.getSequence();
-				for (Block b : tmp) {
-					//always clone these blocks, as they may be placed in multiple contexts
-					Block bl = b.copy();
-					currentBlockAddress = new BlockAddress(groupNumber, currentBlockAddress.getBlockNumber()+1);
-					bl.setBlockAddress(currentBlockAddress);
-					it.add(bl);
-				}
-			}
-		}
-		return it;
-	}
+    FormatterCore addVolumeStartEvents(Condition condition) {
+        FormatterCoreImpl f = new FormatterCoreImpl(fc);
+        volumeStartEvents.add(new ConditionalBlock(f, condition));
+        return f;
+    }
 
-	private Iterable<Block> getVolumeStart(Context vars) throws IOException {
-		return getCompoundIterableB(volumeStartEvents, vars);
-	}
-	
-	private Iterable<Block> getVolumeEnd(Context vars) throws IOException {
-		return getCompoundIterableB(volumeEndEvents, vars);
-	}
-	
-	private Iterable<Block> getTocStart(Context vars) throws IOException {
-		return getCompoundIterableB(tocStartEvents, vars);
-	}
+    FormatterCore addVolumeEndEvents(Condition condition) {
+        FormatterCoreImpl f = new FormatterCoreImpl(fc);
+        volumeEndEvents.add(new ConditionalBlock(f, condition));
+        return f;
+    }
 
-	private Iterable<Block> getTocEnd(Context vars) throws IOException {
-		return getCompoundIterableB(tocEndEvents, vars);
-	}
+    FormatterCore addTocEnd(Condition condition) {
+        // we don't need a layout master here, because it will be replaced before rendering below
+        FormatterCoreImpl f = new FormatterCoreImpl(fc);
+        tocEndEvents.add(new ConditionalBlock(f, condition));
+        return f;
+    }
 
-	@Override
-	public SequenceProperties getSequenceProperties() {
-		return props;
-	}
+    TocProperties.TocRange getRange() {
+        return props.getRange();
+    }
 
-	@Override
-	public BlockSequence getBlockSequence(FormatterContext context, DefaultContext vars, CrossReferenceHandler crh) {
-		TableOfContentsImpl data = context.getTocs().get(props.getTocName());
-		currentBlockAddress = new BlockAddress(groupNumber, 0);
-		try {
-			BlockSequenceManipulator fsm = new BlockSequenceManipulator(
-					context.getMasters().get(getSequenceProperties().getMasterName()), 
-					getSequenceProperties());
-			fsm.appendGroup(getTocStart(vars));
-			if (getRange()==TocProperties.TocRange.VOLUME) {
-				int currentVolume = vars.getCurrentVolume();
-				Collection<Block> volumeToc = data.filter(refToVolume(currentVolume, crh), rangeToVolume(currentVolume, crh));
-				if (volumeToc.isEmpty()) {
-					return null;
-				}
-				fsm.appendGroup(volumeToc);
-			} else if (getRange()==TocProperties.TocRange.DOCUMENT) {
-				for (int vol = 1; vol <= crh.getVolumeCount(); vol++) {
-					Collection<Block> volumeToc = data.filter(refToVolume(vol, crh), rangeToVolume(vol, crh));
-					if (!volumeToc.isEmpty()) {
-						Context varsWithVolume = DefaultContext.from(vars).metaVolume(vol).build();
-						Iterable<Block> volumeStart = getVolumeStart(varsWithVolume);
-						for (Block b : volumeStart) {
-							b.setMetaVolume(vol);
-						}
-						Iterable<Block> volumeEnd = getVolumeEnd(varsWithVolume);
-						for (Block b : volumeEnd) {
-							b.setMetaVolume(vol);
-						}
-						fsm.appendGroup(volumeStart);
-						fsm.appendGroup(volumeToc);
-						fsm.appendGroup(volumeEnd);
-					}
-				}
-				{
-					Collection<Block> volumeToc = data.filter(refToVolume(null, crh), range -> false);
-					if (!volumeToc.isEmpty()) {
-						fsm.appendGroup(volumeToc);
-					}
-				}
-			} else {
-				throw new RuntimeException("Coding error");
-			}
-			fsm.appendGroup(getTocEnd(vars));
-			return fsm.newSequence();
-		} catch (IOException e) {
-			Logger.getLogger(this.getClass().getCanonicalName()).log(Level.WARNING, "Failed to assemble toc.", e);
-		}
-		return null;
-	}
+    private Iterable<Block> getCompoundIterableB(Iterable<ConditionalBlock> events, Context vars) {
+        ArrayList<Block> it = new ArrayList<>();
+        for (ConditionalBlock ev : events) {
+            if (ev.appliesTo(vars)) {
+                Iterable<Block> tmp = ev.getSequence();
+                for (Block b : tmp) {
+                    //always clone these blocks, as they may be placed in multiple contexts
+                    Block bl = b.copy();
+                    currentBlockAddress = new BlockAddress(
+                        groupNumber,
+                        currentBlockAddress.getBlockNumber() + 1
+                    );
+                    bl.setBlockAddress(currentBlockAddress);
+                    it.add(bl);
+                }
+            }
+        }
+        return it;
+    }
 
-	private Predicate<String> refToVolume(Integer vol, CrossReferenceHandler crh) {
-		return refId -> {
-			VolumeData volumeData = crh.getVolumeData(refId);
-			if (vol == null || volumeData == null) {
-				return vol == null && volumeData == null;
-			} else {
-				return vol.equals(volumeData.getVolumeNumber());
-			}
-		};
-	}
-	
-	/**
-	 * Determines whether a range is part of a volume
-	 * 
-	 * @param vol volume
-	 * @param crh cross-reference handler
-	 * @return 
-	 */
-	private Predicate<TocEntryOnResumedRange> rangeToVolume(int vol, CrossReferenceHandler crh) {
-		return range -> {
-			/* startVolumeData refers to the location where the range starts */
-			VolumeData startVolumeData = crh.getVolumeData(range.getStartRefId());
-			if (startVolumeData == null) {
-				return false;
-			}
-			if (startVolumeData.getVolumeNumber() >= vol) {
-				return false;
-			}
-			
-			Optional<String> endRefId = range.getEndRefId();
-			if (!endRefId.isPresent()) {
-				return true;
-			}
-			
-			/* endVolumeData refers to the location where the first block after the range starts */
-			VolumeData endVolumeData = crh.getVolumeData(endRefId.get());
-			if (endVolumeData == null) {
-				return false;
-			}
-			if (endVolumeData.isAtStartOfVolumeContents()) {
-				return vol < endVolumeData.getVolumeNumber();
-			} else {
-				return vol <= endVolumeData.getVolumeNumber();
-			}
-		};
-	}
-	
+    private Iterable<Block> getVolumeStart(Context vars) throws IOException {
+        return getCompoundIterableB(volumeStartEvents, vars);
+    }
+
+    private Iterable<Block> getVolumeEnd(Context vars) throws IOException {
+        return getCompoundIterableB(volumeEndEvents, vars);
+    }
+
+    private Iterable<Block> getTocStart(Context vars) throws IOException {
+        return getCompoundIterableB(tocStartEvents, vars);
+    }
+
+    private Iterable<Block> getTocEnd(Context vars) throws IOException {
+        return getCompoundIterableB(tocEndEvents, vars);
+    }
+
+    @Override
+    public SequenceProperties getSequenceProperties() {
+        return props;
+    }
+
+    @Override
+    public BlockSequence getBlockSequence(FormatterContext context, DefaultContext vars, CrossReferenceHandler crh) {
+        TableOfContentsImpl data = context.getTocs().get(props.getTocName());
+        currentBlockAddress = new BlockAddress(groupNumber, 0);
+        try {
+            BlockSequenceManipulator fsm = new BlockSequenceManipulator(
+                    context.getMasters().get(getSequenceProperties().getMasterName()),
+                    getSequenceProperties());
+            fsm.appendGroup(getTocStart(vars));
+            if (getRange() == TocProperties.TocRange.VOLUME) {
+                int currentVolume = vars.getCurrentVolume();
+                Collection<Block> volumeToc = data.filter(
+                    refToVolume(currentVolume, crh), rangeToVolume(currentVolume, crh)
+                );
+                if (volumeToc.isEmpty()) {
+                    return null;
+                }
+                fsm.appendGroup(volumeToc);
+            } else if (getRange() == TocProperties.TocRange.DOCUMENT) {
+                for (int vol = 1; vol <= crh.getVolumeCount(); vol++) {
+                    Collection<Block> volumeToc = data.filter(refToVolume(vol, crh), rangeToVolume(vol, crh));
+                    if (!volumeToc.isEmpty()) {
+                        Context varsWithVolume = DefaultContext.from(vars).metaVolume(vol).build();
+                        Iterable<Block> volumeStart = getVolumeStart(varsWithVolume);
+                        for (Block b : volumeStart) {
+                            b.setMetaVolume(vol);
+                        }
+                        Iterable<Block> volumeEnd = getVolumeEnd(varsWithVolume);
+                        for (Block b : volumeEnd) {
+                            b.setMetaVolume(vol);
+                        }
+                        fsm.appendGroup(volumeStart);
+                        fsm.appendGroup(volumeToc);
+                        fsm.appendGroup(volumeEnd);
+                    }
+                }
+                {
+                    Collection<Block> volumeToc = data.filter(refToVolume(null, crh), range -> false);
+                    if (!volumeToc.isEmpty()) {
+                        fsm.appendGroup(volumeToc);
+                    }
+                }
+            } else {
+                throw new RuntimeException("Coding error");
+            }
+            fsm.appendGroup(getTocEnd(vars));
+            return fsm.newSequence();
+        } catch (IOException e) {
+            Logger.getLogger(this.getClass().getCanonicalName()).log(Level.WARNING, "Failed to assemble toc.", e);
+        }
+        return null;
+    }
+
+    private Predicate<String> refToVolume(Integer vol, CrossReferenceHandler crh) {
+        return refId -> {
+            VolumeData volumeData = crh.getVolumeData(refId);
+            if (vol == null || volumeData == null) {
+                return vol == null && volumeData == null;
+            } else {
+                return vol.equals(volumeData.getVolumeNumber());
+            }
+        };
+    }
+
+    /**
+     * Determines whether a range is part of a volume.
+     *
+     * @param vol volume
+     * @param crh cross-reference handler
+     * @return
+     */
+    private Predicate<TocEntryOnResumedRange> rangeToVolume(int vol, CrossReferenceHandler crh) {
+        return range -> {
+            /* startVolumeData refers to the location where the range starts */
+            VolumeData startVolumeData = crh.getVolumeData(range.getStartRefId());
+            if (startVolumeData == null) {
+                return false;
+            }
+            if (startVolumeData.getVolumeNumber() >= vol) {
+                return false;
+            }
+
+            Optional<String> endRefId = range.getEndRefId();
+            if (!endRefId.isPresent()) {
+                return true;
+            }
+
+            /* endVolumeData refers to the location where the first block after the range starts */
+            VolumeData endVolumeData = crh.getVolumeData(endRefId.get());
+            if (endVolumeData == null) {
+                return false;
+            }
+            if (endVolumeData.isAtStartOfVolumeContents()) {
+                return vol < endVolumeData.getVolumeNumber();
+            } else {
+                return vol <= endVolumeData.getVolumeNumber();
+            }
+        };
+    }
+
 }

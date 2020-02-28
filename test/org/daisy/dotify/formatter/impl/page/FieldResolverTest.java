@@ -1,9 +1,5 @@
 package org.daisy.dotify.formatter.impl.page;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Arrays;
-
 import org.daisy.dotify.api.formatter.FieldList;
 import org.daisy.dotify.api.formatter.FormatterConfiguration;
 import org.daisy.dotify.api.formatter.LayoutMasterProperties;
@@ -22,15 +18,22 @@ import org.daisy.dotify.formatter.impl.search.SequenceId;
 import org.daisy.dotify.formatter.impl.search.Space;
 import org.junit.Test;
 
+import java.util.Arrays;
+
+import static org.junit.Assert.assertEquals;
+
+/**
+ * TODO: Write java doc.
+ */
 @SuppressWarnings("javadoc")
 public class FieldResolverTest {
 
     @Test
     public void testGetWidth_01() throws TranslatorConfigurationException {
         FormatterContext fcontext = new FormatterContext(
-            BrailleTranslatorFactoryMaker.newInstance(),
-            TextBorderFactoryMaker.newInstance(),
-            new FormatterConfiguration.Builder("sv-SE", "bypass").build()
+                BrailleTranslatorFactoryMaker.newInstance(),
+                TextBorderFactoryMaker.newInstance(),
+                new FormatterConfiguration.Builder("sv-SE", "bypass").build()
         );
 
         LayoutMaster master = new LayoutMaster(fcontext,
@@ -51,11 +54,11 @@ public class FieldResolverTest {
         PageDetails details = new PageDetails(
                 true,
                 new PageId(0, 0,
-                    new SequenceId(
-                        0,
-                        new DocumentSpace(Space.BODY, null),
-                        0
-                    )
+                        new SequenceId(
+                                0,
+                                new DocumentSpace(Space.BODY, null),
+                                0
+                        )
                 ),
                 null,
                 0);

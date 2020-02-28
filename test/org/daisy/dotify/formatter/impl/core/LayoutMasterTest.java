@@ -1,9 +1,5 @@
 package org.daisy.dotify.formatter.impl.core;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Arrays;
-
 import org.daisy.dotify.api.formatter.FieldList;
 import org.daisy.dotify.api.formatter.FormatterConfiguration;
 import org.daisy.dotify.api.formatter.LayoutMasterProperties;
@@ -14,6 +10,13 @@ import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMaker;
 import org.daisy.dotify.api.translator.TextBorderFactoryMaker;
 import org.junit.Test;
 
+import java.util.Arrays;
+
+import static org.junit.Assert.assertEquals;
+
+/**
+ * TODO: Write java doc.
+ */
 public class LayoutMasterTest {
 
     @Test

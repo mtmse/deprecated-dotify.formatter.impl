@@ -1,11 +1,5 @@
 package org.daisy.dotify.formatter.impl;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.List;
-
 import org.daisy.dotify.api.formatter.BlockProperties;
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.DynamicContent;
@@ -32,6 +26,15 @@ import org.daisy.dotify.translator.impl.DefaultBrailleFinalizer;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+
+/**
+ * TODO: Write java doc.
+ */
 @SuppressWarnings("javadoc")
 public class FormatterImplTest {
 
@@ -42,6 +45,7 @@ public class FormatterImplTest {
         TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
         DynamicContent exp = new DynamicContent() {
             String str = "b";
+
             @Override
             public String render(Context context) {
                 return str;
@@ -49,13 +53,14 @@ public class FormatterImplTest {
 
             @Override
             public String render() {
-                return render(new Context() {});
+                return render(new Context() {
+                });
             }
         };
 
         DefaultMarkerProcessor mp = new DefaultMarkerProcessor.Builder()
-                .addDictionary("em", (String str, TextAttribute attributes)->new Marker("1>", "<1"))
-                .addDictionary("strong", (String str, TextAttribute attributes)->new Marker("2>", "<2"))
+                .addDictionary("em", (String str, TextAttribute attributes) -> new Marker("1>", "<1"))
+                .addDictionary("strong", (String str, TextAttribute attributes) -> new Marker("2>", "<2"))
                 .build();
 
         SimpleBrailleTranslator trr = new SimpleBrailleTranslator(
@@ -83,19 +88,24 @@ public class FormatterImplTest {
         StringBuilder sb = new StringBuilder();
         f1.write(new PagedMediaWriter() {
             @Override
-            public void close() throws IOException { }
+            public void close() throws IOException {
+            }
 
             @Override
-            public void prepare(List<MetaDataItem> meta) { }
+            public void prepare(List<MetaDataItem> meta) {
+            }
 
             @Override
-            public void open(OutputStream os) throws PagedMediaWriterException { }
+            public void open(OutputStream os) throws PagedMediaWriterException {
+            }
 
             @Override
-            public void newVolume(SectionProperties props) { }
+            public void newVolume(SectionProperties props) {
+            }
 
             @Override
-            public void newSection(SectionProperties props) { }
+            public void newSection(SectionProperties props) {
+            }
 
             @Override
             public void newRow(Row row) {
@@ -103,10 +113,12 @@ public class FormatterImplTest {
             }
 
             @Override
-            public void newRow() { }
+            public void newRow() {
+            }
 
             @Override
-            public void newPage() { }
+            public void newPage() {
+            }
         });
         assertEquals("1>a2>b<2c<1", sb.toString());
     }

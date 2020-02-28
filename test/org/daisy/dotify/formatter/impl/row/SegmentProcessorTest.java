@@ -1,10 +1,5 @@
 package org.daisy.dotify.formatter.impl.row;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.daisy.dotify.api.formatter.FormatterConfiguration;
 import org.daisy.dotify.api.formatter.TextProperties;
 import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMaker;
@@ -24,15 +19,26 @@ import org.daisy.dotify.translator.impl.DefaultBrailleFinalizer;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
+
+import static org.junit.Assert.assertEquals;
+
+/**
+ * TODO: Write java doc.
+ */
 @SuppressWarnings("javadoc")
 public class SegmentProcessorTest {
+    private static final Logger logger = Logger.getLogger(SegmentProcessorTest.class.getCanonicalName());
+
     final String loc = "und";
     final String mode = "bypass";
     final RowDataProperties rdp = new RowDataProperties.Builder().build();
     final FormatterConfiguration conf = new FormatterConfiguration.Builder(loc, mode).build();
     final DefaultMarkerProcessor mp = new DefaultMarkerProcessor.Builder()
-            .addDictionary("em", (str, ta)->new Marker("x", "y"))
-            .addDictionary("strong", (str, ta)->new Marker("6", "7"))
+            .addDictionary("em", (str, ta) -> new Marker("x", "y"))
+            .addDictionary("strong", (str, ta) -> new Marker("6", "7"))
             .build();
     final SimpleBrailleTranslator trr = new SimpleBrailleTranslator(
             new DefaultBrailleFilter(new IdentityFilter(), loc, mp, null),
@@ -57,8 +63,18 @@ public class SegmentProcessorTest {
         expecteds.add(t);
         FormatterContext fc = new FormatterContext(BrailleTranslatorFactoryMaker.newInstance(), null, conf);
 
-        SegmentProcessor sp = new SegmentProcessor("", segments, 100, null, null, 100, rdp.getMargins(), fc, rdp);
-        System.out.println(sp.getNext(LineProperties.DEFAULT).get().getChars());
+        SegmentProcessor sp = new SegmentProcessor(
+            "",
+            segments,
+            100,
+            null,
+            null,
+            100,
+            rdp.getMargins(),
+            fc,
+            rdp
+        );
+        logger.info(sp.getNext(LineProperties.DEFAULT).get().getChars());
     }
 
     @Test
@@ -79,7 +95,17 @@ public class SegmentProcessorTest {
         BrailleTranslatorFactoryMakerService sr = Mockito.mock(BrailleTranslatorFactoryMakerService.class);
         Mockito.when(sr.newTranslator(loc, mode)).thenReturn(trr);
         FormatterContext fc = new FormatterContext(sr, null, conf);
-        SegmentProcessor sp = new SegmentProcessor("", segments, 100, null, null, 100, rdp.getMargins(), fc, rdp);
+        SegmentProcessor sp = new SegmentProcessor(
+            "",
+            segments,
+            100,
+            null,
+            null,
+            100,
+            rdp.getMargins(),
+            fc,
+            rdp
+        );
         assertEquals("abcxdefyghi", sp.getNext(LineProperties.DEFAULT).get().getChars());
     }
 
@@ -104,87 +130,18 @@ public class SegmentProcessorTest {
         BrailleTranslatorFactoryMakerService sr = Mockito.mock(BrailleTranslatorFactoryMakerService.class);
         Mockito.when(sr.newTranslator(loc, mode)).thenReturn(trr);
         FormatterContext fc = new FormatterContext(sr, null, conf);
-        SegmentProcessor sp = new SegmentProcessor("", segments, 100, null, null, 100, rdp.getMargins(), fc, rdp);
+        SegmentProcessor sp = new SegmentProcessor(
+            "",
+            segments,
+            100,
+            null,
+            null,
+            100,
+            rdp.getMargins(),
+            fc,
+            rdp
+        );
         assertEquals("abcxdefy", sp.getNext(LineProperties.DEFAULT).get().getChars());
     }
-    /*
-    @Test
-    public void testDynamicWithProcessor_01() {
-        Context context = Mockito.mock(Context.class);
-        Segment t;
-        TextProperties tp = new TextProperties.Builder("und").build();
-        List<Segment> segments = new ArrayList<>();
-        List<Segment> expecteds = new ArrayList<>();
-        t = new TextSegment("abc", tp);
-        segments.add(t);
-        expecteds.add(t);
-        Style s = new Style("em");
-        segments.add(s);
-        DynamicContent dc = Mockito.mock(DynamicContent.class);
-        t = new Evaluate(dc, tp);
-        s.add(t);
-        expecteds.add(new Evaluate(dc, tp, new MarkerValue("x", "y")));
-        t = new TextSegment("ghi", tp);
-        segments.add(t);
-        expecteds.add(t);
-        MarkerProcessor mp = new DefaultMarkerProcessor.Builder().addDictionary("em", (str, ta)->new Marker("x", "y")).build();
-        List<Segment> actuals = SegmentProcessor.processStyles(segments, mp, context);
-        assertEquals(expecteds, actuals);
-    }
 
-    @Test
-    public void testDynamicWithProcessor_02() {
-        Context context = Mockito.mock(Context.class);
-        Segment t;
-        TextProperties tp = new TextProperties.Builder("und").build();
-        List<Segment> segments = new ArrayList<>();
-        List<Segment> expecteds = new ArrayList<>();
-        t = new TextSegment("abc", tp);
-        segments.add(t);
-        expecteds.add(t);
-        Style s = new Style("em");
-        Style s1 = new Style("strong");
-        segments.add(s);
-        s.add(s1);
-        DynamicContent dc = Mockito.mock(DynamicContent.class);
-        t = new Evaluate(dc, tp);
-        s1.add(t);
-        expecteds.add(new Evaluate(dc, tp, new MarkerValue("x6", "7")));
-        t = new TextSegment("ghi", tp);
-        s.add(t);
-        expecteds.add(new TextSegment("ghiy", tp));
-
-        List<Segment> actuals = SegmentProcessor.processStyles(segments, mp, context);
-        assertEquals(expecteds, actuals);
-    }
-
-    @Test
-    public void testDynamicWithProcessor_03() {
-        Context context = Mockito.mock(Context.class);
-        Segment t;
-        TextProperties tp = new TextProperties.Builder("und").build();
-        List<Segment> segments = new ArrayList<>();
-        List<Segment> expecteds = new ArrayList<>();
-        t = new TextSegment("abc", tp);
-        segments.add(t);
-        expecteds.add(t);
-        Style s = new Style("em");
-        Style s1 = new Style("strong");
-        segments.add(s);
-        s.add(s1);
-        DynamicContent dc = Mockito.mock(DynamicContent.class);
-        t = new PageNumberReference("id", NumeralStyle.ALPHA);
-        s1.add(t);
-        expecteds.add(new PageNumberReference("id", NumeralStyle.ALPHA, new MarkerValue("x6", "7")));
-        t = new TextSegment("ghi", tp);
-        s.add(t);
-        expecteds.add(new TextSegment("ghiy", tp));
-        MarkerProcessor mp = new DefaultMarkerProcessor.Builder()
-                .addDictionary("em", (str, ta)->new Marker("x", "y"))
-                .addDictionary("strong", (str, ta)->new Marker("6", "7"))
-                .build();
-        List<Segment> actuals = SegmentProcessor.processStyles(segments, mp, context);
-        assertEquals(expecteds, actuals);
-    }
-*/
 }

@@ -200,10 +200,8 @@ public class VolumeProvider {
                 }
                 // sets the preferred value to targetSheetsInVolume, where cost will be 0
                 // including a small preference for bigger volumes
-                double distancePenalty =
-                        Math.abs(contentSheetTarget - sheetCount) +
-                        (contentSheetTarget - sheetCount) *
-                        0.001;
+                double distancePenalty = Math.abs(contentSheetTarget - sheetCount) +
+                        (contentSheetTarget - sheetCount) * 0.001;
                 int unbreakablePenalty = lastSheet.isBreakable() ? 0 : 100;
                 return distancePenalty + priorityPenalty + unbreakablePenalty;
             }
@@ -240,8 +238,16 @@ public class VolumeProvider {
         boolean atFirstPageOfContents = true;
         for (Sheet sheet : contents) {
             for (PageImpl p : sheet.getPages()) {
-                for (String id : p.getIdentifiers()) {
-                    crh.setVolumeData(id, new VolumeData(volumeNumber, atFirstPageOfContents));
+                if (atFirstPageOfContents) {
+                    List<String> contentIdentifiers = p.getContentIdentifiers();
+                    for (String id : p.getIdentifiers()) {
+                        boolean atStartOfPage = !contentIdentifiers.contains(id);
+                        crh.setVolumeData(id, new VolumeData(volumeNumber, atStartOfPage));
+                    }
+                } else {
+                    for (String id : p.getIdentifiers()) {
+                        crh.setVolumeData(id, new VolumeData(volumeNumber, false));
+                    }
                 }
                 if (p.getAnchors().size() > 0) {
                     ad.add(new AnchorData(p.getAnchors(), p.getPageNumber()));
@@ -366,108 +372,36 @@ public class VolumeProvider {
         return new SheetDataSource(pageCounter, context.getFormatterContext(), rcontext, volumeGroup, seqs);
     }
 
-		pageIndex += pageCount;
-		SectionBuilder sb = new SectionBuilder();
-		boolean atFirstPageOfContents = true;
-		for (Sheet sheet : contents) {
-			for (PageImpl p : sheet.getPages()) {
-				if (atFirstPageOfContents) {
-					List<String> contentIdentifiers = p.getContentIdentifiers();
-					for (String id : p.getIdentifiers()) {
-						boolean atStartOfPage = !contentIdentifiers.contains(id);
-						crh.setVolumeData(id, new VolumeData(volumeNumber, atStartOfPage));
-					}
-				} else {
-					for (String id : p.getIdentifiers()) {
-						crh.setVolumeData(id, new VolumeData(volumeNumber, false));
-					}
-				}
-				if (p.getAnchors().size()>0) {
-					ad.add(new AnchorData(p.getAnchors(), p.getPageNumber()));
-				}
-				atFirstPageOfContents = false;
-			}
-			sb.addSheet(sheet);
-		}
-		groups.currentGroup().setSheetCount(groups.currentGroup().getSheetCount() + contents.size());
-		groups.nextVolume();
-		return sb;
-	}
-	
-	private SectionBuilder updateVolumeContents(int volumeNumber, ArrayList<AnchorData> ad, boolean pre) {
-		DefaultContext c = new DefaultContext.Builder(crh)
-						.currentVolume(volumeNumber)
-						.space(pre?Space.PRE_CONTENT:Space.POST_CONTENT)
-						.build();
-		try {
-			ArrayList<BlockSequence> ib = new ArrayList<>();
-			for (VolumeTemplate t : volumeTemplates) {
-				if (t.appliesTo(c)) {
-					for (VolumeSequence seq : (pre?t.getPreVolumeContent():t.getPostVolumeContent())) {
-						BlockSequence s = seq.getBlockSequence(context.getFormatterContext(), c, crh);
-						if (s!=null) {
-							ib.add(s);
-						}
-					}
-					break;
-				}
-			}
-			List<Sheet> ret = prepareToPaginatePrePostVolumeContent(ib, c).getRemaining();
-			SectionBuilder sb = new SectionBuilder();
-			for (Sheet ps : ret) {
-				for (PageImpl p : ps.getPages()) {
-					for (String id : p.getIdentifiers()) {
-						crh.setVolumeData(id, new VolumeData(volumeNumber, false));
-					}
-					if (p.getAnchors().size()>0) {
-						ad.add(new AnchorData(p.getAnchors(), p.getPageNumber()));
-					}
-				}
-				sb.addSheet(ps);
-			}
-			return sb;
-		} catch (PaginatorException e) {
-			return null;
-		}
-	}
-	
-	/**
-	 * Convert a list of {@link BlockSequence}s from a pre- or post-content to a {@link SheetDataSource}.
-	 */
-	private SheetDataSource prepareToPaginatePrePostVolumeContent(List<BlockSequence> fs, DefaultContext rcontext) throws PaginatorException {
-		return prepareToPaginate(new PageCounter(), rcontext, null, fs);
-	}
-	
-	/**
-	 * Process hard volume breaks.
-	 *
-	 * <p>Convert a list of {@link BlockSequence}s to a sequence of {@link SheetDataSource}. At
-	 * every <code>BlockSequence</code> with a hard volume break
-	 * (<code>break-before="volume"</code>) a new <code>SheetDataSource</code> is started.
-	 */
-	private Iterable<SheetDataSource> prepareToPaginateWithVolumeGroups(List<BlockSequence> fs, DefaultContext rcontext) {
-		List<List<BlockSequence>> volGroups = new ArrayList<>();
-		List<BlockSequence> currentGroup = new ArrayList<>();
-		volGroups.add(currentGroup);
-		for (BlockSequence bs : fs) {
-			if (bs.getSequenceProperties().getBreakBeforeType()==SequenceBreakBefore.VOLUME) {
-				currentGroup = new ArrayList<>();
-				volGroups.add(currentGroup);
-			}
-			currentGroup.add(bs);
-		}
-		PageCounter pageCounter = new PageCounter();
-		crh.resetUniqueChecks();
-		return new Iterable<SheetDataSource>(){
-			@Override
-			public Iterator<SheetDataSource> iterator() {
-				try {
-					return prepareToPaginateWithVolumeGroups(pageCounter, rcontext, volGroups).iterator();
-				} catch (PaginatorException e) {
-					throw new RuntimeException(e);
-				}
-			}};
-	}
+    /**
+     * Informs the volume provider that the caller has finished requesting volumes.
+     * <b>Note: only use after all volumes have been calculated.</b>
+     *
+     * @return returns true if the volumes can be accepted, false otherwise
+     */
+    boolean done() {
+        if (groups.hasNext() && logger.isLoggable(Level.FINE)) {
+            logger.fine("There is more content (sheets: " +
+                    groups.countRemainingSheets() + ", pages: " +
+                    groups.countRemainingPages() + ")");
+        }
+        // this changes the value of groups.getVolumeCount() to the newly computed
+        // required number of volume based on groups.countTotalSheets()
+        groups.updateAll();
+        crh.commitBreakable();
+        crh.commitTransitionProperties();
+        crh.trimPageDetails();
+        crh.setVolumeCount(groups.getVolumeCount());
+        crh.setSheetsInDocument(groups.countTotalSheets());
+        //crh.setPagesInDocument(value);
+        if (!crh.isDirty() && !groups.hasNext()) {
+            return true;
+        } else {
+            crh.setDirty(false);
+            logger.info("Things didn't add up, running another iteration (" + j + ")");
+        }
+        j++;
+        return false;
+    }
 
     int getVolumeCount() {
         return crh.getVolumeCount();
