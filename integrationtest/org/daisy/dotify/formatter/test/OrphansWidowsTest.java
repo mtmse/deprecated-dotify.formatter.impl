@@ -9,13 +9,27 @@ import org.junit.Test;
 public class OrphansWidowsTest extends AbstractFormatterEngineTest {
 
     @Test
-    public void testOrphans() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-        testPEF("resource-files/orphans-input.obfl", "resource-files/orphans-expected.pef", false);
+    public void testOrphans() throws
+            LayoutEngineException,
+            IOException,
+            PagedMediaWriterConfigurationException {
+        testPEF(
+            "resource-files/orphans-input.obfl",
+            "resource-files/orphans-expected.pef",
+            false
+        );
     }
 
     @Test
-    public void testWidows() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-        testPEF("resource-files/widows-input.obfl", "resource-files/widows-expected.pef", false);
+    public void testWidows() throws
+            LayoutEngineException,
+            IOException,
+            PagedMediaWriterConfigurationException {
+        testPEF(
+            "resource-files/widows-input.obfl",
+            "resource-files/widows-expected.pef",
+            false
+        );
     }
 
 }

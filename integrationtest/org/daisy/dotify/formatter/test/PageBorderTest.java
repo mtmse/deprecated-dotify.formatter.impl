@@ -9,8 +9,15 @@ import org.junit.Test;
 public class PageBorderTest extends AbstractFormatterEngineTest {
 
     @Test
-    public void testPageBorder() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-        testPEF("resource-files/page-border-input.obfl", "resource-files/page-border-expected.pef", false);
+    public void testPageBorder() throws
+            LayoutEngineException,
+            IOException,
+            PagedMediaWriterConfigurationException {
+        testPEF(
+            "resource-files/page-border-input.obfl",
+            "resource-files/page-border-expected.pef",
+            false
+        );
     }
 
 }

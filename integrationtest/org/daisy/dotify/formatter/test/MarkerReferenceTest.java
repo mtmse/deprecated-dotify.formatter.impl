@@ -10,8 +10,15 @@ import org.junit.Test;
 public class MarkerReferenceTest extends AbstractFormatterEngineTest {
 
     @Test
-    public void testPageMarker() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-        testPEF("resource-files/marker-ref/marker-ref-page-input.obfl", "resource-files/marker-ref/marker-ref-page-expected.pef", false);
+    public void testPageMarker() throws
+            LayoutEngineException,
+            IOException,
+            PagedMediaWriterConfigurationException {
+        testPEF(
+            "resource-files/marker-ref/marker-ref-page-input.obfl",
+            "resource-files/marker-ref/marker-ref-page-expected.pef",
+            false
+        );
     }
 
     @Test
