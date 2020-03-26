@@ -101,7 +101,7 @@ public class TextSegment implements Segment {
 
     @Override
     public Optional<String> getLocale() {
-        return Optional.of(tp.getLocale());
+        return Optional.ofNullable(tp.getLocale());
     }
 
     @Override
