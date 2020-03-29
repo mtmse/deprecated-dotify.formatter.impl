@@ -290,5 +290,15 @@ public class MarkerReferenceTest extends AbstractFormatterEngineTest {
             false
         );
     }
-
+    @Test
+    public void testMarkerReferenceInVolumeTransition() throws
+            LayoutEngineException,
+            IOException,
+            PagedMediaWriterConfigurationException {
+        testPEF(
+            "resource-files/marker-ref/marker-reference-volume-transition-input.obfl",
+            "resource-files/marker-ref/marker-reference-volume-transition-expected.pef",
+            false
+        );
+    }
 }

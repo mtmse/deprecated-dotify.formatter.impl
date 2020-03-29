@@ -8,7 +8,6 @@ import org.daisy.dotify.formatter.impl.row.RowDataProperties;
 import org.daisy.dotify.formatter.impl.search.BlockAddress;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.segment.Segment;
-import org.daisy.dotify.formatter.impl.segment.Segment.SegmentType;
 
 /**
  * <p>Provides a block of rows and the properties associated with it.</p>
@@ -111,8 +110,13 @@ public abstract class Block {
     }
 
     private void markIfVolatile(Segment s) {
-        if (s.getSegmentType() == SegmentType.Reference || s.getSegmentType() == SegmentType.Evaluate) {
+        switch (s.getSegmentType()) {
+        case PageReference:
+        case MarkerReference:
+        case Evaluate:
             isVolatile = true;
+            break;
+        default:
         }
     }
 

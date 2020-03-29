@@ -8,6 +8,7 @@ import org.daisy.dotify.api.formatter.DynamicSequenceBuilder;
 import org.daisy.dotify.api.formatter.FormatterCore;
 import org.daisy.dotify.api.formatter.Leader;
 import org.daisy.dotify.api.formatter.Marker;
+import org.daisy.dotify.api.formatter.MarkerReference;
 import org.daisy.dotify.api.formatter.NumeralStyle;
 import org.daisy.dotify.api.formatter.SequenceProperties;
 import org.daisy.dotify.api.formatter.SpanProperties;
@@ -136,8 +137,13 @@ class VolumeContentBuilderImpl extends Stack<VolumeSequence> implements VolumeCo
     }
 
     @Override
-    public void insertReference(String identifier, NumeralStyle numeralStyle) {
-        current().insertReference(identifier, numeralStyle);
+    public void insertPageReference(String identifier, NumeralStyle numeralStyle) {
+        current().insertPageReference(identifier, numeralStyle);
+    }
+
+    @Override
+    public void insertMarkerReference(MarkerReference ref, TextProperties t) {
+        current().insertMarkerReference(ref, t);
     }
 
     @Override

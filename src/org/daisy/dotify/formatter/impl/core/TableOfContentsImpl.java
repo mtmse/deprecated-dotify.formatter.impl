@@ -4,6 +4,7 @@ import org.daisy.dotify.api.formatter.BlockProperties;
 import org.daisy.dotify.api.formatter.DynamicContent;
 import org.daisy.dotify.api.formatter.Leader;
 import org.daisy.dotify.api.formatter.Marker;
+import org.daisy.dotify.api.formatter.MarkerReference;
 import org.daisy.dotify.api.formatter.NumeralStyle;
 import org.daisy.dotify.api.formatter.SpanProperties;
 import org.daisy.dotify.api.formatter.TableOfContents;
@@ -234,9 +235,15 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
     }
 
     @Override
-    public void insertReference(String identifier, NumeralStyle numeralStyle) {
+    public void insertPageReference(String identifier, NumeralStyle numeralStyle) {
         assertInEntry();
-        super.insertReference(identifier, numeralStyle);
+        super.insertPageReference(identifier, numeralStyle);
+    }
+
+    @Override
+    public void insertMarkerReference(MarkerReference ref, TextProperties t) {
+        assertInEntry();
+        super.insertMarkerReference(ref, t);
     }
 
     @Override

@@ -2,6 +2,7 @@ package org.daisy.dotify.formatter.impl.row;
 
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.Marker;
+import org.daisy.dotify.api.formatter.MarkerReference;
 import org.daisy.dotify.api.translator.AttributeWithContext;
 import org.daisy.dotify.api.translator.BrailleTranslatorResult;
 import org.daisy.dotify.api.translator.DefaultAttributeWithContext;
@@ -16,6 +17,7 @@ import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
 import org.daisy.dotify.formatter.impl.segment.Evaluate;
 import org.daisy.dotify.formatter.impl.segment.IdentifierSegment;
 import org.daisy.dotify.formatter.impl.segment.LeaderSegment;
+import org.daisy.dotify.formatter.impl.segment.MarkerReferenceSegment;
 import org.daisy.dotify.formatter.impl.segment.MarkerSegment;
 import org.daisy.dotify.formatter.impl.segment.PageNumberReference;
 import org.daisy.dotify.formatter.impl.segment.Segment;
@@ -40,7 +42,7 @@ class SegmentProcessor implements SegmentProcessing {
     private final CrossReferenceHandler refs;
     private final AttributeWithContext attr;
 
-    private Context context;
+    private DefaultContext context;
     private final boolean significantContent;
     private final SegmentProcessorContext spc;
 
@@ -62,6 +64,7 @@ class SegmentProcessor implements SegmentProcessing {
     private boolean closed;
     private String blockId;
     private Function<PageNumberReference, String> pagenumResolver;
+    private Function<MarkerReference, String> markerRefResolver;
     private Function<Evaluate, String> expressionResolver;
 
     SegmentProcessor(
@@ -69,7 +72,7 @@ class SegmentProcessor implements SegmentProcessing {
         List<Segment> segments,
         int flowWidth,
         CrossReferenceHandler refs,
-        Context context,
+        DefaultContext context,
         int available,
         BlockMargin margins,
         FormatterCoreContext fcontext,
@@ -96,6 +99,9 @@ class SegmentProcessor implements SegmentProcessing {
                 return "" + rs.getNumeralStyle().format(page);
             }
         };
+        this.markerRefResolver = (refs == null)
+                ? (ref) -> "??"
+                : (ref) -> refs.findMarker(getContext().getCurrentPageId(), ref);
         this.expressionResolver = (e) -> e.getExpression().render(getContext());
         initFields();
     }
@@ -131,6 +137,9 @@ class SegmentProcessor implements SegmentProcessing {
         this.blockId = template.blockId;
         this.pagenumResolver = template.pagenumResolver;
         // can't simply copy because getContext() of template would be used
+        this.markerRefResolver = (refs == null)
+                ? (ref) -> "??"
+                : (ref) -> refs.findMarker(getContext().getCurrentPageId(), ref);
         this.expressionResolver = (e) -> e.getExpression().render(getContext());
     }
 
@@ -179,7 +188,8 @@ class SegmentProcessor implements SegmentProcessing {
                 if (
                     v.getSegmentType() == SegmentType.Text ||
                     v.getSegmentType() == SegmentType.Evaluate ||
-                    v.getSegmentType() == SegmentType.Reference ||
+                    v.getSegmentType() == SegmentType.PageReference ||
+                    v.getSegmentType() == SegmentType.MarkerReference ||
                     v.getSegmentType() == SegmentType.Style
                 ) {
                     if (start < 0) {
@@ -263,7 +273,8 @@ class SegmentProcessor implements SegmentProcessing {
                     return true;
                 case NewLine:
                 case Leader:
-                case Reference:
+                case PageReference:
+                case MarkerReference:
                 default:
                     return true;
             }
@@ -290,9 +301,13 @@ class SegmentProcessor implements SegmentProcessing {
         // reset resolved values and (re)set resolvers
         for (Segment s : segments) {
             switch (s.getSegmentType()) {
-                case Reference:
-                    PageNumberReference rs = (PageNumberReference) s;
-                    rs.setResolver(pagenumResolver);
+                case PageReference:
+                    PageNumberReference prs = (PageNumberReference) s;
+                    prs.setResolver(pagenumResolver);
+                    break;
+                case MarkerReference:
+                    MarkerReferenceSegment mrs = (MarkerReferenceSegment) s;
+                    mrs.setResolver(markerRefResolver);
                     break;
                 case Evaluate:
                     Evaluate e = (Evaluate) s;
@@ -440,8 +455,10 @@ class SegmentProcessor implements SegmentProcessing {
                 return layoutTextSegment(ts, fromIndex, len);
             case Leader:
                 return layoutLeaderSegment((LeaderSegment) s);
-            case Reference:
+            case PageReference:
                 return layoutPageSegment((PageNumberReference) s);
+            case MarkerReference:
+                return layoutMarkerRefSegment((MarkerReferenceSegment) s);
             case Evaluate:
                 return layoutEvaluate((Evaluate) s);
             case Marker:
@@ -536,6 +553,30 @@ class SegmentProcessor implements SegmentProcessing {
             BrailleTranslatorResult btr = toResult(spec, null);
             CurrentResult cr = new CurrentResultImpl(spc, btr, mode);
             return Optional.of(cr);
+        }
+        return Optional.empty();
+    }
+
+    private Optional<CurrentResult> layoutMarkerRefSegment(MarkerReferenceSegment rs) {
+        // This is done to reset the state of the MarkerReference, i.e. to "unfreeze" its
+        // value. It is safe to do this because by the time we get here the translator has not had
+        // the chance to resolve() the segment yet (the segment has only been available as a
+        // FollowingText). Still, it would be nicer if deep copies would be made of the segments
+        // when needed, or if the segments would be completely stateless.
+        rs.setResolver(markerRefResolver);
+        if (!rs.peek().isEmpty()) { // Don't create a new row if the evaluated reference is empty
+            TranslatableWithContext spec;
+            spec = TranslatableWithContext.from(segments, segmentIndex - 1)
+                    .attributes(attr)
+                    .build();
+            if (leaderManager.hasLeader()) {
+                layoutAfterLeader(spec, null);
+            } else {
+                String mode = null;
+                BrailleTranslatorResult btr = toResult(spec, null);
+                CurrentResult cr = new CurrentResultImpl(spc, btr, mode);
+                return Optional.of(cr);
+            }
         }
         return Optional.empty();
     }
@@ -701,7 +742,7 @@ class SegmentProcessor implements SegmentProcessing {
         this.context = context;
     }
 
-    private Context getContext() {
+    private DefaultContext getContext() {
         return context;
     }
 

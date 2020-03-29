@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl.core;
 
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
+import org.daisy.dotify.formatter.impl.search.PageId;
 import org.daisy.dotify.formatter.impl.search.Space;
 
 /**
@@ -46,6 +47,12 @@ public class BlockContext extends DefaultContext {
         @Override
         public Builder currentPage(Integer value) {
             super.currentPage(value);
+            return this;
+        }
+
+        @Override
+        public Builder currentPage(PageId index, Integer number) {
+            super.currentPage(index, number);
             return this;
         }
 

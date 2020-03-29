@@ -8,6 +8,7 @@ import org.daisy.dotify.api.formatter.Context;
 public class DefaultContext implements Context {
 
     private final Integer currentVolume, currentPage, metaVolume, metaPage;
+    private final PageId currentPageId;
     private final Space space;
     protected final CrossReferenceHandler crh;
 
@@ -19,6 +20,7 @@ public class DefaultContext implements Context {
                 currentPage = null,
                 metaVolume = null,
                 metaPage = null;
+        private PageId currentPageId = null;
         private Space space = null;
         private final CrossReferenceHandler crh;
 
@@ -32,6 +34,7 @@ public class DefaultContext implements Context {
             this.currentPage = base.getCurrentPage();
             this.metaVolume = base.getMetaVolume();
             this.metaPage = base.getMetaPage();
+            this.currentPageId = base.getCurrentPageId();
             this.space = base.space;
             this.crh = base.crh;
         }
@@ -43,6 +46,12 @@ public class DefaultContext implements Context {
 
         public Builder currentPage(Integer value) {
             this.currentPage = value;
+            return this;
+        }
+
+        public Builder currentPage(PageId index, Integer number) {
+            this.currentPageId = index;
+            this.currentPage = number;
             return this;
         }
 
@@ -75,6 +84,7 @@ public class DefaultContext implements Context {
         this.currentPage = builder.currentPage;
         this.metaVolume = builder.metaVolume;
         this.metaPage = builder.metaPage;
+        this.currentPageId = builder.currentPageId;
         this.space = builder.space;
         this.crh = builder.crh;
     }
@@ -132,12 +142,17 @@ public class DefaultContext implements Context {
         return space;
     }
 
+    public PageId getCurrentPageId() {
+        return currentPageId;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((crh == null) ? 0 : crh.hashCode());
         result = prime * result + ((currentPage == null) ? 0 : currentPage.hashCode());
+        result = prime * result + ((currentPageId == null) ? 0 : currentPageId.hashCode());
         result = prime * result + ((currentVolume == null) ? 0 : currentVolume.hashCode());
         result = prime * result + ((metaPage == null) ? 0 : metaPage.hashCode());
         result = prime * result + ((metaVolume == null) ? 0 : metaVolume.hashCode());
@@ -168,6 +183,13 @@ public class DefaultContext implements Context {
                 return false;
             }
         } else if (!currentPage.equals(other.currentPage)) {
+            return false;
+        }
+        if (currentPageId == null) {
+            if (other.currentPageId != null) {
+                return false;
+            }
+        } else if (!currentPageId.equals(other.currentPageId)) {
             return false;
         }
         if (currentVolume == null) {

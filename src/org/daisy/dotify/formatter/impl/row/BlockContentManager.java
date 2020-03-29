@@ -1,6 +1,5 @@
 package org.daisy.dotify.formatter.impl.row;
 
-import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
@@ -30,7 +29,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
         List<Segment> segments,
         RowDataProperties rdp,
         CrossReferenceHandler refs,
-        Context context,
+        DefaultContext context,
         FormatterCoreContext fcontext
     ) {
         super(flowWidth, rdp, fcontext);

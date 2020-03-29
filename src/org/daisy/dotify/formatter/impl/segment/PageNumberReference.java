@@ -14,7 +14,7 @@ public class PageNumberReference implements Segment {
     private final String refid;
     private final NumeralStyle style;
     private final boolean markCapitalLetters;
-    private Function<PageNumberReference, String> v = (x) -> "";
+    private Function<PageNumberReference, String> value = (x) -> "";
     private String resolved;
 
     public PageNumberReference(String refid, NumeralStyle style, boolean markCapitalLetters) {
@@ -47,7 +47,7 @@ public class PageNumberReference implements Segment {
 
     @Override
     public SegmentType getSegmentType() {
-        return SegmentType.Reference;
+        return SegmentType.PageReference;
     }
 
     @Override
@@ -92,7 +92,7 @@ public class PageNumberReference implements Segment {
     @Override
     public String resolve() {
         if (resolved == null) {
-            resolved = v.apply(this);
+            resolved = value.apply(this);
             if (resolved == null) {
                 resolved = "";
             }
@@ -102,7 +102,7 @@ public class PageNumberReference implements Segment {
 
     public void setResolver(Function<PageNumberReference, String> v) {
         this.resolved = null;
-        this.v = v;
+        this.value = v;
     }
 
     @Override

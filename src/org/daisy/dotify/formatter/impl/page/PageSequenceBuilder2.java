@@ -358,7 +358,7 @@ public class PageSequenceBuilder2 {
                 force = false;
             }
             BlockContext bc = BlockContext.from(data.getContext())
-                .currentPage(current.getDetails().getPageNumber())
+                .currentPage(current.getDetails().getPageId(), current.getDetails().getPageNumber())
                 .flowWidth(
                     master.getFlowWidth() -
                     master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth()

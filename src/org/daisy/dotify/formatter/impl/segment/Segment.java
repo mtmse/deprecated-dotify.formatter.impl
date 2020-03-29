@@ -12,7 +12,7 @@ public interface Segment extends ResolvableText {
      * {PCDATA, LEADER, MARKER, ANCHOR, BR, EVALUATE, BLOCK, TOC_ENTRY, PAGE_NUMBER}.
      */
     enum SegmentType {
-        Text, NewLine, Leader, Reference, Marker, Anchor, Identifier, Evaluate, Style
+        Text, NewLine, Leader, PageReference, Marker, Anchor, Identifier, Evaluate, Style, MarkerReference
     };
 
     public SegmentType getSegmentType();

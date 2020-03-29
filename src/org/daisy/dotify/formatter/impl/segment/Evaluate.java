@@ -16,7 +16,7 @@ public class Evaluate implements Segment {
     private final DynamicContent expression;
     private final TextProperties props;
     private final boolean markCapitalLetters;
-    private Function<Evaluate, String> v = (x) -> "";
+    private Function<Evaluate, String> value = (x) -> "";
     private String resolved;
 
     /**
@@ -83,13 +83,13 @@ public class Evaluate implements Segment {
 
     @Override
     public String peek() {
-        return resolved == null ? v.apply(this) : resolved;
+        return resolved == null ? value.apply(this) : resolved;
     }
 
     @Override
     public String resolve() {
         if (resolved == null) {
-            resolved = v.apply(this);
+            resolved = value.apply(this);
             if (resolved == null) {
                 resolved = "";
             }
@@ -99,7 +99,7 @@ public class Evaluate implements Segment {
 
     public void setResolver(Function<Evaluate, String> v) {
         this.resolved = null;
-        this.v = v;
+        this.value = v;
     }
 
     @Override

@@ -9,6 +9,7 @@ import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
 import org.daisy.dotify.api.formatter.Leader;
 import org.daisy.dotify.api.formatter.Marker;
+import org.daisy.dotify.api.formatter.MarkerReference;
 import org.daisy.dotify.api.formatter.NumeralStyle;
 import org.daisy.dotify.api.formatter.RenderingScenario;
 import org.daisy.dotify.api.formatter.SpanProperties;
@@ -35,6 +36,7 @@ import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
 import org.daisy.dotify.formatter.impl.segment.Evaluate;
 import org.daisy.dotify.formatter.impl.segment.IdentifierSegment;
 import org.daisy.dotify.formatter.impl.segment.LeaderSegment;
+import org.daisy.dotify.formatter.impl.segment.MarkerReferenceSegment;
 import org.daisy.dotify.formatter.impl.segment.MarkerSegment;
 import org.daisy.dotify.formatter.impl.segment.NewLineSegment;
 import org.daisy.dotify.formatter.impl.segment.PageNumberReference;
@@ -361,7 +363,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
     }
 
     @Override
-    public void insertReference(String identifier, NumeralStyle numeralStyle) {
+    public void insertPageReference(String identifier, NumeralStyle numeralStyle) {
         if (table != null) {
             throw new IllegalStateException("A table is open.");
         }
@@ -370,6 +372,15 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
             numeralStyle,
             fc.getConfiguration().isMarkingCapitalLetters()
         );
+        getCurrentBlock().addSegment(r);
+    }
+
+    @Override
+    public void insertMarkerReference(MarkerReference ref, TextProperties t) {
+        if (table != null) {
+            throw new IllegalStateException("A table is open.");
+        }
+        MarkerReferenceSegment r = new MarkerReferenceSegment(ref, t);
         getCurrentBlock().addSegment(r);
     }
 

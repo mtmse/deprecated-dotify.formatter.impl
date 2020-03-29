@@ -1,9 +1,9 @@
 package org.daisy.dotify.formatter.impl.search;
 
 import org.daisy.dotify.api.formatter.Marker;
-import org.daisy.dotify.api.formatter.MarkerReferenceField;
-import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchDirection;
-import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchScope;
+import org.daisy.dotify.api.formatter.MarkerReference;
+import org.daisy.dotify.api.formatter.MarkerReference.MarkerSearchDirection;
+import org.daisy.dotify.api.formatter.MarkerReference.MarkerSearchScope;
 
 import java.util.HashMap;
 import java.util.List;
@@ -152,7 +152,7 @@ class SearchInfo {
         }
     }
 
-    boolean shouldAdjustOutOfBounds(PageDetails base, MarkerReferenceField markerRef) {
+    boolean shouldAdjustOutOfBounds(PageDetails base, MarkerReference markerRef) {
         if (markerRef.getSearchDirection() == MarkerSearchDirection.FORWARD && markerRef.getOffset() >= 0 ||
                 markerRef.getSearchDirection() == MarkerSearchDirection.BACKWARD && markerRef.getOffset() <= 0) {
             return false;
@@ -180,7 +180,7 @@ class SearchInfo {
         }
     }
 
-    String findMarker(final PageDetails page, final MarkerReferenceField markerRef) {
+    String findMarker(final PageDetails page, final MarkerReference markerRef) {
         PageDetails currentPage = page;
         while (currentPage != null) {
             if (
@@ -194,9 +194,9 @@ class SearchInfo {
             int count = 0;
             List<Marker> m;
             boolean skipLeading = false;
-            if (markerRef.getSearchScope() == MarkerReferenceField.MarkerSearchScope.PAGE_CONTENT) {
+            if (markerRef.getSearchScope() == MarkerSearchScope.PAGE_CONTENT) {
                 skipLeading = true;
-            } else if (markerRef.getSearchScope() == MarkerReferenceField.MarkerSearchScope.SPREAD_CONTENT) {
+            } else if (markerRef.getSearchScope() == MarkerSearchScope.SPREAD_CONTENT) {
                 PageDetails prevPageInVolume = getPageInVolumeWithOffset(currentPage, -1, false);
                 if (prevPageInVolume == null || !currentPage.isWithinSpreadScope(-1, prevPageInVolume)) {
                     skipLeading = true;
@@ -207,7 +207,7 @@ class SearchInfo {
             } else {
                 m = currentPage.getMarkers();
             }
-            if (markerRef.getSearchDirection() == MarkerReferenceField.MarkerSearchDirection.BACKWARD) {
+            if (markerRef.getSearchDirection() == MarkerSearchDirection.BACKWARD) {
                 dir = -1;
                 index = m.size() - 1;
             }
@@ -220,7 +220,7 @@ class SearchInfo {
                 count++;
             }
             if (
-                markerRef.getSearchScope() == MarkerReferenceField.MarkerSearchScope.SEQUENCE ||
+                markerRef.getSearchScope() == MarkerSearchScope.SEQUENCE ||
                 markerRef.getSearchScope() == MarkerSearchScope.SHEET && currentPage.isWithinSheetScope(dir) //||
                 //markerRef.getSearchScope() == MarkerSearchScope.SPREAD && page.isWithinSequenceSpreadScope(dir)
             ) {
@@ -254,26 +254,26 @@ class SearchInfo {
         }
     }
 
-    String findStartAndMarker(PageId id, MarkerReferenceField f2) {
+    String findStartAndMarker(PageId id, MarkerReference ref) {
         return getPageDetails(id)
                 .map(p -> {
                     PageDetails start;
-                    if (f2.getSearchScope() == MarkerSearchScope.SPREAD ||
-                            f2.getSearchScope() == MarkerSearchScope.SPREAD_CONTENT) {
-                        start = getPageInVolumeWithOffset(p, f2.getOffset(), shouldAdjustOutOfBounds(p, f2));
+                    if (ref.getSearchScope() == MarkerSearchScope.SPREAD ||
+                            ref.getSearchScope() == MarkerSearchScope.SPREAD_CONTENT) {
+                        start = getPageInVolumeWithOffset(p, ref.getOffset(), shouldAdjustOutOfBounds(p, ref));
                     } else {
                         //Keep while moving: start = p.getPageInScope(
                         //  p.getSequenceParent(),
                         //  f2.getOffset(),
-                        //  shouldAdjustOutOfBounds(p, f2)
+                        //  shouldAdjustOutOfBounds(p, ref)
                         //);
                         start = p.getPageInScope(getContentsInSequence(
                             p.getSequenceId()),
-                            f2.getOffset(),
-                            shouldAdjustOutOfBounds(p, f2)
+                            ref.getOffset(),
+                            shouldAdjustOutOfBounds(p, ref)
                         );
                     }
-                    return findMarker(start, f2);
+                    return findMarker(start, ref);
                 })
                 .orElse("");
     }

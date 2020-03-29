@@ -1,6 +1,5 @@
 package org.daisy.dotify.formatter.impl.row;
 
-import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.FormatterConfiguration;
 import org.daisy.dotify.api.formatter.Leader;
 import org.daisy.dotify.api.formatter.Position;
@@ -46,7 +45,7 @@ public class BlockContentManagerTest {
         }
         RowDataProperties rdp = new RowDataProperties.Builder().firstLineIndent(1).textIndent(3).build();
         CrossReferenceHandler refs = mock(CrossReferenceHandler.class);
-        Context context = createContext();
+        DefaultContext context = createContext();
         AbstractBlockContentManager m = new BlockContentManager(
             null,
             10,
@@ -86,7 +85,7 @@ public class BlockContentManagerTest {
 
         RowDataProperties rdp = new RowDataProperties.Builder().firstLineIndent(1).textIndent(3).build();
         CrossReferenceHandler refs = mock(CrossReferenceHandler.class);
-        Context context = createContext();
+        DefaultContext context = createContext();
         AbstractBlockContentManager m = new BlockContentManager(null, 10, segments, rdp, refs, context, c);
 
         //test
@@ -111,7 +110,7 @@ public class BlockContentManagerTest {
 
         RowDataProperties rdp = new RowDataProperties.Builder().firstLineIndent(1).textIndent(3).build();
         CrossReferenceHandler refs = mock(CrossReferenceHandler.class);
-        Context context = createContext();
+        DefaultContext context = createContext();
         AbstractBlockContentManager m = new BlockContentManager(null, 10, segments, rdp, refs, context, c);
 
         //test
@@ -126,7 +125,7 @@ public class BlockContentManagerTest {
     }
 
 
-    private static Context createContext() {
+    private static DefaultContext createContext() {
         CrossReferenceHandler crh = new CrossReferenceHandler();
         crh.setVolumeCount(1);
         return new DefaultContext.Builder(crh).currentVolume(1).build();

@@ -1,7 +1,7 @@
 package org.daisy.dotify.formatter.impl.search;
 
 import org.daisy.dotify.api.formatter.Marker;
-import org.daisy.dotify.api.formatter.MarkerReferenceField;
+import org.daisy.dotify.api.formatter.MarkerReference;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -348,11 +348,11 @@ public class CrossReferenceHandler {
      * @param id   the page id of the page where the search originates.
      *             Note that this page is not necessarily the first page
      *             searched (depending on the value of
-     *             {@link MarkerReferenceField#getOffset()}).
+     *             {@link MarkerReference#getOffset()}).
      * @param spec the search specification
      * @return returns the marker value, or an empty string if not found
      */
-    public String findMarker(PageId id, MarkerReferenceField spec) {
+    public String findMarker(PageId id, MarkerReference spec) {
         return searchInfo.findStartAndMarker(id, spec);
     }
 

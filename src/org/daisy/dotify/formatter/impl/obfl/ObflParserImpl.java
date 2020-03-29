@@ -21,9 +21,9 @@ import org.daisy.dotify.api.formatter.Leader;
 import org.daisy.dotify.api.formatter.MarginRegion;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.MarkerIndicatorRegion;
+import org.daisy.dotify.api.formatter.MarkerReference.MarkerSearchDirection;
+import org.daisy.dotify.api.formatter.MarkerReference.MarkerSearchScope;
 import org.daisy.dotify.api.formatter.MarkerReferenceField;
-import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchDirection;
-import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchScope;
 import org.daisy.dotify.api.formatter.NoField;
 import org.daisy.dotify.api.formatter.NumeralStyle;
 import org.daisy.dotify.api.formatter.PageAreaBuilder;
@@ -534,19 +534,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
             } else if (equalsStart(event, ObflQName.CURRENT_PAGE)) {
                 compound.add(new CurrentPageField(getNumeralStyle(event), getAttr(event, ObflQName.ATTR_TEXT_STYLE)));
             } else if (equalsStart(event, ObflQName.MARKER_REFERENCE)) {
-                compound.add(
-                        new MarkerReferenceField(
-                                getAttr(event, ObflQName.ATTR_MARKER),
-                                MarkerSearchDirection.valueOf(
-                                        getAttr(event, "direction").toUpperCase()
-                                ),
-                                MarkerSearchScope.valueOf(
-                                        getAttr(event, "scope").replace('-', '_').toUpperCase()
-                                ),
-                                getAttr(event, ObflQName.ATTR_TEXT_STYLE),
-                                toInt(getAttr(event, ObflQName.ATTR_START_OFFSET), 0)
-                        )
-                );
+                compound.add(parseMarkerReferenceField(event, true));
             } else if (equalsEnd(event, ObflQName.FIELD)) {
                 break;
             } else {
@@ -554,6 +542,27 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
             }
         }
         return compound;
+    }
+
+    private MarkerReferenceField parseMarkerReferenceField(
+        XMLEvent event,
+        boolean allowTextStyle
+    ) throws XMLStreamException {
+        String textStyle = getAttr(event, ObflQName.ATTR_TEXT_STYLE);
+        if (!allowTextStyle && textStyle != null) {
+            logger.log(Level.WARNING, "marker-reference can only have text-style attribute in field context");
+        }
+        return new MarkerReferenceField(
+            getAttr(event, ObflQName.ATTR_MARKER),
+            MarkerSearchDirection.valueOf(
+                    getAttr(event, "direction").toUpperCase()
+            ),
+            MarkerSearchScope.valueOf(
+                    getAttr(event, "scope").replace('-', '_').toUpperCase()
+            ),
+            allowTextStyle ? textStyle : null,
+            toInt(getAttr(event, ObflQName.ATTR_START_OFFSET), 0)
+        );
     }
 
     private MarginRegion parseMarginRegion(XMLEvent event, XMLEventIterator input) throws XMLStreamException {
@@ -979,6 +988,8 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
                 parseEvaluate(fc, event, input, tp);
             } else if (equalsStart(event, ObflQName.PAGE_NUMBER)) {
                 parsePageNumber(fc, event, input);
+            } else if (equalsStart(event, ObflQName.MARKER_REFERENCE)) {
+                parseMarkerReference(fc, event, input, tp);
             } else if (equalsEnd(event, ObflQName.STYLE)) {
                 if (!ignore) {
                     if (!hasEvents) {
@@ -1457,6 +1468,9 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
         } else if (equalsStart(event, ObflQName.PAGE_NUMBER)) {
             parsePageNumber(fc, event, input);
             return true;
+        } else if (equalsStart(event, ObflQName.MARKER_REFERENCE)) {
+            parseMarkerReference(fc, event, input, tp);
+            return true;
         } else {
             return false;
         }
@@ -1562,7 +1576,16 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
         String refId = getAttr(event, "ref-id");
         NumeralStyle style = getNumeralStyle(event);
         scanEmptyElement(input, ObflQName.PAGE_NUMBER);
-        fc.insertReference(refId, style);
+        fc.insertPageReference(refId, style);
+    }
+
+    private void parseMarkerReference(
+        BlockContentBuilder fc,
+        XMLEvent event, XMLEventIterator input,
+        TextProperties tp
+    ) throws XMLStreamException {
+        fc.insertMarkerReference(parseMarkerReferenceField(event, false), tp);
+        scanEmptyElement(input, ObflQName.MARKER_REFERENCE);
     }
 
     private void parseEvaluate(
