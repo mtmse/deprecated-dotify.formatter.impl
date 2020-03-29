@@ -20,6 +20,13 @@ public class PageDetails {
     private final ArrayList<Marker> markers;
     private final ArrayList<String> identifiers;
 
+    /**
+     * @param duplex
+     * @param pageId
+     * @param loc
+     * @param pageNumberOffset The offset that needs to be added to the 1-based index of the page
+     *                         within the sequence to obtain the desired page number.
+     */
     public PageDetails(boolean duplex, PageId pageId, BlockLineLocation loc, int pageNumberOffset) {
         this.duplex = duplex;
         this.pageId = pageId;
@@ -56,10 +63,16 @@ public class PageDetails {
         return pageId.getOrdinal() + pageNumberOffset + 1;
     }
 
+    /**
+     * BlockLineLocation of the last line of the previous page.
+     */
     public BlockLineLocation getPageLocation() {
         return loc;
     }
 
+    /**
+     * The volume number.
+     */
     int getVolumeNumber() {
         return volumeNumber;
     }

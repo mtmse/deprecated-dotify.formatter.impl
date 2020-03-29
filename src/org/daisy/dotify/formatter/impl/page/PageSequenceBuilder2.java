@@ -879,7 +879,7 @@ public class PageSequenceBuilder2 {
     }
 
     /**
-     * Returns the provided value of <code>pageOffset</code> in {@link #PageSequenceBuilder2(int,
+     * Returns the provided value of <code>fromIndex</code> in {@link #PageSequenceBuilder2(int,
      * LayoutMaster, int, BlockSequence, FormatterContext, DefaultContext, SequenceId,
      * BlockLineLocation)}.
      *

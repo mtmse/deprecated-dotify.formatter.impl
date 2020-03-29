@@ -9,6 +9,13 @@ public final class PageId {
     private final int pageIndex;
     private final SequenceId sequenceId;
 
+    /**
+     * @param ordinal
+     * @param globalStartIndex Start index of the sequence that contains this page: the number of
+     *                         pages that the whole body (all sequences), or the pre- or post-content
+     *                         of the current volume, already contains.
+     * @param sequenceId
+     */
     public PageId(int ordinal, int globalStartIndex, SequenceId sequenceId) {
         this.ordinal = ordinal;
         this.globalStartIndex = globalStartIndex;
@@ -16,6 +23,9 @@ public final class PageId {
         this.sequenceId = sequenceId;
     }
 
+    /**
+     * 0-based index of this page in the current sequence.
+     */
     public int getOrdinal() {
         return ordinal;
     }
@@ -24,6 +34,11 @@ public final class PageId {
         return new PageId(ordinal, this.globalStartIndex, this.sequenceId);
     }
 
+    /**
+     * Global 0-based index of this page: the total number of pages (within the whole body or within
+     * the current pre- or post-content) before this page. In case of duplex, "absent" pages on the
+     * backside of sheets are not counted.
+     */
     int getPageIndex() {
         return pageIndex;
     }
