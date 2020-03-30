@@ -78,6 +78,9 @@ class SegmentProcessor implements SegmentProcessing {
         FormatterCoreContext fcontext,
         RowDataProperties rdp
     ) {
+        if (refs == null) {
+            throw new IllegalArgumentException("must specify CrossReferenceHandler");
+        }
         this.refs = refs;
         this.segments = Collections.unmodifiableList(removeStyles(segments).collect(Collectors.toList()));
         this.attr = buildAttributeWithContext(null, segments);
@@ -89,9 +92,7 @@ class SegmentProcessor implements SegmentProcessing {
         this.significantContent = calculateSignificantContent(this.segments, context, rdp);
         this.spc = new SegmentProcessorContext(fcontext, rdp, margins, flowWidth, available);
         this.blockId = blockId;
-        this.pagenumResolver = (refs == null)
-                ? (rs) -> "??"
-                : (rs) -> {
+        this.pagenumResolver = (rs) -> {
             Integer page = refs.getPageNumber(rs.getRefId());
             if (page == null) {
                 return "??";
@@ -99,9 +100,7 @@ class SegmentProcessor implements SegmentProcessing {
                 return "" + rs.getNumeralStyle().format(page);
             }
         };
-        this.markerRefResolver = (refs == null)
-                ? (ref) -> "??"
-                : (ref) -> refs.findMarker(getContext().getCurrentPageId(), ref);
+        this.markerRefResolver = (ref) -> refs.findMarker(getContext().getCurrentPageId(), ref);
         this.expressionResolver = (e) -> e.getExpression().render(getContext());
         initFields();
     }
@@ -137,9 +136,7 @@ class SegmentProcessor implements SegmentProcessing {
         this.blockId = template.blockId;
         this.pagenumResolver = template.pagenumResolver;
         // can't simply copy because getContext() of template would be used
-        this.markerRefResolver = (refs == null)
-                ? (ref) -> "??"
-                : (ref) -> refs.findMarker(getContext().getCurrentPageId(), ref);
+        this.markerRefResolver = (ref) -> refs.findMarker(getContext().getCurrentPageId(), ref);
         this.expressionResolver = (e) -> e.getExpression().render(getContext());
     }
 

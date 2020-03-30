@@ -7,6 +7,7 @@ import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMakerService;
 import org.daisy.dotify.api.translator.TranslatorConfigurationException;
 import org.daisy.dotify.common.text.IdentityFilter;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
+import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
 import org.daisy.dotify.formatter.impl.segment.Segment;
 import org.daisy.dotify.formatter.impl.segment.Style;
@@ -67,7 +68,7 @@ public class SegmentProcessorTest {
             "",
             segments,
             100,
-            null,
+            new CrossReferenceHandler(),
             null,
             100,
             rdp.getMargins(),
@@ -99,7 +100,7 @@ public class SegmentProcessorTest {
             "",
             segments,
             100,
-            null,
+            new CrossReferenceHandler(),
             null,
             100,
             rdp.getMargins(),
@@ -134,7 +135,7 @@ public class SegmentProcessorTest {
             "",
             segments,
             100,
-            null,
+            new CrossReferenceHandler(),
             null,
             100,
             rdp.getMargins(),

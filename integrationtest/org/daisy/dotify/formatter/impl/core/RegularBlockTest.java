@@ -10,6 +10,7 @@ import org.daisy.dotify.api.translator.TextAttribute;
 import org.daisy.dotify.api.translator.TranslatorConfigurationException;
 import org.daisy.dotify.common.text.IdentityFilter;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
+import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.translator.DefaultBrailleFilter;
 import org.daisy.dotify.translator.DefaultMarkerProcessor;
@@ -84,7 +85,7 @@ public class RegularBlockTest {
         Block bl = b.get(0);
         AbstractBlockContentManager bcm = bl.getBlockContentManager(
             new BlockContext.Builder(
-                new DefaultContext.Builder(null).build()
+                new DefaultContext.Builder(new CrossReferenceHandler()).build()
             ).flowWidth(30).formatterContext(fc).build()
         );
         StringBuilder sb = new StringBuilder();
