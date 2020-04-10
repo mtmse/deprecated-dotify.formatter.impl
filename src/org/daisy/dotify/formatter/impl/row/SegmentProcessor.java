@@ -101,7 +101,10 @@ class SegmentProcessor implements SegmentProcessing {
             }
         };
         this.markerRefResolver = (ref) -> refs.findMarker(getContext().getCurrentPageId(), ref);
-        this.expressionResolver = (e) -> e.getExpression().render(getContext());
+        this.expressionResolver = (e) -> {
+            String rendered = e.getExpression().render(getContext());
+            return e.getNumeralStyle().format(rendered);
+        };
         initFields();
     }
 

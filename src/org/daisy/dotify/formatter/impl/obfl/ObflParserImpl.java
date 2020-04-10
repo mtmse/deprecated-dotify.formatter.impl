@@ -1594,9 +1594,10 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
         TextProperties tp
     ) throws XMLStreamException {
         String expr = getAttr(event, "expression");
+        NumeralStyle style = getNumeralStyle(event);
         scanEmptyElement(input, ObflQName.EVALUATE);
         OBFLDynamicContent dynamic = new OBFLDynamicContent(expr, fm.getExpressionFactory(), true);
-        fc.insertEvaluate(dynamic, tp);
+        fc.insertEvaluate(dynamic, tp, style);
     }
 
     private void parseVolumeTemplate(

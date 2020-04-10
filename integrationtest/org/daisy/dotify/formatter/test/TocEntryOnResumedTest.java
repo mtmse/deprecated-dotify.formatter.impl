@@ -45,5 +45,16 @@ public class TocEntryOnResumedTest extends AbstractFormatterEngineTest {
             false
         );
     }
+    @Test
+    public void testTocEntryOnResumedWithEvaluateAndNumberFormat() throws
+            LayoutEngineException,
+            IOException,
+            PagedMediaWriterConfigurationException {
+        testPEF(
+            "resource-files/toc-entry-on-resumed/toc-entry-on-resumed-evaluate-number-format-input.obfl",
+            "resource-files/toc-entry-on-resumed/toc-entry-on-resumed-evaluate-number-format-expected.pef",
+            false
+        );
+    }
 
 }

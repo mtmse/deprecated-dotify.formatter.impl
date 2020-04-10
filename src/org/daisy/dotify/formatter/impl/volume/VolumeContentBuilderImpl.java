@@ -147,8 +147,8 @@ class VolumeContentBuilderImpl extends Stack<VolumeSequence> implements VolumeCo
     }
 
     @Override
-    public void insertEvaluate(DynamicContent exp, TextProperties t) {
-        current().insertEvaluate(exp, t);
+    public void insertEvaluate(DynamicContent exp, TextProperties t, NumeralStyle numeralStyle) {
+        current().insertEvaluate(exp, t, numeralStyle);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl.segment;
 
 import org.daisy.dotify.api.formatter.DynamicContent;
+import org.daisy.dotify.api.formatter.NumeralStyle;
 import org.daisy.dotify.api.formatter.TextProperties;
 
 import java.util.Optional;
@@ -15,6 +16,7 @@ import java.util.function.Function;
 public class Evaluate implements Segment {
     private final DynamicContent expression;
     private final TextProperties props;
+    private final NumeralStyle style;
     private final boolean markCapitalLetters;
     private Function<Evaluate, String> value = (x) -> "";
     private String resolved;
@@ -22,20 +24,27 @@ public class Evaluate implements Segment {
     /**
      * @param expression         the expression
      * @param props              the text properties
+     * @param style              the numeral style
      * @param markCapitalLetters true if capital letters should be marked
      */
-    public Evaluate(DynamicContent expression, TextProperties props, boolean markCapitalLetters) {
-        this(expression, props, markCapitalLetters, null);
-    }
-
-    public Evaluate(DynamicContent expression, TextProperties props, boolean markCapitalLetters, MarkerValue marker) {
+    public Evaluate(DynamicContent expression, TextProperties props, NumeralStyle style, boolean markCapitalLetters) {
         this.expression = expression;
         this.props = props;
+        this.style = style;
         this.markCapitalLetters = markCapitalLetters;
     }
 
     public DynamicContent getExpression() {
         return expression;
+    }
+
+    /**
+     * Gets the numeral style for this evaluate.
+     *
+     * @return returns the numeral style
+     */
+    public NumeralStyle getNumeralStyle() {
+        return style;
     }
 
     @Override

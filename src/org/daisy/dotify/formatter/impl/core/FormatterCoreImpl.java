@@ -385,11 +385,11 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
     }
 
     @Override
-    public void insertEvaluate(DynamicContent exp, TextProperties t) {
+    public void insertEvaluate(DynamicContent exp, TextProperties tp, NumeralStyle style) {
         if (table != null) {
             throw new IllegalStateException("A table is open.");
         }
-        Evaluate e = new Evaluate(exp, t, fc.getConfiguration().isMarkingCapitalLetters());
+        Evaluate e = new Evaluate(exp, tp, style, fc.getConfiguration().isMarkingCapitalLetters());
         getCurrentBlock().addSegment(e);
     }
 

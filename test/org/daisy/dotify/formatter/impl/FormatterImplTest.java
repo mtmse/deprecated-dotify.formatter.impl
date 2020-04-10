@@ -7,6 +7,7 @@ import org.daisy.dotify.api.formatter.Formatter;
 import org.daisy.dotify.api.formatter.FormatterConfiguration;
 import org.daisy.dotify.api.formatter.FormatterSequence;
 import org.daisy.dotify.api.formatter.LayoutMasterProperties;
+import org.daisy.dotify.api.formatter.NumeralStyle;
 import org.daisy.dotify.api.formatter.SequenceProperties;
 import org.daisy.dotify.api.formatter.TextProperties;
 import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMakerService;
@@ -80,7 +81,7 @@ public class FormatterImplTest {
         f.startStyle("em");
         f.addChars("a", tp);
         f.startStyle("strong");
-        f.insertEvaluate(exp, tp);
+        f.insertEvaluate(exp, tp, NumeralStyle.DEFAULT);
         f.endStyle();
         f.addChars("c", tp);
         f.endStyle();

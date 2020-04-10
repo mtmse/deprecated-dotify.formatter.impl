@@ -4,6 +4,7 @@ import org.daisy.dotify.api.formatter.BlockProperties;
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.DynamicContent;
 import org.daisy.dotify.api.formatter.FormatterConfiguration;
+import org.daisy.dotify.api.formatter.NumeralStyle;
 import org.daisy.dotify.api.formatter.TextProperties;
 import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMakerService;
 import org.daisy.dotify.api.translator.TextAttribute;
@@ -76,7 +77,7 @@ public class RegularBlockTest {
         f.startStyle("em");
         f.addChars("a", tp);
         f.startStyle("strong");
-        f.insertEvaluate(exp, tp);
+        f.insertEvaluate(exp, tp, NumeralStyle.DEFAULT);
         f.endStyle();
         f.addChars("c", tp);
         f.endStyle();

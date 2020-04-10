@@ -247,9 +247,9 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
     }
 
     @Override
-    public void insertEvaluate(DynamicContent exp, TextProperties t) {
+    public void insertEvaluate(DynamicContent exp, TextProperties t, NumeralStyle numeralStyle) {
         assertInEntry();
-        super.insertEvaluate(exp, t);
+        super.insertEvaluate(exp, t, numeralStyle);
     }
 
     private class TocBlock {
