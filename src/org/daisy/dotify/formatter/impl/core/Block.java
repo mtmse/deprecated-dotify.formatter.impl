@@ -35,6 +35,7 @@ public abstract class Block {
     private BlockPosition verticalPosition;
     protected Integer metaVolume;
     protected Integer metaPage;
+    protected Integer metaVolumeFirstContentPage;
     private final RenderingScenario rs;
     private boolean isVolatile;
     private BlockAddress blockAddress;
@@ -55,6 +56,7 @@ public abstract class Block {
         this.verticalPosition = null;
         this.metaVolume = null;
         this.metaPage = null;
+        this.metaVolumeFirstContentPage = null;
         this.rs = rs;
         this.isVolatile = false;
     }
@@ -75,6 +77,7 @@ public abstract class Block {
         this.verticalPosition = template.verticalPosition;
         this.metaVolume = template.metaVolume;
         this.metaPage = template.metaPage;
+        this.metaVolumeFirstContentPage = template.metaVolumeFirstContentPage;
         this.rs = template.rs;
         this.isVolatile = template.isVolatile;
         this.blockAddress = template.blockAddress;
@@ -226,8 +229,17 @@ public abstract class Block {
         this.metaPage = metaPage;
     }
 
+    public void setMetaVolumeFirstContentPage(Integer metaVolumeFirstContentPage) {
+        this.metaVolumeFirstContentPage = metaVolumeFirstContentPage;
+    }
+    
     public DefaultContext contextWithMeta(DefaultContext dc) {
-        return DefaultContext.from(dc).metaVolume(metaVolume).metaPage(metaPage).build();
+        return DefaultContext
+                .from(dc)
+                .metaVolume(metaVolume)
+                .metaPage(metaPage)
+                .metaVolumeFirstContentPage(metaVolumeFirstContentPage)
+                .build();
     }
 
     public RowDataProperties getRowDataProperties() {

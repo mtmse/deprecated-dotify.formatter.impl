@@ -8,6 +8,7 @@ import java.util.Map;
 
 /**
  * TODO: Write java doc.
+ * TODO: Remove the defaults. See https://github.com/mtmse/obfl/issues/13
  */
 public abstract class OBFLExpressionBase {
     public static final String DEFAULT_PAGE_NUMBER_VARIABLE_NAME = "page";
@@ -17,9 +18,11 @@ public abstract class OBFLExpressionBase {
     public static final String DEFAULT_EVENT_PAGE_NUMBER = "started-page-number";
     public static final String DEFAULT_SHEET_COUNT_VARIABLE_NAME = "sheets-in-document";
     public static final String DEFAULT_VOLUME_SHEET_COUNT_VARIABLE_NAME = "sheets-in-volume";
+    public static final String EVENT_STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER = "started-volume-first-content-page";
 
     protected final ExpressionFactory ef;
     protected final String exp;
+    private final boolean extended;
 
     protected String pageNumberVariable;
     protected String volumeNumberVariable;
@@ -32,6 +35,7 @@ public abstract class OBFLExpressionBase {
     public OBFLExpressionBase(String exp, ExpressionFactory ef, boolean extended) {
         this.ef = ef;
         this.exp = exp;
+        this.extended = extended;
         this.pageNumberVariable = DEFAULT_PAGE_NUMBER_VARIABLE_NAME;
         this.volumeNumberVariable = DEFAULT_VOLUME_NUMBER_VARIABLE_NAME;
         this.volumeCountVariable = DEFAULT_VOLUME_COUNT_VARIABLE_NAME;
@@ -105,11 +109,22 @@ public abstract class OBFLExpressionBase {
         if (volumeCountVariable != null) {
             variables.put(volumeCountVariable, "" + context.getVolumeCount());
         }
+        // The meta variables below are only available in a meta-context. If
+        // they are used incorrectly in a context where the meta-context is
+        // unavailable, then they evaluate to null, which may result for
+        // instance in the literal text "null" to appear in the content, without
+        // warning or error.
+        // TODO: Fix this issue.
         if (metaVolumeNumberVariable != null) {
             variables.put(metaVolumeNumberVariable, "" + context.getMetaVolume());
         }
         if (metaPageNumberVariable != null) {
             variables.put(metaPageNumberVariable, "" + context.getMetaPage());
+        }
+        if (extended) {
+            variables.put(EVENT_STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER,
+                    "" + context.getMetaVolumeFirstContentPage()
+            );
         }
         if (sheetCountVariable != null) {
             variables.put(sheetCountVariable, "" + context.getSheetsInDocument());

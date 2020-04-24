@@ -239,6 +239,7 @@ public class VolumeProvider {
         for (Sheet sheet : contents) {
             for (PageImpl p : sheet.getPages()) {
                 if (atFirstPageOfContents) {
+                    crh.setPageNumberOfFirstContentPageOfVolume(volumeNumber, p.getPageNumber());
                     List<String> contentIdentifiers = p.getContentIdentifiers();
                     for (String id : p.getIdentifiers()) {
                         boolean atStartOfPage = !contentIdentifiers.contains(id);
@@ -264,6 +265,7 @@ public class VolumeProvider {
     private SectionBuilder updateVolumeContents(int volumeNumber, ArrayList<AnchorData> ad, boolean pre) {
         DefaultContext c = new DefaultContext.Builder(crh)
                 .currentVolume(volumeNumber)
+                .metaVolumeFirstContentPage(crh.getPageNumberOfFirstContentPageOfVolume(volumeNumber))
                 .space(pre ? Space.PRE_CONTENT : Space.POST_CONTENT)
                 .build();
         try {

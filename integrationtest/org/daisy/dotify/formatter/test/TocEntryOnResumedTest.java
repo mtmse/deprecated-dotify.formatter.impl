@@ -7,7 +7,9 @@ import org.junit.Test;
 import java.io.IOException;
 
 /**
- * TODO: Write java doc.
+ * Unit tests for toc-entry-on-resumed functionality.
+ * 
+ * @author Paul Rambags
  */
 @SuppressWarnings("javadoc")
 public class TocEntryOnResumedTest extends AbstractFormatterEngineTest {

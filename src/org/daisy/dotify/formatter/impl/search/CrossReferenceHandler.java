@@ -35,6 +35,8 @@ public class CrossReferenceHandler {
     private static final String SHEETS_IN_DOCUMENT = "sheets-in-document";
     private static final String PAGES_IN_VOLUME = "pages-in-volume-";
     private static final String PAGES_IN_DOCUMENT = "pages-in-document";
+    private static final String PAGE_NUMBER_OF_FIRST_CONTENT_PAGE_OF_VOLUME =
+            "page-number-of-first-content-page-of-volume-";
     private Set<String> pageIds;
     private boolean overheadDirty = false;
     private boolean readOnly = false;
@@ -140,6 +142,13 @@ public class CrossReferenceHandler {
         }
         //TODO: use this method
         variables.put(PAGES_IN_VOLUME + volume, value);
+    }
+
+    public void setPageNumberOfFirstContentPageOfVolume(int volume, int value) {
+        if (readOnly) {
+            return;
+        }
+        variables.put(PAGE_NUMBER_OF_FIRST_CONTENT_PAGE_OF_VOLUME + volume, value);
     }
 
     private void setPagesInDocument(int value) {
@@ -264,6 +273,10 @@ public class CrossReferenceHandler {
 
     public int getPagesInVolume(int volume) {
         return variables.get(PAGES_IN_VOLUME + volume, 0, readOnly);
+    }
+
+    public int getPageNumberOfFirstContentPageOfVolume(int volume) {
+        return variables.get(PAGE_NUMBER_OF_FIRST_CONTENT_PAGE_OF_VOLUME + volume, 0, readOnly);
     }
 
     public int getPagesInDocument() {
