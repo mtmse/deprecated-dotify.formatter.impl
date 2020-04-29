@@ -1468,6 +1468,9 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
         } else if (equalsStart(event, ObflQName.PAGE_NUMBER)) {
             parsePageNumber(fc, event, input);
             return true;
+        } else if (equalsStart(event, ObflQName.METADATA)) {
+            parseMetadata(fc, event, input);
+            return true;
         } else if (equalsStart(event, ObflQName.MARKER_REFERENCE)) {
             parseMarkerReference(fc, event, input, tp);
             return true;
@@ -1578,6 +1581,21 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
         scanEmptyElement(input, ObflQName.PAGE_NUMBER);
         fc.insertPageReference(refId, style);
     }
+
+    private void parseMetadata(
+            BlockContentBuilder fc,
+            XMLEvent event,
+            XMLEventIterator input
+    ) throws XMLStreamException {
+        Iterator<Object> it = event.asStartElement().getAttributes();
+        Map<String, String> attrList = new HashMap<>();
+        while (it.hasNext()) {
+            Attribute a = (Attribute) it.next();
+            attrList.put(a.getName().getLocalPart(), a.getValue());
+        }
+        fc.insertMetadata(attrList);
+    }
+
 
     private void parseMarkerReference(
         BlockContentBuilder fc,

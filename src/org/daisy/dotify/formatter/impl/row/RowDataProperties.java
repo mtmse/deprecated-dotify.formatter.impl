@@ -5,6 +5,7 @@ import org.daisy.dotify.api.formatter.FormattingTypes.Alignment;
 import org.daisy.dotify.formatter.impl.row.Margin.Type;
 
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * Provides properties for a block. {@link RowDataProperties} are
@@ -29,6 +30,8 @@ public final class RowDataProperties {
     private final SingleLineDecoration leadingDecoration;
     private final SingleLineDecoration trailingDecoration;
     private final String underlineStyle;
+    private final Map<String, String> metadata;
+
 
     /**
      * TODO: Write java doc.
@@ -57,6 +60,7 @@ public final class RowDataProperties {
         private String underlineStyle = null;
 
         private ListItem listProps = null;
+        private Map<String, String> metadata;
 
         public Builder() {
         }
@@ -79,6 +83,7 @@ public final class RowDataProperties {
             this.orphans = template.orphans;
             this.widows = template.widows;
             this.underlineStyle = template.underlineStyle;
+            this.metadata = template.metadata;
         }
 
         public Builder blockIndent(int value) {
@@ -161,6 +166,11 @@ public final class RowDataProperties {
             return this;
         }
 
+        public Builder addMetadata(Map<String, String> metadata) {
+            this.metadata = metadata;
+            return this;
+        }
+
         public Builder underlineStyle(String value) {
             if (value != null && value.length() != 1) {
                 throw new IllegalArgumentException(
@@ -194,12 +204,14 @@ public final class RowDataProperties {
         this.orphans = builder.orphans;
         this.widows = builder.widows;
         this.underlineStyle = builder.underlineStyle;
+        this.metadata = builder.metadata;
     }
 
     RowImpl.Builder configureNewEmptyRowBuilder(MarginProperties left, MarginProperties right) {
         return new RowImpl.Builder("").leftMargin(left).rightMargin(right)
                 .alignment(getAlignment())
                 .rowSpacing(getRowSpacing())
+                .addMetadata(getMetadata())
                 .adjustedForMargin(true);
     }
 
@@ -237,6 +249,10 @@ public final class RowDataProperties {
 
     ListItem getListItem() {
         return listProps;
+    }
+
+    public Map<String, String> getMetadata() {
+        return metadata;
     }
 
     public int getOuterSpaceBefore() {

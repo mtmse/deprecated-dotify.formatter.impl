@@ -238,7 +238,7 @@ public class BorderManager {
                 "Row is too long (" + rowWidth + "/" + master.getPageWidth() + ") '" + res + "'"
             );
         }
-        return new RowImpl.Builder(res);
+        return new RowImpl.Builder(res).addMetadata(row.getMetadata());
     }
 
 }

@@ -241,6 +241,12 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
     }
 
     @Override
+    public void insertMetadata(Map<String, String> metadata) {
+        assertInEntry();
+        super.insertMetadata(metadata);
+    }
+
+    @Override
     public void insertMarkerReference(MarkerReference ref, TextProperties t) {
         assertInEntry();
         super.insertMarkerReference(ref, t);

@@ -7,6 +7,7 @@ import org.daisy.dotify.api.writer.PagedMediaWriterException;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.api.writer.SectionProperties;
 import org.daisy.dotify.common.io.StateObject;
+import org.daisy.dotify.formatter.impl.row.RowImpl;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -230,7 +231,21 @@ class PEFMediaWriter implements PagedMediaWriter {
         if (row.getRowSpacing() != null) {
             pst.print(" rowgap=\"" + (int) Math.floor((row.getRowSpacing() - 1) * 4) + "\"");
         }
-        pst.println((row.getChars().length() > 0 ? ">" + row.getChars() + "</row>" : "/>"));
+
+        StringBuilder md = new StringBuilder();
+        if (row instanceof RowImpl) {
+            RowImpl impl = (RowImpl) row;
+            Map<String, String> metadata = impl.getMetadata();
+            if (metadata != null && !metadata.isEmpty()) {
+                md.append("<metadata ");
+                for (Map.Entry<String, String> entry : metadata.entrySet()) {
+                    md.append(entry.getKey() + "=\"" + entry.getValue() + "\" ");
+                }
+                md.append("/>");
+            }
+        }
+
+        pst.println((row.getChars().length() > 0 ? ">" + md.toString() + row.getChars() + "</row>" : "/>"));
     }
 
     @Override

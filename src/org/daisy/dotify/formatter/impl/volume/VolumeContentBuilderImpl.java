@@ -21,6 +21,7 @@ import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 class VolumeContentBuilderImpl extends Stack<VolumeSequence> implements VolumeContentBuilder {
@@ -149,6 +150,11 @@ class VolumeContentBuilderImpl extends Stack<VolumeSequence> implements VolumeCo
     @Override
     public void insertEvaluate(DynamicContent exp, TextProperties t) {
         current().insertEvaluate(exp, t);
+    }
+
+    @Override
+    public void insertMetadata(Map<String, String> metadata) {
+        current().insertMetadata(metadata);
     }
 
     @Override

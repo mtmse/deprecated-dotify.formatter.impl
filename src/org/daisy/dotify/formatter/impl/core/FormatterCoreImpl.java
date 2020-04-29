@@ -38,6 +38,7 @@ import org.daisy.dotify.formatter.impl.segment.IdentifierSegment;
 import org.daisy.dotify.formatter.impl.segment.LeaderSegment;
 import org.daisy.dotify.formatter.impl.segment.MarkerReferenceSegment;
 import org.daisy.dotify.formatter.impl.segment.MarkerSegment;
+import org.daisy.dotify.formatter.impl.segment.MetadataSegment;
 import org.daisy.dotify.formatter.impl.segment.NewLineSegment;
 import org.daisy.dotify.formatter.impl.segment.PageNumberReference;
 import org.daisy.dotify.formatter.impl.segment.TextSegment;
@@ -360,6 +361,15 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
             throw new IllegalStateException("A table is open.");
         }
         getCurrentBlock().addSegment(new NewLineSegment());
+    }
+
+    @Override
+    public void insertMetadata(Map<String, String> metadata) {
+        if (table != null) {
+            throw new IllegalStateException("A table is open.");
+        }
+        MetadataSegment r = new MetadataSegment(metadata);
+        getCurrentBlock().addSegment(r);
     }
 
     @Override
