@@ -1587,10 +1587,10 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
             XMLEvent event,
             XMLEventIterator input
     ) throws XMLStreamException {
-        Iterator<Object> it = event.asStartElement().getAttributes();
+        Iterator<Attribute> it = event.asStartElement().getAttributes();
         Map<String, String> attrList = new HashMap<>();
         while (it.hasNext()) {
-            Attribute a = (Attribute) it.next();
+            Attribute a = it.next();
             attrList.put(a.getName().getLocalPart(), a.getValue());
         }
         fc.insertMetadata(attrList);
