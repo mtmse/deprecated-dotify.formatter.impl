@@ -571,8 +571,11 @@ class SegmentProcessor implements SegmentProcessing {
             } else {
                 String mode = null;
                 BrailleTranslatorResult btr = toResult(spec, null);
-                CurrentResult cr = new CurrentResultImpl(spc, btr, mode);
-                return Optional.of(cr);
+                if (btr.hasNext()) { // Don't create a new row if the evaluated reference is empty
+                                     // after applying the style
+                    CurrentResult cr = new CurrentResultImpl(spc, btr, mode);
+                    return Optional.of(cr);
+                }
             }
         }
         return Optional.empty();
