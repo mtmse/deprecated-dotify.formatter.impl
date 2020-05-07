@@ -148,12 +148,7 @@ jar {
 	manifest {
 		attributes(
 			'-sources': 'true',
-			'Import-Package': 'org.daisy.dotify.api.engine; provide:=true,'+
-								'org.daisy.dotify.api.formatter; provide:=true,'+
-								'org.daisy.dotify.api.obfl; provide:=true,'+
-								'org.daisy.dotify.api.writer; provide:=true,',
-			////The split-package instruction is because a resource folder is included twice on the classpath
-			//'Private-Package': 'org.daisy.dotify.formatter.impl.*;-split-package:=merge-first,',
+			'-exportcontents': '${packages;VERSIONED}',
 			'Automatic-Module-Name': "$moduleName",
 			'Bundle-Name': "$bundleName",
 			'Bundle-SymbolicName': "$bundleName",
