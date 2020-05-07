@@ -30,7 +30,7 @@ interface ObflQName {
     static final QName LEADER = new QName(OBFL_NS, "leader");
     static final QName MARKER = new QName(OBFL_NS, "marker");
     static final QName ANCHOR = new QName(OBFL_NS, "anchor");
-    static final QName METADATA = new QName(OBFL_NS, "metadata");
+    static final QName EXTERNAL_REFERENCE = new QName(OBFL_NS, "external-reference");
 
     static final QName BR = new QName(OBFL_NS, "br");
     static final QName PAGE_NUMBER = new QName(OBFL_NS, "page-number");

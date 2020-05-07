@@ -165,6 +165,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
                         throw new ObflParserException("Missing xml:lang on root element");
                     }
                     tp = getTextProperties(event, tp);
+                    parseNamespaces(event);
                 } else if (equalsStart(event, ObflQName.META)) {
                     parseMeta(event, input);
                 } else if (equalsStart(event, ObflQName.LAYOUT_MASTER)) {
@@ -192,6 +193,16 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
             input.close();
         } catch (XMLStreamException e) {
             throw new ObflParserException(e);
+        }
+    }
+
+    private void parseNamespaces(XMLEvent event) {
+        Iterator<Attribute> attrIT = event.asStartElement().getNamespaces();
+        while (attrIT.hasNext()) {
+            Attribute attr = attrIT.next();
+            if ("xmlns".equals(attr.getName().getPrefix())) {
+                meta.add(new MetaDataItem(attr.getName(), attr.getValue()));
+            }
         }
     }
 
@@ -1468,8 +1479,8 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
         } else if (equalsStart(event, ObflQName.PAGE_NUMBER)) {
             parsePageNumber(fc, event, input);
             return true;
-        } else if (equalsStart(event, ObflQName.METADATA)) {
-            parseMetadata(fc, event, input);
+        } else if (equalsStart(event, ObflQName.EXTERNAL_REFERENCE)) {
+            parseExternalReference(fc, event, input);
             return true;
         } else if (equalsStart(event, ObflQName.MARKER_REFERENCE)) {
             parseMarkerReference(fc, event, input, tp);
@@ -1582,18 +1593,18 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
         fc.insertPageReference(refId, style);
     }
 
-    private void parseMetadata(
+    private void parseExternalReference(
             BlockContentBuilder fc,
             XMLEvent event,
             XMLEventIterator input
     ) throws XMLStreamException {
         Iterator<Attribute> it = event.asStartElement().getAttributes();
-        Map<String, String> attrList = new HashMap<>();
+        Map<QName, String> attrList = new HashMap<>();
         while (it.hasNext()) {
             Attribute a = it.next();
-            attrList.put(a.getName().getLocalPart(), a.getValue());
+            attrList.put(a.getName(), a.getValue());
         }
-        fc.insertMetadata(attrList);
+        fc.insertExternalReference(attrList);
     }
 
 

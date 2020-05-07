@@ -153,8 +153,8 @@ class VolumeContentBuilderImpl extends Stack<VolumeSequence> implements VolumeCo
     }
 
     @Override
-    public void insertMetadata(Map<String, String> metadata) {
-        current().insertMetadata(metadata);
+    public void insertExternalReference(Object reference) {
+        current().insertExternalReference(reference);
     }
 
     @Override

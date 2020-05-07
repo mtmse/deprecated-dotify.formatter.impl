@@ -16,6 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -30,7 +31,7 @@ import javax.xml.namespace.QName;
  *
  * @author Joel Håkansson
  */
-class PEFMediaWriter implements PagedMediaWriter {
+public class PEFMediaWriter implements PagedMediaWriter {
     private static final String DC_NAMESPACE_URI = "http://purl.org/dc/elements/1.1/";
     private static final Logger logger = Logger.getLogger(PEFMediaWriter.class.getCanonicalName());
     private PrintStream pst;
@@ -73,7 +74,7 @@ class PEFMediaWriter implements PagedMediaWriter {
         open(os, null);
     }
 
-    private void open(OutputStream os, List<MetaDataItem> data) throws PagedMediaWriterException {
+    public void open(OutputStream os, List<MetaDataItem> data) throws PagedMediaWriterException {
         if (data != null) {
             metadata.addAll(data);
         }
@@ -89,7 +90,19 @@ class PEFMediaWriter implements PagedMediaWriter {
         hasOpenSection = false;
         hasOpenPage = false;
         pst.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-        pst.println("<pef version=\"2008-1\" xmlns=\"http://www.daisy.org/ns/2008/pef\">");
+        pst.print("<pef version=\"2008-1\" xmlns=\"http://www.daisy.org/ns/2008/pef\"");
+
+        Iterator<MetaDataItem> metaIT = metadata.iterator();
+        while (metaIT.hasNext()) {
+            MetaDataItem metaDataItem = metaIT.next();
+            if ("xmlns".equals(metaDataItem.getKey().getPrefix())) {
+                pst.print(" " + metaDataItem.getKey().getPrefix());
+                pst.print(":" + metaDataItem.getKey().getLocalPart());
+                pst.print("=\"" + metaDataItem.getValue() + "\"");
+                metaIT.remove();
+            }
+        }
+        pst.println(">");
         pst.println("<head>");
         List<MetaDataItem> meta = organizeMetadata(metadata);
         Map<String, String> ns = getNamespaces(meta);
@@ -228,24 +241,26 @@ class PEFMediaWriter implements PagedMediaWriter {
             errorCount++;
         }
         pst.print("<row");
+
+        if (row instanceof RowImpl) {
+            RowImpl impl = (RowImpl) row;
+            Object externalReference = impl.getExternalReference();
+            if(externalReference instanceof Map) {
+                Map<QName, String> metadata = (Map<QName, String>) externalReference;
+                if (metadata != null && !metadata.isEmpty()) {
+                    for (Map.Entry<QName, String> entry : metadata.entrySet()) {
+                        QName name = entry.getKey();
+                        pst.print(" " + name.getPrefix() + ":" + name.getLocalPart() + "=\"" + entry.getValue() + "\"");
+                    }
+                }
+            }
+        }
+
         if (row.getRowSpacing() != null) {
             pst.print(" rowgap=\"" + (int) Math.floor((row.getRowSpacing() - 1) * 4) + "\"");
         }
 
-        StringBuilder md = new StringBuilder();
-        if (row instanceof RowImpl) {
-            RowImpl impl = (RowImpl) row;
-            Map<String, String> metadata = impl.getMetadata();
-            if (metadata != null && !metadata.isEmpty()) {
-                md.append("<metadata ");
-                for (Map.Entry<String, String> entry : metadata.entrySet()) {
-                    md.append(entry.getKey() + "=\"" + entry.getValue() + "\" ");
-                }
-                md.append("/>");
-            }
-        }
-
-        pst.println((row.getChars().length() > 0 ? ">" + md.toString() + row.getChars() + "</row>" : "/>"));
+        pst.println((row.getChars().length() > 0 ? ">" + row.getChars() + "</row>" : "/>"));
     }
 
     @Override

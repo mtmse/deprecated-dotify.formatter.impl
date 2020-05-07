@@ -34,11 +34,11 @@ import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
 import org.daisy.dotify.formatter.impl.segment.Evaluate;
+import org.daisy.dotify.formatter.impl.segment.ExternalReferenceSegment;
 import org.daisy.dotify.formatter.impl.segment.IdentifierSegment;
 import org.daisy.dotify.formatter.impl.segment.LeaderSegment;
 import org.daisy.dotify.formatter.impl.segment.MarkerReferenceSegment;
 import org.daisy.dotify.formatter.impl.segment.MarkerSegment;
-import org.daisy.dotify.formatter.impl.segment.MetadataSegment;
 import org.daisy.dotify.formatter.impl.segment.NewLineSegment;
 import org.daisy.dotify.formatter.impl.segment.PageNumberReference;
 import org.daisy.dotify.formatter.impl.segment.TextSegment;
@@ -364,11 +364,11 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
     }
 
     @Override
-    public void insertMetadata(Map<String, String> metadata) {
+    public void insertExternalReference(Object reference) {
         if (table != null) {
             throw new IllegalStateException("A table is open.");
         }
-        MetadataSegment r = new MetadataSegment(metadata);
+        ExternalReferenceSegment r = new ExternalReferenceSegment(reference);
         getCurrentBlock().addSegment(r);
     }
 

@@ -3,12 +3,15 @@ package org.daisy.dotify.formatter.impl.writer;
 import org.daisy.dotify.api.writer.AttributeItem;
 import org.daisy.dotify.api.writer.MetaDataItem;
 import org.daisy.dotify.api.writer.PagedMediaWriterException;
+import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import javax.xml.namespace.QName;
 
@@ -66,4 +69,27 @@ public class PEFMediaWriterTest {
             + "</pef>";
         assertEquals(exp, w.toString().replaceAll("[\\r\\n]+", ""));
     }
+
+    @Test
+    public void testExternalReference() throws PagedMediaWriterException {
+        PEFMediaWriter p = new PEFMediaWriter(new Properties());
+
+        Map<QName, String> ref = new HashMap<>();
+        ref.put(new QName(null, "id", "example"), "TestValue");
+
+        RowImpl rowImpl = new RowImpl.Builder("Testing").addExternalReference(ref).build();
+        final StringWriter w = new StringWriter();
+        p.open(new OutputStream() {
+            @Override
+            public void write(int b) throws IOException {
+                w.write(b);
+            }
+        });
+        p.newRow(rowImpl);
+        p.close();
+        String exp = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><pef version=\"2008-1\" xmlns=\"http://www.daisy.org/ns/2008/pef\"><head><meta xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><dc:format>application/x-pef+xml</dc:format><dc:identifier>identifier?</dc:identifier><dc:date>2020-05-06</dc:date></meta></head><body><row example:id=\"TestValue\" >Testing</row></body></pef>";
+        assertEquals(exp, w.toString().replaceAll("[\\r\\n]+", ""));
+    }
+
+
 }

@@ -26,7 +26,7 @@ public final class RowImpl implements Row {
     private final boolean adjustedForMargin;
     private final boolean allowsBreakAfter;
     private final int leaderSpace;
-    private final Map<String, String> metadata;
+    private final Object externalReference;
 
     /**
      * TODO: Write java doc.
@@ -44,7 +44,7 @@ public final class RowImpl implements Row {
         private boolean allowsBreakAfter = true;
         private int leaderSpace = 0;
         private boolean built = false;
-        private Map<String, String> metadata;
+        private Object externalReference;
 
         public Builder(String chars) {
             this.chars = chars;
@@ -62,7 +62,7 @@ public final class RowImpl implements Row {
             this.adjustedForMargin = template.adjustedForMargin;
             this.allowsBreakAfter = template.allowsBreakAfter;
             this.leaderSpace = template.leaderSpace;
-            this.metadata = template.metadata;
+            this.externalReference = template.externalReference;
         }
 
         Builder(RowImpl.Builder template) {
@@ -77,7 +77,7 @@ public final class RowImpl implements Row {
             this.adjustedForMargin = template.adjustedForMargin;
             this.allowsBreakAfter = template.allowsBreakAfter;
             this.leaderSpace = template.leaderSpace;
-            this.metadata = template.metadata;
+            this.externalReference = template.externalReference;
         }
 
         public Builder text(String value) {
@@ -207,13 +207,13 @@ public final class RowImpl implements Row {
         }
 
         /**
-         * Add a collection of  that will flow though the framework to the PEF file.
+         * Add a external reference object that will flow though the framework to the PEF file.
          *
-         * @param metadata a map of data
+         * @param externalReference External reference object
          * @return returns this builder
          */
-        public Builder addMetadata(Map<String, String> metadata) {
-            this.metadata = metadata;
+        public Builder addExternalReference(Object externalReference) {
+            this.externalReference = externalReference;
             return this;
         }
 
@@ -269,7 +269,7 @@ public final class RowImpl implements Row {
         this.adjustedForMargin = builder.adjustedForMargin;
         this.allowsBreakAfter = builder.allowsBreakAfter;
         this.leaderSpace = builder.leaderSpace;
-        this.metadata = builder.metadata;
+        this.externalReference = builder.externalReference;
     }
 
     /**
@@ -293,7 +293,7 @@ public final class RowImpl implements Row {
         this.adjustedForMargin = false;
         this.allowsBreakAfter = true;
         this.leaderSpace = 0;
-        this.metadata = null;
+        this.externalReference = null;
     }
 
     /**
@@ -397,8 +397,8 @@ public final class RowImpl implements Row {
      *
      * @return  Map of metadata.
      */
-    public Map<String, String> getMetadata() {
-        return metadata;
+    public Object getExternalReference() {
+        return externalReference;
     }
 
     @Override

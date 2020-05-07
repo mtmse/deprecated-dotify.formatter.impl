@@ -30,7 +30,7 @@ public final class RowDataProperties {
     private final SingleLineDecoration leadingDecoration;
     private final SingleLineDecoration trailingDecoration;
     private final String underlineStyle;
-    private final Map<String, String> metadata;
+    private final Object externalReference;
 
 
     /**
@@ -60,7 +60,7 @@ public final class RowDataProperties {
         private String underlineStyle = null;
 
         private ListItem listProps = null;
-        private Map<String, String> metadata;
+        private Object externalReference;
 
         public Builder() {
         }
@@ -83,7 +83,7 @@ public final class RowDataProperties {
             this.orphans = template.orphans;
             this.widows = template.widows;
             this.underlineStyle = template.underlineStyle;
-            this.metadata = template.metadata;
+            this.externalReference = template.externalReference;
         }
 
         public Builder blockIndent(int value) {
@@ -166,8 +166,8 @@ public final class RowDataProperties {
             return this;
         }
 
-        public Builder addMetadata(Map<String, String> metadata) {
-            this.metadata = metadata;
+        public Builder addExternalReference(Object externalReference) {
+            this.externalReference = externalReference;
             return this;
         }
 
@@ -204,14 +204,14 @@ public final class RowDataProperties {
         this.orphans = builder.orphans;
         this.widows = builder.widows;
         this.underlineStyle = builder.underlineStyle;
-        this.metadata = builder.metadata;
+        this.externalReference = builder.externalReference;
     }
 
     RowImpl.Builder configureNewEmptyRowBuilder(MarginProperties left, MarginProperties right) {
         return new RowImpl.Builder("").leftMargin(left).rightMargin(right)
                 .alignment(getAlignment())
                 .rowSpacing(getRowSpacing())
-                .addMetadata(getMetadata())
+                .addExternalReference(getExternalReference())
                 .adjustedForMargin(true);
     }
 
@@ -251,8 +251,8 @@ public final class RowDataProperties {
         return listProps;
     }
 
-    public Map<String, String> getMetadata() {
-        return metadata;
+    public Object getExternalReference() {
+        return externalReference;
     }
 
     public int getOuterSpaceBefore() {

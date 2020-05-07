@@ -8,20 +8,20 @@ import java.util.Map;
  * track and transmit information in the OBFL document that
  * is required for the PEF document.
  */
-public class MetadataSegment implements Segment {
-    private Map<String, String> metadata;
+public class ExternalReferenceSegment implements Segment {
+    private Object reference;
 
-    public MetadataSegment(Map<String, String> metadata) {
-        this.metadata = metadata;
+    public ExternalReferenceSegment(Object reference) {
+        this.reference = reference;
     }
 
-    public Map<String, String> getMetadata() {
-        return metadata;
+    public Object getExternalReference() {
+        return reference;
     }
 
     @Override
     public SegmentType getSegmentType() {
-        return SegmentType.Metadata;
+        return SegmentType.ExternalReference;
     }
 
     @Override

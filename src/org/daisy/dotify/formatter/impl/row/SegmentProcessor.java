@@ -15,11 +15,11 @@ import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
 import org.daisy.dotify.formatter.impl.segment.Evaluate;
+import org.daisy.dotify.formatter.impl.segment.ExternalReferenceSegment;
 import org.daisy.dotify.formatter.impl.segment.IdentifierSegment;
 import org.daisy.dotify.formatter.impl.segment.LeaderSegment;
 import org.daisy.dotify.formatter.impl.segment.MarkerReferenceSegment;
 import org.daisy.dotify.formatter.impl.segment.MarkerSegment;
-import org.daisy.dotify.formatter.impl.segment.MetadataSegment;
 import org.daisy.dotify.formatter.impl.segment.PageNumberReference;
 import org.daisy.dotify.formatter.impl.segment.Segment;
 import org.daisy.dotify.formatter.impl.segment.Segment.SegmentType;
@@ -468,11 +468,11 @@ class SegmentProcessor implements SegmentProcessing {
             case Identifier:
                 applyAfterLeader((IdentifierSegment) s);
                 return Optional.empty();
-            case Metadata:
+            case ExternalReference:
                 if (currentRow == null) {
                     newCurrentRow(spc.getMargins().getLeftMargin(), spc.getMargins().getRightMargin());
                 }
-                currentRow.addMetadata(((MetadataSegment) s).getMetadata());
+                currentRow.addExternalReference(((ExternalReferenceSegment) s).getExternalReference());
                 return Optional.empty();
             default:
                 return Optional.empty();
