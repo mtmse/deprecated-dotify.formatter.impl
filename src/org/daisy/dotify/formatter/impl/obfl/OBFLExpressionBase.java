@@ -40,6 +40,8 @@ public abstract class OBFLExpressionBase {
         this.sheetCountVariable = DEFAULT_SHEET_COUNT_VARIABLE_NAME;
         this.volumeSheetCountVariable = DEFAULT_VOLUME_SHEET_COUNT_VARIABLE_NAME;
         
+        this.metaVolumeNumberVariable = null;
+        this.metaPageNumberVariable = null;
         for (MetaVariable metaVariable : metaVariables) {
             switch (metaVariable) {
                 case STARTED_VOLUME_NUMBER:
