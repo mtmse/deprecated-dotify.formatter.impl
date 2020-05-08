@@ -70,7 +70,6 @@ class RegularBlock extends Block {
                         .from(context)
                         .metaVolume(metaVolume)
                         .metaPage(metaPage)
-                        .metaVolumeFirstContentPage(metaVolumeFirstContentPage)
                         .build(),
                 context.getFcontext());
     }

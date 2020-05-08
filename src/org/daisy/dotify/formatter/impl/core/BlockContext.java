@@ -69,12 +69,6 @@ public class BlockContext extends DefaultContext {
         }
 
         @Override
-        public Builder metaVolumeFirstContentPage(Integer value) {
-            super.metaVolumeFirstContentPage(value);
-            return this;
-        }
-
-        @Override
         public Builder space(Space value) {
             super.space(value);
             return this;

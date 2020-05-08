@@ -79,7 +79,7 @@ public class XSLTRenderingScenario implements RenderingScenario {
                     parser.parseBlock(event, input, formatter, tp);
                 } else if (ObflParserImpl.equalsStart(event, ObflQName.TABLE)) {
                     parser.parseTable(event, input, formatter, tp);
-                } else if (parser.processAsBlockContents(formatter, event, input, tp)) {
+                } else if (parser.processAsBlockContents(formatter, event, input, tp, false)) {
                     //done
                 } else if (ObflParserImpl.equalsEnd(event, ObflQName.XML_PROCESSOR_RESULT)) {
                     break;

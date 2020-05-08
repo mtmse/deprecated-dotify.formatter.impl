@@ -115,7 +115,6 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
                                 bl.setBlockAddress(currentBlockAddress);
                                 bl.setMetaPage(ad.getPageNumber());
                                 bl.setMetaVolume(i + 1);
-                                bl.setMetaVolumeFirstContentPage(crh.getPageNumberOfFirstContentPageOfVolume(i + 1));
                                 b.add(bl);
                             }
                             volume.addAll(b);
@@ -134,7 +133,6 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
                                 bl.setBlockAddress(currentBlockAddress);
                                 bl.setMetaPage(ad.getPageNumber());
                                 bl.setMetaVolume(i + 1);
-                                bl.setMetaVolumeFirstContentPage(crh.getPageNumberOfFirstContentPageOfVolume(i + 1));
                                 b.add(bl);
                             }
                             volume.addAll(b);
@@ -147,7 +145,6 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
                         currentBlockAddress = new BlockAddress(groupNumber, currentBlockAddress.getBlockNumber() + 1);
                         bl.setBlockAddress(currentBlockAddress);
                         bl.setMetaVolume(i + 1);
-                        bl.setMetaVolumeFirstContentPage(crh.getPageNumberOfFirstContentPageOfVolume(i + 1));
                         ret.add(bl);
                     }
                     ret.addAll(volume);
@@ -156,7 +153,6 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
                         currentBlockAddress = new BlockAddress(groupNumber, currentBlockAddress.getBlockNumber() + 1);
                         bl.setBlockAddress(currentBlockAddress);
                         bl.setMetaVolume(i + 1);
-                        bl.setMetaVolumeFirstContentPage(crh.getPageNumberOfFirstContentPageOfVolume(i + 1));
                         ret.add(bl);
                     }
                 }

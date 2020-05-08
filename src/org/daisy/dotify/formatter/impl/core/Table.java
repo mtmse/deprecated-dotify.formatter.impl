@@ -128,7 +128,6 @@ class Table extends Block {
                 .from(context)
                 .metaVolume(metaVolume)
                 .metaPage(metaPage)
-                .metaVolumeFirstContentPage(metaVolumeFirstContentPage)
                 .build();
         resultCache = new HashMap<>();
         Result r = minimizeCost(

@@ -131,45 +131,45 @@ class TocSequenceEventImpl implements VolumeSequence {
                 
                 case VOLUME: {
                     final int currentVolume = vars.getCurrentVolume();
-                    final int currentVolumeFirstContentPage = vars.getMetaVolumeFirstContentPage();
+                    final int currentVolumeFirstContentPage =
+                            crh.getPageNumberOfFirstContentPageOfVolume(currentVolume);
                     Collection<Block> volumeToc = data.filter(
-                        refToVolume(currentVolume, crh), rangeToVolume(currentVolume, crh)
+                            refToVolume(currentVolume, crh), rangeToVolume(currentVolume, crh), 
+                            currentVolumeFirstContentPage
                     );
                     if (volumeToc.isEmpty()) {
                         return null;
                     }
-                    volumeToc.forEach(block -> block.setMetaVolumeFirstContentPage(currentVolumeFirstContentPage));
                     fsm.appendGroup(volumeToc);
                     break;
                 }
 
                 case DOCUMENT: {
                     for (int vol = 1; vol <= crh.getVolumeCount(); vol++) {
-                        Collection<Block> volumeToc = data.filter(refToVolume(vol, crh), rangeToVolume(vol, crh));
+                        final int volumeFirstContentPage = crh.getPageNumberOfFirstContentPageOfVolume(vol);
+                        Collection<Block> volumeToc = data.filter(
+                                refToVolume(vol, crh), rangeToVolume(vol, crh),
+                                volumeFirstContentPage
+                        );
                         if (!volumeToc.isEmpty()) {
-                            final int volumeFirstContentPage = crh.getPageNumberOfFirstContentPageOfVolume(vol);
                             Context varsWithVolume = DefaultContext
                                     .from(vars)
                                     .metaVolume(vol)
-                                    .metaVolumeFirstContentPage(volumeFirstContentPage)
                                     .build();
                             Iterable<Block> volumeStart = getVolumeStart(varsWithVolume);
                             for (Block b : volumeStart) {
                                 b.setMetaVolume(vol);
-                                b.setMetaVolumeFirstContentPage(volumeFirstContentPage);
                             }
-                            volumeToc.forEach(block -> block.setMetaVolumeFirstContentPage(volumeFirstContentPage));
                             Iterable<Block> volumeEnd = getVolumeEnd(varsWithVolume);
                             for (Block b : volumeEnd) {
                                 b.setMetaVolume(vol);
-                                b.setMetaVolumeFirstContentPage(volumeFirstContentPage);
                             }
                             fsm.appendGroup(volumeStart);
                             fsm.appendGroup(volumeToc);
                             fsm.appendGroup(volumeEnd);
                         }
                     }
-                    Collection<Block> volumeToc = data.filter(refToVolume(null, crh), range -> false);
+                    Collection<Block> volumeToc = data.filter(refToVolume(null, crh), range -> false, 0);
                     if (!volumeToc.isEmpty()) {
                         fsm.appendGroup(volumeToc);
                     }

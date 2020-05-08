@@ -265,7 +265,6 @@ public class VolumeProvider {
     private SectionBuilder updateVolumeContents(int volumeNumber, ArrayList<AnchorData> ad, boolean pre) {
         DefaultContext c = new DefaultContext.Builder(crh)
                 .currentVolume(volumeNumber)
-                .metaVolumeFirstContentPage(crh.getPageNumberOfFirstContentPageOfVolume(volumeNumber))
                 .space(pre ? Space.PRE_CONTENT : Space.POST_CONTENT)
                 .build();
         try {

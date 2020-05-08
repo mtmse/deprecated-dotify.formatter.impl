@@ -9,8 +9,8 @@ import org.daisy.dotify.api.obfl.ExpressionFactory;
  */
 public class OBFLDynamicContent extends OBFLExpressionBase implements DynamicContent {
 
-    public OBFLDynamicContent(String exp, ExpressionFactory ef, boolean extended) {
-        super(exp, ef, extended);
+    public OBFLDynamicContent(String exp, ExpressionFactory ef, MetaVariable... metaVariables) {
+        super(exp, ef, metaVariables);
     }
 
     @Override

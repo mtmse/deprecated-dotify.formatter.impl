@@ -7,8 +7,7 @@ import org.daisy.dotify.api.formatter.Context;
  */
 public class DefaultContext implements Context {
 
-    private final Integer currentVolume, currentPage, metaVolume, metaPage,
-            metaVolumeFirstContentPage;
+    private final Integer currentVolume, currentPage, metaVolume, metaPage;
     private final PageId currentPageId;
     private final Space space;
     protected final CrossReferenceHandler crh;
@@ -17,11 +16,8 @@ public class DefaultContext implements Context {
      * TODO: Write java doc.
      */
     public static class Builder {
-        private Integer currentVolume = null,
-                currentPage = null,
-                metaVolume = null,
-                metaPage = null,
-                metaVolumeFirstContentPage = null;
+        private Integer currentVolume = null, currentPage = null,
+                metaVolume = null, metaPage = null;
         private PageId currentPageId = null;
         private Space space = null;
         private final CrossReferenceHandler crh;
@@ -36,7 +32,6 @@ public class DefaultContext implements Context {
             this.currentPage = base.getCurrentPage();
             this.metaVolume = base.getMetaVolume();
             this.metaPage = base.getMetaPage();
-            this.metaVolumeFirstContentPage = base.getMetaVolumeFirstContentPage();
             this.currentPageId = base.getCurrentPageId();
             this.space = base.space;
             this.crh = base.crh;
@@ -68,11 +63,6 @@ public class DefaultContext implements Context {
             return this;
         }
 
-        public Builder metaVolumeFirstContentPage(Integer value) {
-            this.metaVolumeFirstContentPage = value;
-            return this;
-        }
-
         public Builder space(Space value) {
             this.space = value;
             return this;
@@ -92,7 +82,6 @@ public class DefaultContext implements Context {
         this.currentPage = builder.currentPage;
         this.metaVolume = builder.metaVolume;
         this.metaPage = builder.metaPage;
-        this.metaVolumeFirstContentPage = builder.metaVolumeFirstContentPage;
         this.currentPageId = builder.currentPageId;
         this.space = builder.space;
         this.crh = builder.crh;
@@ -121,11 +110,6 @@ public class DefaultContext implements Context {
     @Override
     public Integer getMetaPage() {
         return metaPage;
-    }
-
-    @Override
-    public Integer getMetaVolumeFirstContentPage() {
-        return metaVolumeFirstContentPage;
     }
 
     @Override
@@ -170,7 +154,6 @@ public class DefaultContext implements Context {
         result = prime * result + ((currentVolume == null) ? 0 : currentVolume.hashCode());
         result = prime * result + ((metaVolume == null) ? 0 : metaVolume.hashCode());
         result = prime * result + ((metaPage == null) ? 0 : metaPage.hashCode());
-        result = prime * result + ((metaVolumeFirstContentPage == null) ? 0 : metaVolumeFirstContentPage.hashCode());
         return result;
     }
 
@@ -226,13 +209,6 @@ public class DefaultContext implements Context {
                 return false;
             }
         } else if (!metaPage.equals(other.metaPage)) {
-            return false;
-        }
-        if (metaVolumeFirstContentPage == null) {
-            if (other.metaVolumeFirstContentPage != null) {
-                return false;
-            }
-        } else if (!metaVolumeFirstContentPage.equals(other.metaVolumeFirstContentPage)) {
             return false;
         }
         return true;

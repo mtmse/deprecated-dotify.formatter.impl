@@ -18,11 +18,10 @@ public abstract class OBFLExpressionBase {
     public static final String DEFAULT_EVENT_PAGE_NUMBER = "started-page-number";
     public static final String DEFAULT_SHEET_COUNT_VARIABLE_NAME = "sheets-in-document";
     public static final String DEFAULT_VOLUME_SHEET_COUNT_VARIABLE_NAME = "sheets-in-volume";
-    public static final String EVENT_STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER = "started-volume-first-content-page";
+    public static final String STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER = "started-volume-first-content-page";
 
     protected final ExpressionFactory ef;
     protected final String exp;
-    private final boolean extended;
 
     protected String pageNumberVariable;
     protected String volumeNumberVariable;
@@ -32,21 +31,28 @@ public abstract class OBFLExpressionBase {
     protected String sheetCountVariable;
     protected String volumeSheetCountVariable;
 
-    public OBFLExpressionBase(String exp, ExpressionFactory ef, boolean extended) {
+    public OBFLExpressionBase(String exp, ExpressionFactory ef, MetaVariable... metaVariables) {
         this.ef = ef;
         this.exp = exp;
-        this.extended = extended;
         this.pageNumberVariable = DEFAULT_PAGE_NUMBER_VARIABLE_NAME;
         this.volumeNumberVariable = DEFAULT_VOLUME_NUMBER_VARIABLE_NAME;
         this.volumeCountVariable = DEFAULT_VOLUME_COUNT_VARIABLE_NAME;
         this.sheetCountVariable = DEFAULT_SHEET_COUNT_VARIABLE_NAME;
         this.volumeSheetCountVariable = DEFAULT_VOLUME_SHEET_COUNT_VARIABLE_NAME;
-        if (extended) {
-            this.metaVolumeNumberVariable = DEFAULT_EVENT_VOLUME_NUMBER;
-            this.metaPageNumberVariable = DEFAULT_EVENT_PAGE_NUMBER;
-        } else {
-            this.metaVolumeNumberVariable = null;
-            this.metaPageNumberVariable = null;
+        
+        for (MetaVariable metaVariable : metaVariables) {
+            switch (metaVariable) {
+                case STARTED_VOLUME_NUMBER:
+                    this.metaVolumeNumberVariable = DEFAULT_EVENT_VOLUME_NUMBER;
+                    break;
+                case STARTED_PAGE_NUMBER:
+                    this.metaPageNumberVariable = DEFAULT_EVENT_PAGE_NUMBER;
+                    break;
+                case STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER:
+                    this.metaPageNumberVariable = STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER;
+                    break;
+                default:
+            }
         }
     }
 
@@ -120,11 +126,6 @@ public abstract class OBFLExpressionBase {
         }
         if (metaPageNumberVariable != null) {
             variables.put(metaPageNumberVariable, "" + context.getMetaPage());
-        }
-        if (extended) {
-            variables.put(EVENT_STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER,
-                    "" + context.getMetaVolumeFirstContentPage()
-            );
         }
         if (sheetCountVariable != null) {
             variables.put(sheetCountVariable, "" + context.getSheetsInDocument());

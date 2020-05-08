@@ -132,12 +132,19 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
      * of the way the sequence of blocks is constructed, we are potentially throwing away borders
      * and margins that should be kept. That said, the previous implementation did not handle
      * borders and margins correctly either, so fixing this issue can be seen as an optimization.</p>
+     * 
+     * <p>This method sets the meta page number of the range blocks that are filtered out.</p> 
      *
      * @param refIdFilter predicate that takes as argument a ref-id
      * @param rangeFilter predicate that takes as argument a range
+     * @param rangeMetaPage meta page number of range blocks
      * @return collection of blocks
      */
-    public Collection<Block> filter(Predicate<String> refIdFilter, Predicate<TocEntryOnResumedRange> rangeFilter) {
+    public Collection<Block> filter(
+            Predicate<String> refIdFilter,
+            Predicate<TocEntryOnResumedRange> rangeFilter,
+            int rangeMetaPage
+    ) {
         List<Block> filtered = new ArrayList<>();
         Set<TocBlock> tocBlocksWithDescendantTocEntry = new HashSet<>();
         for (Block b : this) {
@@ -162,7 +169,11 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
         Iterator<Block> i = filtered.iterator();
         while (i.hasNext()) {
             Block b = i.next();
-            if (refIdForBlock.containsKey(b) || rangeForBlock.containsKey(b)) {
+            if (refIdForBlock.containsKey(b)) {
+                continue;
+            }
+            if (rangeForBlock.containsKey(b)) {
+                b.setMetaPage(rangeMetaPage);
                 continue;
             }
             if (tocBlockForBlock.containsKey(b) // this should always be true
