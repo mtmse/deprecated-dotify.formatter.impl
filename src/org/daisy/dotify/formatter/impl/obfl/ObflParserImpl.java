@@ -434,7 +434,12 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
             template = master.newTemplate(
                 new OBFLCondition(
                     getAttr(event, ObflQName.ATTR_USE_WHEN),
-                    fm.getExpressionFactory()
+                    fm.getExpressionFactory(),
+                    OBFLVariable.PAGE_NUMBER,
+                    OBFLVariable.VOLUME_NUMBER,
+                    OBFLVariable.VOLUME_COUNT,
+                    OBFLVariable.SHEET_COUNT,
+                    OBFLVariable.VOLUME_SHEET_COUNT
                 )
             );
         } else {
@@ -1601,12 +1606,22 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
         final OBFLDynamicContent dynamic;
         if (inTocEntryOnResumed) {
             dynamic = new OBFLDynamicContent(expr, fm.getExpressionFactory(),
-                    MetaVariable.STARTED_VOLUME_NUMBER,
-                    MetaVariable.STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER);
+                    OBFLVariable.PAGE_NUMBER,
+                    OBFLVariable.VOLUME_NUMBER,
+                    OBFLVariable.VOLUME_COUNT,
+                    OBFLVariable.SHEET_COUNT,
+                    OBFLVariable.VOLUME_SHEET_COUNT,
+                    OBFLVariable.STARTED_VOLUME_NUMBER,
+                    OBFLVariable.STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER);
         } else {
             dynamic = new OBFLDynamicContent(expr, fm.getExpressionFactory(),
-                    MetaVariable.STARTED_VOLUME_NUMBER,
-                    MetaVariable.STARTED_PAGE_NUMBER);
+                    OBFLVariable.PAGE_NUMBER,
+                    OBFLVariable.VOLUME_NUMBER,
+                    OBFLVariable.VOLUME_COUNT,
+                    OBFLVariable.SHEET_COUNT,
+                    OBFLVariable.VOLUME_SHEET_COUNT,
+                    OBFLVariable.STARTED_VOLUME_NUMBER,
+                    OBFLVariable.STARTED_PAGE_NUMBER);
         }
         fc.insertEvaluate(dynamic, tp);
     }
@@ -1618,9 +1633,16 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
     ) throws XMLStreamException {
         String useWhen = getAttr(event, ObflQName.ATTR_USE_WHEN);
         String splitterMax = getAttr(event, "sheets-in-volume-max");
-        OBFLCondition condition = new OBFLCondition(useWhen, fm.getExpressionFactory());
-        condition.setVolumeCountVariable(getAttr(event, "volume-count-variable"));
-        condition.setVolumeNumberVariable(getAttr(event, "volume-number-variable"));
+        OBFLCondition condition = new OBFLCondition(
+            useWhen,
+            fm.getExpressionFactory(),
+            OBFLVariable.PAGE_NUMBER,
+            OBFLVariable.VOLUME_NUMBER,
+            OBFLVariable.VOLUME_COUNT,
+            OBFLVariable.SHEET_COUNT,
+            OBFLVariable.VOLUME_SHEET_COUNT);
+        condition.setVariableName(OBFLVariable.VOLUME_COUNT, getAttr(event, "volume-count-variable"));
+        condition.setVariableName(OBFLVariable.VOLUME_NUMBER, getAttr(event, "volume-number-variable"));
         VolumeTemplateProperties vtp = new VolumeTemplateProperties.Builder(Integer.parseInt(splitterMax))
                 .condition(condition)
                 .build();
@@ -1809,8 +1831,13 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
                     new OBFLCondition(
                         getAttr(event, ObflQName.ATTR_USE_WHEN),
                         fm.getExpressionFactory(),
-                        MetaVariable.STARTED_VOLUME_NUMBER,
-                        MetaVariable.STARTED_PAGE_NUMBER
+                        OBFLVariable.STARTED_VOLUME_NUMBER,
+                        OBFLVariable.STARTED_PAGE_NUMBER,
+                        OBFLVariable.PAGE_NUMBER,
+                        OBFLVariable.VOLUME_NUMBER,
+                        OBFLVariable.VOLUME_COUNT,
+                        OBFLVariable.SHEET_COUNT,
+                        OBFLVariable.VOLUME_SHEET_COUNT
                     )
                 );
                 parseOnEvent(event, input, template, ObflQName.ON_TOC_START, tp);
@@ -1819,8 +1846,13 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
                     new OBFLCondition(
                         getAttr(event, ObflQName.ATTR_USE_WHEN),
                         fm.getExpressionFactory(),
-                        MetaVariable.STARTED_VOLUME_NUMBER,
-                        MetaVariable.STARTED_PAGE_NUMBER
+                        OBFLVariable.STARTED_VOLUME_NUMBER,
+                        OBFLVariable.STARTED_PAGE_NUMBER,
+                        OBFLVariable.PAGE_NUMBER,
+                        OBFLVariable.VOLUME_NUMBER,
+                        OBFLVariable.VOLUME_COUNT,
+                        OBFLVariable.SHEET_COUNT,
+                        OBFLVariable.VOLUME_SHEET_COUNT
                     )
                 );
                 parseOnEvent(event, input, template, ObflQName.ON_VOLUME_START, tp);
@@ -1829,8 +1861,13 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
                     new OBFLCondition(
                         getAttr(event, ObflQName.ATTR_USE_WHEN),
                         fm.getExpressionFactory(),
-                        MetaVariable.STARTED_VOLUME_NUMBER,
-                        MetaVariable.STARTED_PAGE_NUMBER
+                        OBFLVariable.STARTED_VOLUME_NUMBER,
+                        OBFLVariable.STARTED_PAGE_NUMBER,
+                        OBFLVariable.PAGE_NUMBER,
+                        OBFLVariable.VOLUME_NUMBER,
+                        OBFLVariable.VOLUME_COUNT,
+                        OBFLVariable.SHEET_COUNT,
+                        OBFLVariable.VOLUME_SHEET_COUNT
                     )
                 );
                 parseOnEvent(event, input, template, ObflQName.ON_VOLUME_END, tp);
@@ -1839,8 +1876,13 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
                     new OBFLCondition(
                         getAttr(event, ObflQName.ATTR_USE_WHEN),
                         fm.getExpressionFactory(),
-                        MetaVariable.STARTED_VOLUME_NUMBER,
-                        MetaVariable.STARTED_PAGE_NUMBER
+                        OBFLVariable.STARTED_VOLUME_NUMBER,
+                        OBFLVariable.STARTED_PAGE_NUMBER,
+                        OBFLVariable.PAGE_NUMBER,
+                        OBFLVariable.VOLUME_NUMBER,
+                        OBFLVariable.VOLUME_COUNT,
+                        OBFLVariable.SHEET_COUNT,
+                        OBFLVariable.VOLUME_SHEET_COUNT
                     )
                 );
                 parseOnEvent(event, input, template, ObflQName.ON_TOC_END, tp);

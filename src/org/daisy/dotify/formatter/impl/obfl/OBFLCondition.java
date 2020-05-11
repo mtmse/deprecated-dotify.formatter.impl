@@ -9,8 +9,8 @@ import org.daisy.dotify.api.obfl.ExpressionFactory;
  */
 public class OBFLCondition extends OBFLExpressionBase implements Condition {
 
-    public OBFLCondition(String exp, ExpressionFactory ef, MetaVariable... metaVariables) {
-        super(exp, ef, metaVariables);
+    public OBFLCondition(String exp, ExpressionFactory ef, OBFLVariable... variables) {
+        super(exp, ef, variables);
     }
 
     @Override
