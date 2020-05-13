@@ -10,116 +10,91 @@ import java.util.Set;
 
 /**
  * TODO: Write java doc.
- * TODO: Remove the defaults. See https://github.com/mtmse/obfl/issues/13
+ * TODO: Remove the defaults from the OBFL specification. See https://github.com/mtmse/obfl/issues/13
  */
 public abstract class OBFLExpressionBase {
 
-    public static final String DEFAULT_PAGE_NUMBER_VARIABLE_NAME = "page";
-    public static final String DEFAULT_VOLUME_NUMBER_VARIABLE_NAME = "volume";
-    public static final String DEFAULT_VOLUME_COUNT_VARIABLE_NAME = "volumes";
-    public static final String DEFAULT_STARTED_VOLUME_NUMBER_VARIABLE_NAME = "started-volume-number";
-    public static final String DEFAULT_STARTED_PAGE_NUMBER_VARIABLE_NAME = "started-page-number";
-    public static final String DEFAULT_STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER_VARIABLE_NAME
-        = "started-volume-first-content-page";
-    public static final String DEFAULT_SHEET_COUNT_VARIABLE_NAME = "sheets-in-document";
-    public static final String DEFAULT_VOLUME_SHEET_COUNT_VARIABLE_NAME = "sheets-in-volume";
+    public static final String
+            PAGE_NUMBER_VARIABLE_NAME = "page",
+            VOLUME_NUMBER_VARIABLE_NAME = "volume",
+            VOLUME_COUNT_VARIABLE_NAME = "volumes",
+            STARTED_VOLUME_NUMBER_VARIABLE_NAME = "started-volume-number",
+            STARTED_PAGE_NUMBER_VARIABLE_NAME = "started-page-number",
+            STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER_VARIABLE_NAME = "started-volume-first-content-page",
+            SHEET_COUNT_VARIABLE_NAME = "sheets-in-document",
+            VOLUME_SHEET_COUNT_VARIABLE_NAME = "sheets-in-volume";
 
     protected final ExpressionFactory ef;
     protected final String exp;
 
-    protected String pageNumberVariableName = null;
-    protected String volumeNumberVariableName = null;
-    protected String volumeCountVariableName = null;
-    protected String metaVolumeNumberVariableName = null;
-    protected String metaPageNumberVariableName = null;
-    protected String sheetCountVariableName = null;
-    protected String volumeSheetCountVariableName = null;
+    private String
+            pageNumberVariableName = null,
+            volumeNumberVariableName = null,
+            volumeCountVariableName = null,
+            metaVolumeNumberVariableName = null,
+            metaPageNumberVariableName = null,
+            sheetCountVariableName = null,
+            volumeSheetCountVariableName = null;
 
-    private final Set<OBFLVariable> variables;
     /**
      * @param exp The expression string
      * @param ef The expression factory
      * @param variables The variables (zero or more) that may be used within the expression.
-     *            <p>Default names are given to the variables. To provide different names use the
-     *            {@link #setVariableName(OBFLVariable, String)} method. Note that whether a
-     *            variable will actually be assigned a value is not determined by this object. This
-     *            depends on the context in which the expression is used.</p> <p>The variables
-     *            {@link OBFLVariable#STARTED_PAGE_NUMBER} and {@link
-     *            OBFLVariable#STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER} can not both be used in the
-     *            same expression. At most one "<i>meta</i>" page number is available at any
-     *            particular place in the OBFL. Which of the two is included in the
-     *            <code>variables</code> argument does not affect the value that will be assigned,
-     *            only the variable name. The value is determined by the context.</p>
+     * <p>Note that whether a variable will actually be assigned a value is not
+     * determined by this object. This depends on the context in which the
+     * expression is used.</p>
+     * <p>The variables {@link OBFLVariable#STARTED_PAGE_NUMBER} and {@link
+     * OBFLVariable#STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER} cannot both be
+     * used in the same expression. At most one "<i>meta</i>" page number is
+     * available at any particular place in the OBFL. Which of the two is
+     * included in the <code>variables</code> argument does not affect the value
+     * that will be assigned, only the variable name. The value is determined by
+     * the context.</p>
      */
     public OBFLExpressionBase(String exp, ExpressionFactory ef, OBFLVariable... variables) {
         this.ef = ef;
         this.exp = exp;
-        this.variables = new HashSet<>();
+        final Set<OBFLVariable> variablesSeen = new HashSet<>();
         for (OBFLVariable v : variables) {
             switch (v) {
             case PAGE_NUMBER:
+                this.pageNumberVariableName = PAGE_NUMBER_VARIABLE_NAME;
+                break;
             case VOLUME_NUMBER:
+                this.volumeNumberVariableName = VOLUME_NUMBER_VARIABLE_NAME;
+                break;
             case VOLUME_COUNT:
+                this.volumeCountVariableName = VOLUME_COUNT_VARIABLE_NAME;
+                break;
             case STARTED_VOLUME_NUMBER:
+                this.metaVolumeNumberVariableName = STARTED_VOLUME_NUMBER_VARIABLE_NAME;
                 break;
             case STARTED_PAGE_NUMBER:
-                if (this.variables.contains(OBFLVariable.STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER)) {
+                if (variablesSeen.contains(OBFLVariable.STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER)) {
                     throw new IllegalArgumentException(
                         "STARTED_PAGE_NUMBER and STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER " +
                         "may not both be used in the same expression.");
                 }
+                this.metaPageNumberVariableName = STARTED_PAGE_NUMBER_VARIABLE_NAME;
                 break;
             case STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER:
-                if (this.variables.contains(OBFLVariable.STARTED_PAGE_NUMBER)) {
+                if (variablesSeen.contains(OBFLVariable.STARTED_PAGE_NUMBER)) {
                     throw new IllegalArgumentException(
                         "STARTED_PAGE_NUMBER and STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER " +
                         "may not both be used in the same expression.");
                 }
+                this.metaPageNumberVariableName = STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER_VARIABLE_NAME;
                 break;
             case SHEET_COUNT:
+                this.sheetCountVariableName = SHEET_COUNT_VARIABLE_NAME;
+                break;
             case VOLUME_SHEET_COUNT:
+                this.volumeSheetCountVariableName = VOLUME_SHEET_COUNT_VARIABLE_NAME;
                 break;
             default:
                 throw new IllegalArgumentException(); // coding error
             }
-            this.variables.add(v);
-            setVariableName(v, null);
-        }
-    }
-
-    public void setVariableName(OBFLVariable variable, String name) {
-        if (!variables.contains(variable)) {
-            throw new IllegalArgumentException("variable " + variable + " not made available in this expression");
-        }
-        switch (variable) {
-        case PAGE_NUMBER:
-            this.pageNumberVariableName = name != null ? name : DEFAULT_PAGE_NUMBER_VARIABLE_NAME;
-            break;
-        case VOLUME_NUMBER:
-            this.volumeNumberVariableName = name != null ? name : DEFAULT_VOLUME_NUMBER_VARIABLE_NAME;
-            break;
-        case VOLUME_COUNT:
-            this.volumeCountVariableName = name != null ? name : DEFAULT_VOLUME_COUNT_VARIABLE_NAME;
-            break;
-        case STARTED_VOLUME_NUMBER:
-            this.metaVolumeNumberVariableName = name != null ? name : DEFAULT_STARTED_VOLUME_NUMBER_VARIABLE_NAME;
-            break;
-        case STARTED_PAGE_NUMBER:
-            this.metaPageNumberVariableName = name != null ? name : DEFAULT_STARTED_PAGE_NUMBER_VARIABLE_NAME;
-            break;
-        case STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER:
-            this.metaPageNumberVariableName = name != null
-                ? name
-                : DEFAULT_STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER_VARIABLE_NAME;
-            break;
-        case SHEET_COUNT:
-            this.sheetCountVariableName = name != null ? name : DEFAULT_SHEET_COUNT_VARIABLE_NAME;
-            break;
-        case VOLUME_SHEET_COUNT:
-            this.volumeSheetCountVariableName = name != null ? name : DEFAULT_VOLUME_SHEET_COUNT_VARIABLE_NAME;
-            break;
-        default:
-            throw new IllegalArgumentException(); // coding error
+            variablesSeen.add(v);
         }
     }
 

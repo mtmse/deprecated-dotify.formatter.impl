@@ -1641,8 +1641,6 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
             OBFLVariable.VOLUME_COUNT,
             OBFLVariable.SHEET_COUNT,
             OBFLVariable.VOLUME_SHEET_COUNT);
-        condition.setVariableName(OBFLVariable.VOLUME_COUNT, getAttr(event, "volume-count-variable"));
-        condition.setVariableName(OBFLVariable.VOLUME_NUMBER, getAttr(event, "volume-number-variable"));
         VolumeTemplateProperties vtp = new VolumeTemplateProperties.Builder(Integer.parseInt(splitterMax))
                 .condition(condition)
                 .build();
