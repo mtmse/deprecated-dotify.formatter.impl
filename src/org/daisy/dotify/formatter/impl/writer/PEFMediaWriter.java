@@ -7,7 +7,6 @@ import org.daisy.dotify.api.writer.PagedMediaWriterException;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.api.writer.SectionProperties;
 import org.daisy.dotify.common.io.StateObject;
-import org.daisy.dotify.formatter.impl.row.RowImpl;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -242,16 +241,13 @@ public class PEFMediaWriter implements PagedMediaWriter {
         }
         pst.print("<row");
 
-        if (row instanceof RowImpl) {
-            RowImpl impl = (RowImpl) row;
-            Object externalReference = impl.getExternalReference();
-            if(externalReference instanceof Map) {
-                Map<QName, String> metadata = (Map<QName, String>) externalReference;
-                if (metadata != null && !metadata.isEmpty()) {
-                    for (Map.Entry<QName, String> entry : metadata.entrySet()) {
-                        QName name = entry.getKey();
-                        pst.print(" " + name.getPrefix() + ":" + name.getLocalPart() + "=\"" + entry.getValue() + "\"");
-                    }
+        Object externalReference = row.getExternalReference();
+        if (externalReference instanceof Map) {
+            Map<QName, String> metadata = (Map<QName, String>) externalReference;
+            if (metadata != null && !metadata.isEmpty()) {
+                for (Map.Entry<QName, String> entry : metadata.entrySet()) {
+                    QName name = entry.getKey();
+                    pst.print(" " + name.getPrefix() + ":" + name.getLocalPart() + "=\"" + entry.getValue() + "\"");
                 }
             }
         }

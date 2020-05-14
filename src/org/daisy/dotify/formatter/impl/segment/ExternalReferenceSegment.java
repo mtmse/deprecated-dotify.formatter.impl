@@ -1,7 +1,5 @@
 package org.daisy.dotify.formatter.impl.segment;
 
-import java.util.Map;
-
 /**
  * This segment contains all attributes from the optional
  * metadata tags that could be added to blocks in order to

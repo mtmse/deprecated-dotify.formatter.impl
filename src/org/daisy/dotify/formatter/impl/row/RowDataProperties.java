@@ -5,7 +5,6 @@ import org.daisy.dotify.api.formatter.FormattingTypes.Alignment;
 import org.daisy.dotify.formatter.impl.row.Margin.Type;
 
 import java.util.Collections;
-import java.util.Map;
 
 /**
  * Provides properties for a block. {@link RowDataProperties} are

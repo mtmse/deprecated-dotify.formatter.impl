@@ -7,7 +7,6 @@ import org.daisy.dotify.api.writer.Row;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Provides a single row of text. {@link RowImpl}s are immutable.

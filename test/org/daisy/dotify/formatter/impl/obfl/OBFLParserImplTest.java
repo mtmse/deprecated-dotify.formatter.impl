@@ -7,24 +7,16 @@ import org.daisy.dotify.api.formatter.NumeralStyle;
 import org.daisy.dotify.api.obfl.ExpressionFactoryMaker;
 import org.daisy.dotify.api.obfl.ObflParser;
 import org.daisy.dotify.api.translator.TextBorderFactoryMaker;
-import org.daisy.dotify.api.writer.PagedMediaWriter;
 import org.daisy.dotify.formatter.impl.FormatterFactoryImpl;
 import org.daisy.dotify.formatter.impl.common.FactoryManager;
 import org.daisy.dotify.formatter.impl.writer.PEFMediaWriter;
 import org.daisy.dotify.formatter.impl.writer.PEFMediaWriterFactoryService;
 import org.junit.Test;
-import sun.misc.IOUtils;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Properties;
-import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.stream.XMLEventFactory;
@@ -99,7 +91,8 @@ public class OBFLParserImplTest {
 
         input.close();
 
-        PEFMediaWriter p = (PEFMediaWriter) new PEFMediaWriterFactoryService().newFactory("").newPagedMediaWriter();
+        PEFMediaWriter p = (PEFMediaWriter) new PEFMediaWriterFactoryService()
+                .newFactory("").newPagedMediaWriter();
         final StringWriter w = new StringWriter();
         p.open(new OutputStream() {
             @Override

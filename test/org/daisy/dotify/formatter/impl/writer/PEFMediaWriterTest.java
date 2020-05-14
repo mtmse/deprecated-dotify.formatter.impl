@@ -9,7 +9,9 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -87,7 +89,23 @@ public class PEFMediaWriterTest {
         });
         p.newRow(rowImpl);
         p.close();
-        String exp = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><pef version=\"2008-1\" xmlns=\"http://www.daisy.org/ns/2008/pef\"><head><meta xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><dc:format>application/x-pef+xml</dc:format><dc:identifier>identifier?</dc:identifier><dc:date>2020-05-06</dc:date></meta></head><body><row example:id=\"TestValue\" >Testing</row></body></pef>";
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = new Date(System.currentTimeMillis());
+
+        String exp = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+                "<pef version=\"2008-1\" xmlns=\"http://www.daisy.org/ns/2008/pef\">" +
+                "<head>" +
+                "<meta xmlns:dc=\"http://purl.org/dc/elements/1.1/\">" +
+                "<dc:format>application/x-pef+xml</dc:format>" +
+                "<dc:identifier>identifier?</dc:identifier>" +
+                "<dc:date>" + formatter.format(date) + "</dc:date>" +
+                "</meta>" +
+                "</head>" +
+                "<body>" +
+                "<row example:id=\"TestValue\">Testing</row>" +
+                "</body>" +
+                "</pef>";
         assertEquals(exp, w.toString().replaceAll("[\\r\\n]+", ""));
     }
 
