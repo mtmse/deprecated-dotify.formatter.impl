@@ -264,8 +264,13 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
         return (line > -1 ? " (at line: " + line + (col > -1 ? ", column: " + col : "") + ") " : "");
     }
 
-    //TODO: parse page-number-variable
     private void parseLayoutMaster(XMLEvent event, XMLEventIterator input) throws XMLStreamException {
+        // TODO: This check can be removed after the concept of an alternative variable name
+        // has been removed from the OBFL specification.
+        // See https://github.com/mtmse/obfl/issues/13
+        if (getAttr(event, "page-number-variable") != null) {
+            throw new UnsupportedOperationException("Alternative variable names are not supported");
+        }
         @SuppressWarnings("unchecked")
         Iterator<Attribute> i = event.asStartElement().getAttributes();
         int width = Integer.parseInt(getAttr(event, ObflQName.ATTR_PAGE_WIDTH));
