@@ -77,6 +77,7 @@ import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.Attribute;
+import javax.xml.stream.events.Namespace;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.Source;
@@ -197,9 +198,9 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
     }
 
     private void parseNamespaces(XMLEvent event) {
-        Iterator<Attribute> attrIT = event.asStartElement().getNamespaces();
+        Iterator<Namespace> attrIT = event.asStartElement().getNamespaces();
         while (attrIT.hasNext()) {
-            Attribute attr = attrIT.next();
+            Namespace attr = attrIT.next();
             if ("xmlns".equals(attr.getName().getPrefix())) {
                 meta.add(new MetaDataItem(attr.getName(), attr.getValue()));
             }
