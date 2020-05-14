@@ -1631,6 +1631,12 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
         XMLEventIterator input,
         TextProperties tp
     ) throws XMLStreamException {
+        // TODO: This check can be removed after the concept of an alternative variable name
+        // has been removed from the OBFL specification.
+        // See https://github.com/mtmse/obfl/issues/13
+        if (getAttr(event, "volume-count-variable") != null || getAttr(event, "volume-number-variable") != null) {
+            throw new UnsupportedOperationException("Alternative variable names are not supported");
+        }
         String useWhen = getAttr(event, ObflQName.ATTR_USE_WHEN);
         String splitterMax = getAttr(event, "sheets-in-volume-max");
         OBFLCondition condition = new OBFLCondition(

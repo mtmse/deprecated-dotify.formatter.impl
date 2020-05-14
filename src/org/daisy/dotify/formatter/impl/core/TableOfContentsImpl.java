@@ -133,7 +133,8 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
      * and margins that should be kept. That said, the previous implementation did not handle
      * borders and margins correctly either, so fixing this issue can be seen as an optimization.</p>
      * 
-     * <p>This method sets the meta page number of the range blocks that are filtered out.</p> 
+     * <p>This method sets the meta page number of the range blocks that are filtered out to
+     * the provided value.</p> 
      *
      * @param refIdFilter predicate that takes as argument a ref-id
      * @param rangeFilter predicate that takes as argument a range
