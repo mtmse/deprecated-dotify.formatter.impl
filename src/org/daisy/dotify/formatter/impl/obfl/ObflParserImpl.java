@@ -77,7 +77,6 @@ import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.Attribute;
-import javax.xml.stream.events.Namespace;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.Source;
@@ -166,7 +165,6 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
                         throw new ObflParserException("Missing xml:lang on root element");
                     }
                     tp = getTextProperties(event, tp);
-                    parseNamespaces(event);
                 } else if (equalsStart(event, ObflQName.META)) {
                     parseMeta(event, input);
                 } else if (equalsStart(event, ObflQName.LAYOUT_MASTER)) {
@@ -194,16 +192,6 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
             input.close();
         } catch (XMLStreamException e) {
             throw new ObflParserException(e);
-        }
-    }
-
-    private void parseNamespaces(XMLEvent event) {
-        Iterator<Namespace> attrIT = event.asStartElement().getNamespaces();
-        while (attrIT.hasNext()) {
-            Namespace attr = attrIT.next();
-            if ("xmlns".equals(attr.getName().getPrefix())) {
-                meta.add(new MetaDataItem(attr.getName(), attr.getValue()));
-            }
         }
     }
 
@@ -1603,9 +1591,25 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
         Map<QName, String> attrList = new HashMap<>();
         while (it.hasNext()) {
             Attribute a = it.next();
+            MetaDataItem newItem = new MetaDataItem(
+                new QName(null, a.getName().getPrefix(), "xmlns"),
+                a.getName().getNamespaceURI()
+            );
+            if (!checkIfAlreadyContainsPrefix(meta, newItem)) {
+                meta.add(newItem);
+            }
             attrList.put(a.getName(), a.getValue());
         }
         fc.insertExternalReference(attrList);
+    }
+
+    private boolean checkIfAlreadyContainsPrefix(List<MetaDataItem> meta, MetaDataItem newItem) {
+        for (MetaDataItem metaItem : meta) {
+            if (metaItem.getKey().getLocalPart().equalsIgnoreCase(newItem.getKey().getLocalPart())) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
