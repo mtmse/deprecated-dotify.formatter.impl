@@ -1605,7 +1605,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 
     private boolean checkIfAlreadyContainsPrefix(List<MetaDataItem> meta, MetaDataItem newItem) {
         for (MetaDataItem metaItem : meta) {
-            if (metaItem.getKey().getLocalPart().equalsIgnoreCase(newItem.getKey().getLocalPart())) {
+            if (metaItem.getKey().getNamespaceURI().equalsIgnoreCase(newItem.getKey().getNamespaceURI())) {
                 return true;
             }
         }
