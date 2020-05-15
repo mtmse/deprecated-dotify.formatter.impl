@@ -77,7 +77,7 @@ public class PEFMediaWriterTest {
         PEFMediaWriter p = new PEFMediaWriter(new Properties());
 
         Map<QName, String> ref = new HashMap<>();
-        ref.put(new QName(null, "id", "example"), "TestValue");
+        ref.put(new QName("http://example.com", "id", "example"), "TestValue");
 
         RowImpl rowImpl = new RowImpl.Builder("Testing").addExternalReference(ref).build();
         final StringWriter w = new StringWriter();

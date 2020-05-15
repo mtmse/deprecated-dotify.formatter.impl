@@ -392,9 +392,9 @@ public final class RowImpl implements Row {
     }
 
     /**
-     * Get the current metadata information tagged for this row.
+     * Get the current external reference information tagged for this row.
      *
-     * @return  Map of metadata.
+     * @return  Object of the external reference.
      */
     public Object getExternalReference() {
         return externalReference;
