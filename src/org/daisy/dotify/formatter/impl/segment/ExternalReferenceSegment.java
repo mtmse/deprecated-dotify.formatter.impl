@@ -2,7 +2,7 @@ package org.daisy.dotify.formatter.impl.segment;
 
 /**
  * This segment contains all attributes from the optional
- * metadata tags that could be added to blocks in order to
+ * external-reference tags that could be added to blocks to
  * track and transmit information in the OBFL document that
  * is required for the PEF document.
  */
