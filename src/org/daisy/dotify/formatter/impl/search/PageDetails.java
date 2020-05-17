@@ -21,9 +21,9 @@ public class PageDetails {
     private final ArrayList<String> identifiers;
 
     /**
-     * @param duplex
-     * @param pageId
-     * @param loc
+     * @param duplex Double sided output.
+     * @param pageId ID of the page.
+     * @param loc Block location for the start of this page.
      * @param pageNumberOffset The offset that needs to be added to the 1-based index of the page
      *                         within the sequence to obtain the desired page number.
      */
@@ -65,6 +65,8 @@ public class PageDetails {
 
     /**
      * BlockLineLocation of the last line of the previous page.
+     *
+     * @return page location for last line of previous page.
      */
     public BlockLineLocation getPageLocation() {
         return loc;
@@ -72,6 +74,8 @@ public class PageDetails {
 
     /**
      * The volume number.
+     *
+     * @return current volume number.
      */
     int getVolumeNumber() {
         return volumeNumber;

@@ -1592,7 +1592,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
         while (it.hasNext()) {
             Attribute a = it.next();
             MetaDataItem newItem = new MetaDataItem(
-                new QName(null, a.getName().getPrefix(), "xmlns"),
+                new QName("http://www.w3.org/2000/xmlns/", a.getName().getPrefix(), "xmlns"),
                 a.getName().getNamespaceURI()
             );
             if (!checkIfAlreadyContainsPrefix(meta, newItem)) {

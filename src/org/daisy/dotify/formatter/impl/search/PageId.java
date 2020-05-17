@@ -10,11 +10,11 @@ public final class PageId {
     private final SequenceId sequenceId;
 
     /**
-     * @param ordinal
+     * @param ordinal Numbering of the current page.
      * @param globalStartIndex Start index of the sequence that contains this page: the number of
      *                         pages that the whole body (all sequences), or the pre- or post-content
      *                         of the current volume, already contains.
-     * @param sequenceId
+     * @param sequenceId Index of the page in current sequence.
      */
     public PageId(int ordinal, int globalStartIndex, SequenceId sequenceId) {
         this.ordinal = ordinal;
@@ -25,6 +25,8 @@ public final class PageId {
 
     /**
      * 0-based index of this page in the current sequence.
+     *
+     * @return Index of the page in current sequence.
      */
     public int getOrdinal() {
         return ordinal;

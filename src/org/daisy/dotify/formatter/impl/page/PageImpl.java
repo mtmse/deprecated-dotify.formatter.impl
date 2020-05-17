@@ -250,6 +250,8 @@ public class PageImpl implements Page {
 
     /**
      * Get identifiers for this page excluding identifiers before text content.
+     *
+     * @return Content identifiers excluding identifiers before text content.
      */
     public List<String> getContentIdentifiers() {
         return getDetails().getContentIdentifiers();

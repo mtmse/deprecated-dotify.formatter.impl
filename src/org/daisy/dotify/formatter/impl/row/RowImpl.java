@@ -206,7 +206,7 @@ public final class RowImpl implements Row {
         }
 
         /**
-         * Add a external reference object that will flow though the framework to the PEF file.
+         * Add an external reference object that will flow though the framework to the PEF file.
          *
          * @param externalReference External reference object
          * @return returns this builder

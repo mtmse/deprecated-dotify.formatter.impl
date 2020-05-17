@@ -59,7 +59,7 @@ public final class RowDataProperties {
         private String underlineStyle = null;
 
         private ListItem listProps = null;
-        private Object externalReference;
+        private Object externalReference = null;
 
         public Builder() {
         }
@@ -165,7 +165,7 @@ public final class RowDataProperties {
             return this;
         }
 
-        public Builder addExternalReference(Object externalReference) {
+        public Builder externalReference(Object externalReference) {
             this.externalReference = externalReference;
             return this;
         }
