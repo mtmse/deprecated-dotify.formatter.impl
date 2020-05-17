@@ -82,17 +82,12 @@ public class PEFMediaWriterTest {
 
         RowImpl rowImpl = new RowImpl.Builder("Testing").addExternalReference(ref).build();
         final StringWriter w = new StringWriter();
-        List<MetaDataItem> metaDataItemList = new ArrayList<>();
-        metaDataItemList.add(new MetaDataItem(
-                new QName("http://www.w3.org/2000/xmlns/", "example", "xmlns"),
-                "http://example.com"
-        ));
         p.open(new OutputStream() {
             @Override
             public void write(int b) throws IOException {
                 w.write(b);
             }
-        }, metaDataItemList);
+        });
         p.newRow(rowImpl);
         p.close();
 
@@ -100,7 +95,7 @@ public class PEFMediaWriterTest {
         Date date = new Date(System.currentTimeMillis());
 
         String exp = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-                "<pef version=\"2008-1\" xmlns=\"http://www.daisy.org/ns/2008/pef\" xmlns:example=\"http://example.com\">" +
+                "<pef version=\"2008-1\" xmlns=\"http://www.daisy.org/ns/2008/pef\">" +
                 "<head>" +
                 "<meta xmlns:dc=\"http://purl.org/dc/elements/1.1/\">" +
                 "<dc:format>application/x-pef+xml</dc:format>" +

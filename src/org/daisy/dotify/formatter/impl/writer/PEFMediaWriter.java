@@ -73,7 +73,7 @@ public class PEFMediaWriter implements PagedMediaWriter {
         open(os, null);
     }
 
-    public void open(OutputStream os, List<MetaDataItem> data) throws PagedMediaWriterException {
+    private void open(OutputStream os, List<MetaDataItem> data) throws PagedMediaWriterException {
         if (data != null) {
             metadata.addAll(data);
         }
