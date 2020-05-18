@@ -116,6 +116,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
     Map<String, Node> xslts = new HashMap<>();
     Map<String, Node> fileRefs = new HashMap<>();
     Map<String, List<RendererInfo>> renderers = new HashMap<>();
+    private HashMap<QName, String> externalReferenceObject = null;
 
     /**
      * Creates a new obfl parser with the specified factory manager.
@@ -874,6 +875,8 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
         FormatterCore fc,
         TextProperties tp
     ) throws XMLStreamException {
+        externalReferenceObject = null;
+
         tp = getTextProperties(event, tp);
         fc.startBlock(blockBuilder(event.asStartElement()));
         while (input.hasNext()) {
@@ -1588,7 +1591,9 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
             XMLEventIterator input
     ) throws XMLStreamException {
         Iterator<Attribute> it = event.asStartElement().getAttributes();
-        Map<QName, String> attrList = new HashMap<>();
+        if (externalReferenceObject == null) {
+            externalReferenceObject = new HashMap<>();
+        }
         while (it.hasNext()) {
             Attribute a = it.next();
             MetaDataItem newItem = new MetaDataItem(
@@ -1598,9 +1603,9 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
             if (!checkIfAlreadyContainsPrefix(meta, newItem)) {
                 meta.add(newItem);
             }
-            attrList.put(a.getName(), a.getValue());
+            externalReferenceObject.put(a.getName(), a.getValue());
         }
-        fc.insertExternalReference(attrList);
+        fc.insertExternalReference(externalReferenceObject);
     }
 
     private boolean checkIfAlreadyContainsPrefix(List<MetaDataItem> meta, MetaDataItem newItem) {
