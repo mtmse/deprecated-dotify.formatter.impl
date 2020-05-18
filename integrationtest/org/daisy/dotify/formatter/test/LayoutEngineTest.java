@@ -156,6 +156,19 @@ public class LayoutEngineTest extends AbstractFormatterEngineTest {
         );
     }
 
+    @Test
+    public void testLayoutEngineExternalReference() throws
+            LayoutEngineException,
+            IOException,
+            PagedMediaWriterConfigurationException {
+        testPEF(
+                "resource-files/obfl-external-reference-input.obfl",
+                "resource-files/obfl-external-reference-expected.pef",
+                false
+        );
+    }
+
+
     public int compareBinary(InputStream f1, InputStream f2) throws IOException {
         InputStream bf1 = new BufferedInputStream(f1);
         InputStream bf2 = new BufferedInputStream(f2);

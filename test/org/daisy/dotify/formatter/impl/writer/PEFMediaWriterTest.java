@@ -71,43 +71,4 @@ public class PEFMediaWriterTest {
             + "</pef>";
         assertEquals(exp, w.toString().replaceAll("[\\r\\n]+", ""));
     }
-
-    @Test
-    public void testExternalReference() throws PagedMediaWriterException {
-        PEFMediaWriter p = new PEFMediaWriter(new Properties());
-
-        Map<QName, String> ref = new HashMap<>();
-        ref.put(new QName("http://example.com", "id", "example"), "TestValue");
-
-        RowImpl rowImpl = new RowImpl.Builder("Testing").addExternalReference(ref).build();
-        final StringWriter w = new StringWriter();
-        p.open(new OutputStream() {
-            @Override
-            public void write(int b) throws IOException {
-                w.write(b);
-            }
-        });
-        p.newRow(rowImpl);
-        p.close();
-
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-        Date date = new Date(System.currentTimeMillis());
-
-        String exp = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-                "<pef version=\"2008-1\" xmlns=\"http://www.daisy.org/ns/2008/pef\">" +
-                "<head>" +
-                "<meta xmlns:dc=\"http://purl.org/dc/elements/1.1/\">" +
-                "<dc:format>application/x-pef+xml</dc:format>" +
-                "<dc:identifier>identifier?</dc:identifier>" +
-                "<dc:date>" + formatter.format(date) + "</dc:date>" +
-                "</meta>" +
-                "</head>" +
-                "<body>" +
-                "<row example:id=\"TestValue\">Testing</row>" +
-                "</body>" +
-                "</pef>";
-        assertEquals(exp, w.toString().replaceAll("[\\r\\n]+", ""));
-    }
-
-
 }
