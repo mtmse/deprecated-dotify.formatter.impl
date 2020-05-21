@@ -61,6 +61,30 @@ public class ExternalReferenceTest extends AbstractFormatterEngineTest {
         testPEF(
                 "resource-files/external-reference4-input.obfl",
                 "resource-files/external-reference4-expected.pef",
+                true
+        );
+    }
+
+    @Test
+    public void testExternalReference5() throws
+            LayoutEngineException,
+            IOException,
+            PagedMediaWriterConfigurationException {
+        testPEF(
+                "resource-files/external-reference5-input.obfl",
+                "resource-files/external-reference5-expected.pef",
+                true
+        );
+    }
+
+    @Test
+    public void testExternalReference6() throws
+            LayoutEngineException,
+            IOException,
+            PagedMediaWriterConfigurationException {
+        testPEF(
+                "resource-files/external-reference6-input.obfl",
+                "resource-files/external-reference6-expected.pef",
                 false
         );
     }
@@ -78,9 +102,10 @@ public class ExternalReferenceTest extends AbstractFormatterEngineTest {
             IOException,
             PagedMediaWriterConfigurationException {
         testPEF(
-                "resource-files/external-reference7-input.obfl",
-                null,
-                false
+            "resource-files/external-reference7-input.obfl",
+            null,
+            false
         );
     }
+
 }

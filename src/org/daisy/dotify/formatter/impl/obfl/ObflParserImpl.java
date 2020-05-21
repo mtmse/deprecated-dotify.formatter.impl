@@ -1596,6 +1596,11 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
         }
         while (it.hasNext()) {
             Attribute a = it.next();
+
+            if (a.getName().getPrefix() == null || a.getName().getPrefix().isEmpty()) {
+                continue;
+            }
+
             MetaDataItem newItem = new MetaDataItem(
                 new QName("http://www.w3.org/2000/xmlns/", a.getName().getPrefix(), "xmlns"),
                 a.getName().getNamespaceURI()
@@ -1610,7 +1615,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 
     private boolean checkIfAlreadyContainsPrefix(List<MetaDataItem> meta, MetaDataItem newItem) {
         for (MetaDataItem metaItem : meta) {
-            if (metaItem.getKey().getNamespaceURI().equalsIgnoreCase(newItem.getKey().getNamespaceURI())) {
+            if (metaItem.getKey().getPrefix().equalsIgnoreCase(newItem.getKey().getPrefix())) {
                 return true;
             }
         }

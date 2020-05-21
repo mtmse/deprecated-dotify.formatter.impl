@@ -44,6 +44,8 @@ public class PEFMediaWriter implements PagedMediaWriter {
     private final StateObject state;
     private int errorCount = 0;
     private final List<MetaDataItem> metadata;
+    private Map<String, String> namespaces = new HashMap<>();
+    private int namespaceCounter = 0;
 
     /**
      * Create a new PEFMediaWriter using the supplied Properties.
@@ -99,6 +101,7 @@ public class PEFMediaWriter implements PagedMediaWriter {
                 pst.print(":" + metaDataItem.getKey().getLocalPart());
                 pst.print("=\"" + metaDataItem.getValue() + "\"");
                 metaIT.remove();
+                namespaces.put(metaDataItem.getValue(), metaDataItem.getKey().getLocalPart());
             }
         }
         pst.println(">");
@@ -247,7 +250,15 @@ public class PEFMediaWriter implements PagedMediaWriter {
             if (metadata != null && !metadata.isEmpty()) {
                 for (Map.Entry<QName, String> entry : metadata.entrySet()) {
                     QName name = entry.getKey();
-                    pst.print(" " + name.getPrefix() + ":" + name.getLocalPart() + "=\"" + entry.getValue() + "\"");
+
+                    String prefix = namespaces.get(name.getNamespaceURI());
+                    if (prefix == null) {
+                        prefix = "ns" + namespaceCounter++;
+                        pst.print(" xmlns:" + prefix + "=\"" + name.getNamespaceURI() + "\"");
+                    }
+
+                    pst.print(" " + prefix + ":" + name.getLocalPart() + "=\"" + entry.getValue() + "\"");
+
                 }
             }
         }
