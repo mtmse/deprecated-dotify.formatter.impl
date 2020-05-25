@@ -102,7 +102,11 @@ import javax.xml.xpath.XPathExpressionException;
  */
 public class ObflParserImpl extends XMLParserBase implements ObflParser {
 
-    //private HashMap<String, LayoutMaster> masters;
+    /*
+     * List<MetaDataItem> objects are not only used to pass meta elements from OBFL to PEF but also
+     * to pass along namespace binding information to make it easier for PEFMediaWriter to declare
+     * namespace prefixes on the root element.
+     */
     private List<MetaDataItem> meta;
 
     private Formatter formatter;

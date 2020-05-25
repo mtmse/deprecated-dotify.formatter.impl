@@ -43,6 +43,12 @@ public class PEFMediaWriter implements PagedMediaWriter {
     private boolean cDuplex;
     private final StateObject state;
     private int errorCount = 0;
+
+    /*
+     * List<MetaDataItem> objects are not only used to pass meta elements from OBFL to PEF but also
+     * to pass along namespace binding information to make it easier for PEFMediaWriter to declare
+     * namespace prefixes on the root element.
+     */
     private final List<MetaDataItem> metadata;
     private Map<String, String> namespaces = new HashMap<>();
     private int namespaceCounter = 0;
