@@ -120,7 +120,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
     Map<String, Node> xslts = new HashMap<>();
     Map<String, Node> fileRefs = new HashMap<>();
     Map<String, List<RendererInfo>> renderers = new HashMap<>();
-    private HashMap<QName, String> externalReferenceObject = null;
+    private Map<QName, String> externalReferenceObject = null;
 
     /**
      * Creates a new obfl parser with the specified factory manager.
