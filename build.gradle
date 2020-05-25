@@ -38,6 +38,13 @@ sourceSets {
 	test {	java { srcDir 'test' srcDir 'integrationtest'}	resources { srcDir 'test' srcDir 'integrationtest'} }
 }
 
+test {
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+
 compileJava {
 	options.encoding = 'UTF-8'
 }
