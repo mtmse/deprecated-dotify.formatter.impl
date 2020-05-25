@@ -16,7 +16,7 @@ public class ExternalReferenceTest extends AbstractFormatterEngineTest {
 
     @Ignore("Not implemented yet, only supporting references on block level")
     @Test
-    public void testExternalReference1() throws
+    public void testExternalReferenceTwoReferencesSameRow() throws
             LayoutEngineException,
             IOException,
             PagedMediaWriterConfigurationException {
@@ -29,7 +29,7 @@ public class ExternalReferenceTest extends AbstractFormatterEngineTest {
 
     @Ignore("Not implemented yet, only supporting references on block level")
     @Test
-    public void testExternalReference2() throws
+    public void testExternalReferenceWhiteSpaceBeforeNotStripped() throws
             LayoutEngineException,
             IOException,
             PagedMediaWriterConfigurationException {
@@ -42,43 +42,43 @@ public class ExternalReferenceTest extends AbstractFormatterEngineTest {
 
     @Ignore("Not implemented yet, only supporting references on block level")
     @Test
-    public void testExternalReference3() throws
+    public void testExternalReferenceAttachToTheRightRow() throws
             LayoutEngineException,
             IOException,
             PagedMediaWriterConfigurationException {
         testPEF(
                 "resource-files/external-reference3-input.obfl",
                 "resource-files/external-reference3-expected.pef",
-                true
+                false
         );
     }
 
     @Test
-    public void testExternalReference4() throws
+    public void testExternalReferenceSimpleReferenceAtStartOfBlock() throws
             LayoutEngineException,
             IOException,
             PagedMediaWriterConfigurationException {
         testPEF(
                 "resource-files/external-reference4-input.obfl",
                 "resource-files/external-reference4-expected.pef",
-                true
+                false
         );
     }
 
     @Test
-    public void testExternalReference5() throws
+    public void testExternalReferenceTwoReferencesSamePrefix() throws
             LayoutEngineException,
             IOException,
             PagedMediaWriterConfigurationException {
         testPEF(
                 "resource-files/external-reference5-input.obfl",
                 "resource-files/external-reference5-expected.pef",
-                true
+                false
         );
     }
 
     @Test
-    public void testExternalReference6() throws
+    public void testExternalReferenceDontParseReferencesNotInAnExternalNamespace() throws
             LayoutEngineException,
             IOException,
             PagedMediaWriterConfigurationException {
@@ -97,7 +97,7 @@ public class ExternalReferenceTest extends AbstractFormatterEngineTest {
      * @throws PagedMediaWriterConfigurationException   Thrown if configuration is invalid.
      */
     @Test(expected = IllegalStateException.class)
-    public void testExternalReference7() throws
+    public void testExternalReferenceUnsupportedUseCase() throws
             LayoutEngineException,
             IOException,
             PagedMediaWriterConfigurationException {
