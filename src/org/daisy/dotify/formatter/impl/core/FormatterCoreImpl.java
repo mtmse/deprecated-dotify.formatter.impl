@@ -368,6 +368,12 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
         if (table != null) {
             throw new IllegalStateException("A table is open.");
         }
+        if (!getCurrentBlock().isEmpty()) {
+            throw new IllegalStateException(
+                "Unsupported usage. Currently external-reference tags is only allowed at the beginning of a block."
+            );
+        }
+
         ExternalReferenceSegment r = new ExternalReferenceSegment(reference);
         getCurrentBlock().addSegment(r);
     }

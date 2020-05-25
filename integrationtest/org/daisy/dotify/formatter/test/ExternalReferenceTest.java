@@ -14,6 +14,7 @@ import java.io.IOException;
  */
 public class ExternalReferenceTest extends AbstractFormatterEngineTest {
 
+    @Ignore("Not implemented yet, only supporting references on block level")
     @Test
     public void testExternalReference1() throws
             LayoutEngineException,
@@ -60,6 +61,25 @@ public class ExternalReferenceTest extends AbstractFormatterEngineTest {
         testPEF(
                 "resource-files/external-reference4-input.obfl",
                 "resource-files/external-reference4-expected.pef",
+                false
+        );
+    }
+
+    /**
+     * Ensure crash if unsupported layout is used. This test can be removed when other use-cases are implemented.
+     *
+     * @throws LayoutEngineException                    Thrown if layout engine can't be initiated.
+     * @throws IOException                              Thrown if files are missing.
+     * @throws PagedMediaWriterConfigurationException   Thrown if configuration is invalid.
+     */
+    @Test(expected = IllegalStateException.class)
+    public void testExternalReference7() throws
+            LayoutEngineException,
+            IOException,
+            PagedMediaWriterConfigurationException {
+        testPEF(
+                "resource-files/external-reference7-input.obfl",
+                null,
                 false
         );
     }
