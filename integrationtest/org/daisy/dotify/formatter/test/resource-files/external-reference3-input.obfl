@@ -14,7 +14,7 @@
    </layout-master>
    <sequence master="master">
       <block>
-        ⠁⠁⠁⠁⠁⠁⠁⠁⠁⠁
+        ⠁⠁⠁⠁⠁⠁⠁
         <external-reference example:id="exampleValue"/>⠁⠁⠁
       </block>
    </sequence>
