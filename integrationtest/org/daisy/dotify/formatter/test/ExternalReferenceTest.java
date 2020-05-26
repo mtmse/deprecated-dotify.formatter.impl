@@ -36,7 +36,7 @@ public class ExternalReferenceTest extends AbstractFormatterEngineTest {
         testPEF(
                 "resource-files/external-reference2-input.obfl",
                 "resource-files/external-reference2-expected.pef",
-                true
+                false
         );
     }
 
