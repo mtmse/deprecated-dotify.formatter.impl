@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * Provides table of contents entries to be used when building a Table of Contents.
@@ -138,13 +139,15 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
      *
      * @param refIdFilter predicate that takes as argument a ref-id
      * @param rangeFilter predicate that takes as argument a range
-     * @param rangeMetaPage meta page number of range blocks
+     * @param rangeMetaPage meta page number of range blocks. Provided as a lazy value ({@link
+     *     Supplier} object) so that it is not computed when not needed (when there are no matching
+     *     toc-entry-on-resumed).
      * @return collection of blocks
      */
     public Collection<Block> filter(
             Predicate<String> refIdFilter,
             Predicate<TocEntryOnResumedRange> rangeFilter,
-            int rangeMetaPage
+            Supplier<Integer> rangeMetaPage
     ) {
         List<Block> filtered = new ArrayList<>();
         Set<TocBlock> tocBlocksWithDescendantTocEntry = new HashSet<>();
@@ -174,7 +177,7 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
                 continue;
             }
             if (rangeForBlock.containsKey(b)) {
-                b.setMetaPage(rangeMetaPage);
+                b.setMetaPage(rangeMetaPage.get());
                 continue;
             }
             if (tocBlockForBlock.containsKey(b) // this should always be true

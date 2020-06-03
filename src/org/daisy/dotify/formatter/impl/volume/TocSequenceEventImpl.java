@@ -131,11 +131,14 @@ class TocSequenceEventImpl implements VolumeSequence {
                 
                 case VOLUME: {
                     final int currentVolume = vars.getCurrentVolume();
-                    final int currentVolumeFirstContentPage =
-                            crh.getPageNumberOfFirstContentPageOfVolume(currentVolume);
                     Collection<Block> volumeToc = data.filter(
                             refToVolume(currentVolume, crh), rangeToVolume(currentVolume, crh), 
-                            currentVolumeFirstContentPage
+                            // It is important that this variable is only retrieved when a
+                            // toc-entry-on-resumed is actually rendered because a volume could have
+                            // no content pages, in which case the variable would have no value,
+                            // which would result in the CrossReferenceHandler becoming dirty for no
+                            // reason, which could in turn result in endless iterations.
+                            () -> crh.getPageNumberOfFirstContentPageOfVolume(currentVolume)
                     );
                     if (volumeToc.isEmpty()) {
                         return null;
@@ -146,10 +149,10 @@ class TocSequenceEventImpl implements VolumeSequence {
 
                 case DOCUMENT: {
                     for (int vol = 1; vol <= crh.getVolumeCount(); vol++) {
-                        final int volumeFirstContentPage = crh.getPageNumberOfFirstContentPageOfVolume(vol);
+                        final int v = vol;
                         Collection<Block> volumeToc = data.filter(
                                 refToVolume(vol, crh), rangeToVolume(vol, crh),
-                                volumeFirstContentPage
+                                () -> crh.getPageNumberOfFirstContentPageOfVolume(v)
                         );
                         if (!volumeToc.isEmpty()) {
                             Context varsWithVolume = DefaultContext
@@ -169,7 +172,7 @@ class TocSequenceEventImpl implements VolumeSequence {
                             fsm.appendGroup(volumeEnd);
                         }
                     }
-                    Collection<Block> volumeToc = data.filter(refToVolume(null, crh), range -> false, 0);
+                    Collection<Block> volumeToc = data.filter(refToVolume(null, crh), range -> false, () -> 0);
                     if (!volumeToc.isEmpty()) {
                         fsm.appendGroup(volumeToc);
                     }
