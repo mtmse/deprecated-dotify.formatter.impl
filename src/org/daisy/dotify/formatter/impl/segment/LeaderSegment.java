@@ -22,12 +22,12 @@ public class LeaderSegment extends Leader implements Segment {
 
     @Override
     public String peek() {
-        return "";
+        return getPattern();
     }
 
     @Override
     public String resolve() {
-        return "";
+        return getPattern();
     }
 
     @Override
