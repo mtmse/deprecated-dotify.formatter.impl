@@ -30,7 +30,7 @@ class SegmentProcessorContext {
         this.available = available;
     }
 
-    RowDataProperties getRdp() {
+    RowDataProperties getRowDataProps() {
         return rdp;
     }
 

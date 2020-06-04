@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl.row;
 
 import org.daisy.dotify.api.formatter.Context;
+import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.MarkerReference;
 import org.daisy.dotify.api.translator.AttributeWithContext;
@@ -9,8 +10,8 @@ import org.daisy.dotify.api.translator.DefaultAttributeWithContext;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslatableWithContext;
 import org.daisy.dotify.api.translator.TranslationException;
+import org.daisy.dotify.common.text.StringTools;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
-import org.daisy.dotify.formatter.impl.row.RowImpl.Builder;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
@@ -32,37 +33,75 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * TODO: Write java doc.
+ *
+ * @author Joel Håkansson
  */
-class SegmentProcessor implements SegmentProcessing {
+class SegmentProcessor {
+
     private final List<Segment> segments;
     private final CrossReferenceHandler refs;
     private final AttributeWithContext attr;
 
     private DefaultContext context;
     private final boolean significantContent;
-    private final SegmentProcessorContext spc;
+    private final SegmentProcessorContext processorContext;
 
     private int segmentIndex;
+    /**
+     * The active (not completed) row, as a mutable object (builder).
+     */
     private RowImpl.Builder currentRow;
+    /*
+     * Markers, anchors and identifiers that are not associated with a particular row.
+     */
     private final ArrayList<Marker> groupMarkers;
     private final ArrayList<String> groupAnchors;
     private final ArrayList<String> groupIdentifiers;
     private Object externalReference = null;
+    /*
+     * Buffers a number of evaluated segments that follow a leader (contained in `leaderManager') in
+     * a single aggregated BrailleTranslatorResult. Can only be non-null if `current' is null.
+     */
     private AggregatedBrailleTranslatorResult.Builder layoutOrApplyAfterLeader;
+    /*
+     * Mode to be used to translate the segments contained in layoutOrApplyAfterLeader.
+     */
     private String currentLeaderMode;
     private boolean seenSegmentAfterLeader;
+    /*
+     * Contains zero, one of two leader segments. If not empty, the first leader comes before
+     * `layoutOrApplyAfterLeader' or `current'. If there is a second leader it comes after `current'
+     * (`layoutOrApplyAfterLeader' is null).
+     */
     private final LeaderManager leaderManager;
     private ListItem item;
     private int forceCount;
-    private int minLeft;
-    private int minRight;
-    private boolean empty;
-    private CurrentResult cr;
+    /**
+     * The number of unused columns to the left of the text block. Both margins and borders counts
+     * as unused columns in this case. For left adjusted text, this value is typically equal to the
+     * left margin.
+     */
+    private int unusedLeft;
+    /**
+     * The number of unused columns to the right of the text block. Both margins and borders counts
+     * as unused columns in this case.
+     */
+    private int unusedRight;
+    /**
+     * True if at least one row has been finalized (flushed).
+     */
+    private boolean rowsFlushed;
+    /*
+     * Buffers a number of evaluated segments in a CurrentResult. Produces the actual rows that this
+     * SegmentProcessor returns. Can only be non-null if `layoutOrApplyAfterLeader' is null.
+     */
+    private CurrentResult current;
     private boolean closed;
     private String blockId;
     private Function<PageNumberReference, String> pagenumResolver;
@@ -93,7 +132,7 @@ class SegmentProcessor implements SegmentProcessing {
         this.externalReference = null;
         this.leaderManager = new LeaderManager();
         this.significantContent = calculateSignificantContent(this.segments, context, rdp);
-        this.spc = new SegmentProcessorContext(fcontext, rdp, margins, flowWidth, available);
+        this.processorContext = new SegmentProcessorContext(fcontext, rdp, margins, flowWidth, available);
         this.blockId = blockId;
         this.pagenumResolver = (rs) -> {
             Integer page = refs.getPageNumber(rs.getRefId());
@@ -113,7 +152,7 @@ class SegmentProcessor implements SegmentProcessing {
         this.refs = template.refs;
         // Context is mutable, but for now we assume that the same context should be used.
         this.context = template.context;
-        this.spc = template.spc;
+        this.processorContext = template.processorContext;
         this.currentRow = template.currentRow == null ? null : new RowImpl.Builder(template.currentRow);
         this.groupAnchors = new ArrayList<>(template.groupAnchors);
         this.groupMarkers = new ArrayList<>(template.groupMarkers);
@@ -128,13 +167,13 @@ class SegmentProcessor implements SegmentProcessing {
         this.seenSegmentAfterLeader = template.seenSegmentAfterLeader;
         this.item = template.item;
         this.forceCount = template.forceCount;
-        this.minLeft = template.minLeft;
-        this.minRight = template.minRight;
-        this.empty = template.empty;
+        this.unusedLeft = template.unusedLeft;
+        this.unusedRight = template.unusedRight;
+        this.rowsFlushed = template.rowsFlushed;
         this.segments = template.segments;
         this.attr = template.attr;
         this.segmentIndex = template.segmentIndex;
-        this.cr = template.cr != null ? template.cr.copy() : null;
+        this.current = template.current != null ? copy(template.current) : null;
         this.closed = template.closed;
         this.significantContent = template.significantContent;
         this.blockId = template.blockId;
@@ -290,11 +329,11 @@ class SegmentProcessor implements SegmentProcessing {
         layoutOrApplyAfterLeader = null;
         currentLeaderMode = null;
         seenSegmentAfterLeader = false;
-        item = spc.getRdp().getListItem();
-        minLeft = spc.getFlowWidth();
-        minRight = spc.getFlowWidth();
-        empty = true;
-        cr = null;
+        item = processorContext.getRowDataProps().getListItem();
+        unusedLeft = processorContext.getFlowWidth();
+        unusedRight = processorContext.getFlowWidth();
+        rowsFlushed = false;
+        current = null;
         closed = false;
         if (blockId != null && !"".equals(blockId)) {
             groupIdentifiers.add(blockId);
@@ -322,14 +361,14 @@ class SegmentProcessor implements SegmentProcessing {
     }
 
     private boolean couldTriggerNewRow() {
-        if (!hasSegments()) {
+        if (!hasMoreSegments()) {
             //There's a lot of conditions to keep track of here, but hopefully we can simplify later on
 
             return
                 !closed &&
                 (
                     currentRow != null ||
-                    (!empty && spc.getRdp().getUnderlineStyle() != null) ||
+                    (rowsFlushed && processorContext.getRowDataProps().getUnderlineStyle() != null) ||
                     leaderManager.hasLeader()
                 );
         }
@@ -373,31 +412,34 @@ class SegmentProcessor implements SegmentProcessing {
 
     boolean hasMoreData() {
         return
-            hasSegments() ||
+            hasMoreSegments() ||
             !closed ||
-            (cr != null && cr.hasNext(this));
+            (current != null && current.hasNext());
     }
 
-    private boolean hasSegments() {
+    private boolean hasMoreSegments() {
         return segmentIndex < segments.size();
     }
 
+    /*
+     * Create value for `current' if it is null.
+     */
     void prepareNext() {
         if (!hasMoreData()) {
             throw new IllegalStateException();
         }
-        if (cr == null) {
-            if (!hasSegments() && !closed) {
+        if (current == null) {
+            if (!hasMoreSegments() && !closed) {
                 closed = true;
-                cr = new CloseResult(spc, layoutLeader());
+                current = new CloseResult(layoutLeader());
             } else {
-                cr = loadNextSegment().orElse(null);
+                current = loadNextSegment().orElse(null);
             }
         }
     }
 
     boolean hasNext() {
-        return cr != null && cr.hasNext(this);
+        return current != null && current.hasNext();
     }
 
     public boolean hasSignificantContent() {
@@ -410,9 +452,9 @@ class SegmentProcessor implements SegmentProcessing {
 
     private Optional<RowImpl> getNext(boolean produceRow, LineProperties lineProps) {
         while (true) {
-            if (cr != null && cr.hasNext(this)) {
+            if (current != null && current.hasNext()) {
                 try {
-                    Optional<RowImpl> ret = cr.process(this, lineProps);
+                    Optional<RowImpl> ret = current.process(lineProps);
                     if (ret.isPresent()) {
                         if (!produceRow) {
                             // there is a test below that verifies that the current segment cannot produce a row result
@@ -423,8 +465,8 @@ class SegmentProcessor implements SegmentProcessing {
                         return ret;
                     } // else try the next segment.
                 } finally {
-                    if (!cr.hasNext(this)) {
-                        cr = null;
+                    if (!current.hasNext()) {
+                        current = null;
                     }
                 }
             } else if (hasMoreData()) {
@@ -438,13 +480,21 @@ class SegmentProcessor implements SegmentProcessing {
         }
     }
 
+    /*
+     * Get the next segment or segments and do one of the following things:
+     * - buffer them in `layoutOrApplyAfterLeader'
+     * - wrap them (text segments) in a CurrentResult
+     * - apply it (anchor, marker, identifier or external-reference segment) to the active row or the block
+     * - combine it (newline segment) with previously buffered content in a CurrentResult
+     * - add it (leader segment) to `leaderManager' and return previously buffered content as a CurrentResult
+     */
     private Optional<CurrentResult> loadNextSegment() {
         Segment s = segments.get(segmentIndex);
         segmentIndex++;
         switch (s.getSegmentType()) {
             case NewLine:
                 //flush
-                return Optional.of(new NewLineResult(spc, layoutLeader()));
+                return Optional.of(new NewLineResult(layoutLeader()));
             case Text:
                 int len = 1;
                 int fromIndex = segmentIndex - 1;
@@ -479,9 +529,13 @@ class SegmentProcessor implements SegmentProcessing {
         }
     }
 
-    @Override
-    public RowImpl flushCurrentRow() {
-        if (empty) {
+    /**
+     * Flushes the active row and returns it.
+     *
+     * @return returns the completed row
+     */
+    private RowImpl flushCurrentRow() {
+        if (!rowsFlushed) {
             // Clear group anchors and markers (since we have content, we don't need them)
             currentRow.addAnchors(0, groupAnchors);
             groupAnchors.clear();
@@ -493,20 +547,24 @@ class SegmentProcessor implements SegmentProcessing {
             externalReference = null;
         }
         RowImpl r = currentRow.build();
-        empty = false;
+        rowsFlushed = true;
         //Make calculations for underlining
         int width = r.getChars().length();
         int left = r.getLeftMargin().getContent().length();
         int right = r.getRightMargin().getContent().length();
-        int space = spc.getFlowWidth() - width - left - right;
+        int space = processorContext.getFlowWidth() - width - left - right;
         left += r.getAlignment().getOffset(space);
-        right = spc.getFlowWidth() - width - left;
-        minLeft = Math.min(minLeft, left);
-        minRight = Math.min(minRight, right);
+        right = processorContext.getFlowWidth() - width - left;
+        unusedLeft = Math.min(unusedLeft, left);
+        unusedRight = Math.min(unusedRight, right);
         currentRow = null;
         return r;
     }
 
+    /*
+     * Translate the `length' text segments starting at `fromIndex' and either wrap the result in a
+     * CurrentResult or buffer it in `layoutOrApplyAfterLeader'.
+     */
     private Optional<CurrentResult> layoutTextSegment(TextSegment ts, int fromIndex, int length) {
         String mode = ts.getTextProperties().getTranslationMode();
         BrailleTranslatorResult btr = null;
@@ -523,12 +581,16 @@ class SegmentProcessor implements SegmentProcessing {
         if (leaderManager.hasLeader()) {
             layoutAfterLeader(btr, mode);
         } else {
-            CurrentResult cr = new CurrentResultImpl(spc, btr, mode);
-            return Optional.of(cr);
+            CurrentResult current = new CurrentResultImpl(btr, mode);
+            return Optional.of(current);
         }
         return Optional.empty();
     }
 
+    /*
+     * Add the leader segment to leader manager, and if a leader was already present, convert
+     * `layoutOrApplyAfterLeader' to a CurrentResult and return it.
+     */
     private Optional<CurrentResult> layoutLeaderSegment(LeaderSegment ls) {
         try {
             if (leaderManager.hasLeader()) {
@@ -557,8 +619,8 @@ class SegmentProcessor implements SegmentProcessing {
         } else {
             String mode = null;
             BrailleTranslatorResult btr = toResult(spec, null);
-            CurrentResult cr = new CurrentResultImpl(spc, btr, mode);
-            return Optional.of(cr);
+            CurrentResult current = new CurrentResultImpl(btr, mode);
+            return Optional.of(current);
         }
         return Optional.empty();
     }
@@ -582,8 +644,8 @@ class SegmentProcessor implements SegmentProcessing {
                 BrailleTranslatorResult btr = toResult(spec, null);
                 if (btr.hasNext()) { // Don't create a new row if the evaluated reference is empty
                                      // after applying the style
-                    CurrentResult cr = new CurrentResultImpl(spc, btr, mode);
-                    return Optional.of(cr);
+                    CurrentResult current = new CurrentResultImpl(btr, mode);
+                    return Optional.of(current);
                 }
             }
         }
@@ -607,8 +669,8 @@ class SegmentProcessor implements SegmentProcessing {
             } else {
                 String mode = null;
                 BrailleTranslatorResult btr = toResult(spec, mode);
-                CurrentResult cr = new CurrentResultImpl(spc, btr, mode);
-                return Optional.of(cr);
+                CurrentResult current = new CurrentResultImpl(btr, mode);
+                return Optional.of(current);
             }
         }
         return Optional.empty();
@@ -618,6 +680,9 @@ class SegmentProcessor implements SegmentProcessing {
         layoutAfterLeader(toResult(spec, mode), mode);
     }
 
+    /*
+     * Buffer an evaluated segment (BrailleTranslatorResult) in `layoutOrApplyAfterLeader'.
+     */
     private void layoutAfterLeader(BrailleTranslatorResult result, String mode) {
         if (leaderManager.hasLeader()) {
             if (layoutOrApplyAfterLeader == null) {
@@ -635,6 +700,10 @@ class SegmentProcessor implements SegmentProcessing {
         }
     }
 
+    /*
+     * Buffer marker segment in `layoutOrApplyAfterLeader', or if no leader is pending apply it to
+     * the active row or the block.
+     */
     private void applyAfterLeader(MarkerSegment marker) {
         if (leaderManager.hasLeader()) {
             if (layoutOrApplyAfterLeader == null) {
@@ -650,6 +719,10 @@ class SegmentProcessor implements SegmentProcessing {
         }
     }
 
+    /*
+     * Buffer anchor segment in `layoutOrApplyAfterLeader', or if no leader is pending apply it to
+     * the active row or the block.
+     */
     private void applyAfterLeader(final AnchorSegment anchor) {
         if (leaderManager.hasLeader()) {
             if (layoutOrApplyAfterLeader == null) {
@@ -665,6 +738,10 @@ class SegmentProcessor implements SegmentProcessing {
         }
     }
 
+    /*
+     * Buffer identifier segment in `layoutOrApplyAfterLeader', or if no leader is pending apply it
+     * to the active row or the block.
+     */
     private void applyAfterLeader(final IdentifierSegment identifier) {
         if (leaderManager.hasLeader()) {
             if (layoutOrApplyAfterLeader == null) {
@@ -680,9 +757,12 @@ class SegmentProcessor implements SegmentProcessing {
         }
     }
 
+    /*
+     * If a leader segment is pending (leader manager is not empty), convert
+     * `layoutOrApplyAfterLeader' to a CurrentResult and return it.
+     */
     private Optional<CurrentResult> layoutLeader() {
         if (leaderManager.hasLeader()) {
-            // layout() sets currentLeader to null
             BrailleTranslatorResult btr;
             String mode;
             if (layoutOrApplyAfterLeader == null) {
@@ -691,12 +771,11 @@ class SegmentProcessor implements SegmentProcessing {
             } else {
                 btr = layoutOrApplyAfterLeader.build();
                 mode = currentLeaderMode;
-
                 layoutOrApplyAfterLeader = null;
                 seenSegmentAfterLeader = false;
             }
-            CurrentResult cr = new CurrentResultImpl(spc, btr, mode);
-            return Optional.of(cr);
+            CurrentResult current = new CurrentResultImpl(btr, mode);
+            return Optional.of(current);
         }
         return Optional.empty();
     }
@@ -704,7 +783,7 @@ class SegmentProcessor implements SegmentProcessing {
     private BrailleTranslatorResult toResult(String c) {
         return toResult(
             Translatable.text(
-                spc.getFormatterContext().getConfiguration().isMarkingCapitalLetters() ?
+                processorContext.getFormatterContext().getConfiguration().isMarkingCapitalLetters() ?
                 c :
                 c.toLowerCase()
             ).build(),
@@ -714,7 +793,7 @@ class SegmentProcessor implements SegmentProcessing {
 
     private BrailleTranslatorResult toResult(Translatable spec, String mode) {
         try {
-            return spc.getFormatterContext().getTranslator(mode).translate(spec);
+            return processorContext.getFormatterContext().getTranslator(mode).translate(spec);
         } catch (TranslationException e) {
             throw new RuntimeException(e);
         }
@@ -722,7 +801,7 @@ class SegmentProcessor implements SegmentProcessing {
 
     private BrailleTranslatorResult toResult(TranslatableWithContext spec, String mode) {
         try {
-            return spc.getFormatterContext().getTranslator(mode).translate(spec);
+            return processorContext.getFormatterContext().getTranslator(mode).translate(spec);
         } catch (TranslationException e) {
             throw new RuntimeException(e);
         }
@@ -736,14 +815,23 @@ class SegmentProcessor implements SegmentProcessing {
         initFields();
     }
 
+    /**
+     * Get the markers that are not associated with a particular row.
+     */
     List<Marker> getGroupMarkers() {
         return groupMarkers;
     }
 
+    /**
+     * Get the anchors that are not associated with a particular row.
+     */
     List<String> getGroupAnchors() {
         return groupAnchors;
     }
 
+    /**
+     * Get the identifiers that are not associated with a particular row.
+     */
     List<String> getGroupIdentifiers() {
         return groupIdentifiers;
     }
@@ -760,59 +848,428 @@ class SegmentProcessor implements SegmentProcessing {
         return forceCount;
     }
 
-    @Override
-    public boolean isEmpty() {
-        return empty;
-    }
-
-    @Override
-    public boolean hasCurrentRow() {
+    /**
+     * Returns true if there is an active (not completed) row in the
+     * processor.
+     *
+     * @return true if there is an active row
+     */
+    private boolean hasCurrentRow() {
         return currentRow != null;
     }
 
-    @Override
-    public int getUnusedLeft() {
-        return minLeft;
+    /**
+     * Starts a new active row. Note that if {@link #hasCurrentRow()} returns
+     * true, {@link #flushCurrentRow()} should be called first.
+     *
+     * @param left  the left margin
+     * @param right the right margin
+     */
+    private void newCurrentRow(MarginProperties left, MarginProperties right) {
+        currentRow = processorContext.getRowDataProps().configureNewEmptyRowBuilder(left, right);
     }
 
-    @Override
-    public int getUnusedRight() {
-        return minRight;
-    }
-
-    @Override
-    public void newCurrentRow(MarginProperties left, MarginProperties right) {
-        currentRow = spc.getRdp().configureNewEmptyRowBuilder(left, right);
-    }
-
-    @Override
-    public Builder getCurrentRow() {
-        return currentRow;
-    }
-
-    @Override
-    public void addToForceCount(double value) {
+    /**
+     * Adds to the running force count value.
+     *
+     * @param value the value to add
+     */
+    private void addToForceCount(double value) {
         forceCount += value;
     }
 
-    @Override
-    public LeaderManager getLeaderManager() {
-        return leaderManager;
-    }
-
-    @Override
-    public boolean hasListItem() {
+    /**
+     * Returns true if the block processor has a pending list item.
+     *
+     * @return true if the block processor has a pending list item, false otherwise
+     */
+    private boolean hasListItem() {
         return item != null;
     }
 
-    @Override
-    public void discardListItem() {
+    /**
+     * Discards the pending list item.
+     */
+    private void discardListItem() {
         item = null;
     }
 
-    @Override
-    public ListItem getListItem() {
+    /**
+     * Gets the pending list item, or null if {@link #hasListItem()} returns false.
+     *
+     * @return returns the pending list item, or null
+     */
+    private ListItem getListItem() {
         Objects.requireNonNull(item);
         return item;
+    }
+
+    /* ========================= */
+    /*       Inner classes       */
+    /* ========================= */
+
+    private interface CurrentResult {
+        boolean hasNext();
+        Optional<RowImpl> process(LineProperties lineProps);
+    }
+
+    private CurrentResult copy(CurrentResult cr) {
+        return cr instanceof CurrentResultImpl
+            ? new CurrentResultImpl((CurrentResultImpl)cr)
+            : cr instanceof NewLineResult
+                ? new NewLineResult((NewLineResult)cr)
+                : new CloseResult((CloseResult)cr);
+    }
+
+    private static final Pattern softHyphenPattern = Pattern.compile("\u00ad");
+    private static final Pattern trailingWsBraillePattern = Pattern.compile("[\\s\u2800]+\\z");
+
+    private class CurrentResultImpl implements CurrentResult {
+
+        private final BrailleTranslatorResult btr;
+        private final String mode;
+        private boolean first;
+
+        CurrentResultImpl(BrailleTranslatorResult btr, String mode) {
+            this.btr = btr;
+            this.mode = mode;
+            this.first = true;
+        }
+
+        private CurrentResultImpl(CurrentResultImpl template) {
+            this.btr = template.btr.copy();
+            this.mode = template.mode;
+            this.first = template.first;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return first || btr.hasNext();
+        }
+
+        @Override
+        public Optional<RowImpl> process(LineProperties lineProps) {
+            if (first) {
+                first = false;
+                return processFirst(lineProps);
+            }
+            try {
+                if (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
+                    if (hasCurrentRow()) {
+                        return Optional.of(flushCurrentRow());
+                    }
+                    return startNewRow(
+                        btr,
+                        "",
+                        processorContext.getRowDataProps().getBlockIndent()
+                            + processorContext.getRowDataProps().getTextIndent(),
+                        processorContext.getRowDataProps().getBlockIndent()
+                            + processorContext.getRowDataProps().getTextIndent(),
+                        mode,
+                        lineProps
+                    );
+                }
+            } finally {
+                if (!btr.hasNext() && btr.supportsMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK)) {
+                    addToForceCount(btr.getMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK));
+                }
+            }
+            return Optional.empty();
+        }
+
+        private Optional<RowImpl> processFirst(LineProperties lineProps) {
+            // process first row, is it a new block or should we continue the current row?
+            if (!hasCurrentRow()) {
+                // add to left margin
+                if (hasListItem()) { //currentListType!=BlockProperties.ListType.NONE) {
+                    ListItem item = getListItem();
+                    String listLabel;
+                    try {
+                        listLabel = processorContext.getFormatterContext().getTranslator(mode).translate(
+                            Translatable.text(
+                                processorContext.getFormatterContext().getConfiguration().isMarkingCapitalLetters() ?
+                                item.getLabel() :
+                                item.getLabel().toLowerCase()
+                            ).build()
+                        ).getTranslatedRemainder();
+                    } catch (TranslationException e) {
+                        throw new RuntimeException(e);
+                    }
+                    try {
+                        if (item.getType() == FormattingTypes.ListStyle.PL) {
+                            return startNewRow(
+                                btr,
+                                listLabel,
+                                processorContext.getRowDataProps().getBlockIndentParent(),
+                                processorContext.getRowDataProps().getBlockIndentParent()
+                                    + processorContext.getRowDataProps().getTextIndent(),
+                                mode,
+                                lineProps
+                            );
+                        } else {
+                            return startNewRow(
+                                btr,
+                                listLabel,
+                                processorContext.getRowDataProps().getBlockIndent()
+                                    + processorContext.getRowDataProps().getFirstLineIndent(),
+                                processorContext.getRowDataProps().getBlockIndent()
+                                    + processorContext.getRowDataProps().getTextIndent(),
+                                mode,
+                                lineProps
+                            );
+                        }
+                    } finally {
+                        discardListItem();
+                    }
+                } else {
+                    return startNewRow(
+                        btr,
+                        "",
+                        processorContext.getRowDataProps().getBlockIndent()
+                            + processorContext.getRowDataProps().getFirstLineIndent(),
+                        processorContext.getRowDataProps().getBlockIndent()
+                            + processorContext.getRowDataProps().getTextIndent(),
+                        mode,
+                        lineProps
+                    );
+                }
+            } else {
+                return continueRow(
+                    new RowInfo("", processorContext.getAvailable() - lineProps.getReservedWidth()),
+                    btr,
+                    processorContext.getRowDataProps().getBlockIndent()
+                        + processorContext.getRowDataProps().getTextIndent(),
+                    mode,
+                    lineProps
+                );
+            }
+        }
+
+        /*
+         * Start new active row, possibly with list label in the left margin, and fill it with
+         * characters from a BrailleTranslatorResult.
+         */
+        private Optional<RowImpl> startNewRow(
+            BrailleTranslatorResult btr,
+            String listLabel,
+            int indent,
+            int nextRowIndent,
+            String mode,
+            LineProperties lineProps
+        ) {
+            if (hasCurrentRow()) {
+                throw new RuntimeException("Error in code.");
+            }
+            newCurrentRow(processorContext.getMargins().getLeftMargin(), processorContext.getMargins().getRightMargin());
+            return continueRow(
+                new RowInfo(
+                    getLeftIndentWithLabel(listLabel, indent),
+                    processorContext.getAvailable() - lineProps.getReservedWidth()
+                ),
+                btr,
+                nextRowIndent,
+                mode,
+                lineProps
+            );
+        }
+
+        private String getLeftIndent(int indent) {
+            return getLeftIndentWithLabel("", indent);
+        }
+
+        private String getLeftIndentWithLabel(String listLabel, int indent) {
+            indent = Math.max(
+                // There is one known cause for this calculation to become < 0. That is when an ordered list is so long
+                // that the number takes up more space than the indent reserved for it.
+                // In that case it is probably best to push the content instead of failing altogether.
+                indent - StringTools.length(listLabel),
+                0);
+            return listLabel + StringTools.fill(processorContext.getSpaceCharacter(), indent);
+        }
+
+        /*
+         * Update the active row with a RowInfo (indentation and list label) and BrailleTranslatorResult.
+         */
+        private Optional<RowImpl> continueRow(
+            RowInfo row,
+            BrailleTranslatorResult btr,
+            int nextRowIndent,
+            String mode,
+            LineProperties lineProps
+        ) {
+            RowImpl ret = null;
+            // [margin][preContent][preTabText][tab][postTabText]
+            //      preContentPos ^
+            String tabSpace = "";
+
+            // if a leader is pending lay it out first
+            if (leaderManager.hasLeader()) {
+                int preTabPos = row.getPreTabPosition(currentRow);
+                int leaderPos = leaderManager.getLeaderPosition(
+                    processorContext.getAvailable() - lineProps.getReservedWidth()
+                );
+                int offset = leaderPos - preTabPos;
+                int align = leaderManager.getLeaderAlign(btr.countRemaining());
+
+                if (
+                    preTabPos > leaderPos ||
+                    offset - align < 0
+                ) { // if tab position has been passed or if text does not fit within row, try on a new row
+                    MarginProperties leftMargin = currentRow.getLeftMargin();
+                    if (hasCurrentRow()) {
+                        ret = flushCurrentRow();
+                    }
+                    newCurrentRow(leftMargin, processorContext.getMargins().getRightMargin());
+                    row = new RowInfo(
+                        getLeftIndent(nextRowIndent),
+                        processorContext.getAvailable() - lineProps.getReservedWidth()
+                    );
+                    //update offset
+                    offset = leaderPos - row.getPreTabPosition(currentRow);
+                }
+                try {
+                    tabSpace = leaderManager.getLeaderPattern(
+                        processorContext.getFormatterContext().getTranslator(mode),
+                        offset - align
+                    );
+                } finally {
+                    // always discard leader
+                    leaderManager.removeLeader();
+                }
+            }
+
+            // get next row from BrailleTranslatorResult
+            int contentLen = StringTools.length(tabSpace) + StringTools.length(currentRow.getText());
+            boolean force = contentLen == 0;
+            //don't know if soft hyphens need to be replaced, but we'll keep it for now
+            String next = softHyphenPattern.matcher(
+                btr.nextTranslatedRow(row.getMaxLength(currentRow) - contentLen, force, lineProps.suppressHyphenation())
+            ).replaceAll("");
+            if ("".equals(next) && "".equals(tabSpace)) {
+                currentRow.text(row.getLeftIndent() + trailingWsBraillePattern.matcher(currentRow.getText()).replaceAll(""));
+            } else {
+                currentRow.text(row.getLeftIndent() + currentRow.getText() + tabSpace + next);
+                currentRow.leaderSpace(currentRow.getLeaderSpace() + tabSpace.length());
+            }
+            if (btr instanceof AggregatedBrailleTranslatorResult) {
+                AggregatedBrailleTranslatorResult abtr = ((AggregatedBrailleTranslatorResult) btr);
+                currentRow.addMarkers(abtr.getMarkers());
+                currentRow.addAnchors(abtr.getAnchors());
+                currentRow.addIdentifiers(abtr.getIdentifiers());
+                abtr.clearPending();
+            }
+            return Optional.ofNullable(ret);
+        }
+    }
+
+    private class NewLineResult implements CurrentResult {
+
+        private boolean newLine;
+        private Optional<CurrentResult> before;
+
+        NewLineResult(Optional<CurrentResult> before) {
+            this.before = before;
+            this.newLine = true;
+        }
+
+        private NewLineResult(NewLineResult template) {
+            if (template.before.isPresent()) {
+                this.before = Optional.of(copy(template.before.get()));
+            }
+            this.newLine = template.newLine;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return before.isPresent() && before.get().hasNext() || newLine;
+        }
+
+        @Override
+        public Optional<RowImpl> process(LineProperties lineProps) {
+            if (before.isPresent() && before.get().hasNext()) {
+                return before.get().process(lineProps);
+            } else if (newLine) {
+                newLine = false;
+                try {
+                    if (hasCurrentRow()) {
+                        return Optional.of(flushCurrentRow());
+                    }
+                } finally {
+                    MarginProperties ret = new MarginProperties(
+                        processorContext.getMargins().getLeftMargin().getContent() + StringTools.fill(
+                            processorContext.getSpaceCharacter(),
+                            processorContext.getRowDataProps().getTextIndent()
+                        ),
+                        processorContext.getMargins().getLeftMargin().isSpaceOnly()
+                    );
+                    newCurrentRow(ret, processorContext.getMargins().getRightMargin());
+                }
+            }
+            return Optional.empty();
+        }
+    }
+
+    private class CloseResult implements CurrentResult {
+
+        private Optional<CurrentResult> before;
+        private boolean doFlush;
+        private boolean doUnderline;
+
+        CloseResult(Optional<CurrentResult> before) {
+            this.before = before;
+            this.doFlush = true;
+            this.doUnderline = processorContext.getRowDataProps().getUnderlineStyle() != null;
+        }
+
+        private CloseResult(CloseResult template) {
+            if (template.before.isPresent()) {
+                this.before = Optional.of(copy(template.before.get()));
+            } else {
+                this.before = Optional.empty();
+            }
+            this.doFlush = template.doFlush;
+            this.doUnderline = template.doUnderline;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return before.isPresent() && before.get().hasNext() || doFlush || (rowsFlushed && doUnderline);
+        }
+
+        @Override
+        public Optional<RowImpl> process(LineProperties lineProps) {
+            if (before.isPresent() && before.get().hasNext()) {
+                return before.get().process(lineProps);
+            } else if (doFlush) {
+                doFlush = false;
+                if (hasCurrentRow()) {
+                    return Optional.of(flushCurrentRow());
+                }
+            } else if (rowsFlushed && doUnderline) {
+                doUnderline = false;
+                if (
+                    unusedLeft < processorContext.getMargins().getLeftMargin().getContent().length() ||
+                    unusedRight < processorContext.getMargins().getRightMargin().getContent().length()
+                ) {
+                    throw new RuntimeException("coding error");
+                }
+                return Optional.of(
+                        new RowImpl.Builder(
+                            StringTools.fill(
+                                    processorContext.getSpaceCharacter(),
+                                    unusedLeft - processorContext.getMargins().getLeftMargin().getContent().length()
+                            ) +
+                            StringTools.fill(
+                                processorContext.getRowDataProps().getUnderlineStyle(),
+                                processorContext.getFlowWidth() - unusedLeft - unusedRight
+                            )
+                        )
+                        .leftMargin(processorContext.getMargins().getLeftMargin())
+                        .rightMargin(processorContext.getMargins().getRightMargin())
+                        .adjustedForMargin(true)
+                        .build());
+            }
+            return Optional.empty();
+        }
     }
 }
