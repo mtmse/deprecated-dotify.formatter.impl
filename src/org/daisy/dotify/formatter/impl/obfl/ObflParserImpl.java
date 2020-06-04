@@ -1052,6 +1052,10 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
                 builder.textIndent(Integer.parseInt(att.getValue()));
             } else if ("first-line-indent".equals(name)) {
                 builder.firstLineIndent(Integer.parseInt(att.getValue()));
+            } else if ("right-text-indent".equals(name)) {
+                builder.rightTextIndent(Integer.parseInt(att.getValue()));
+            } else if ("right-last-line-indent".equals(name)) {
+                logger.warning("right-last-line-indent attribute is not supported, ignoring." + toLocation(el));
             } else if ("list-type".equals(name)) {
                 builder.listType(FormattingTypes.ListStyle.valueOf(att.getValue().toUpperCase()));
             } else if ("list-style".equals(name)) {

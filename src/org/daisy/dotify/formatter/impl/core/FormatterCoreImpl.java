@@ -127,6 +127,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
         RowDataProperties.Builder rdp = new RowDataProperties.Builder()
                 .textIndent(p.getTextBlockProperties().getTextIndent())
                 .firstLineIndent(p.getTextBlockProperties().getFirstLineIndent())
+                .rightTextIndent(p.getTextBlockProperties().getRightTextIndent())
                 .align(p.getTextBlockProperties().getAlignment())
                 .rowSpacing(p.getTextBlockProperties().getRowSpacing())
                 .orphans(p.getOrphans())
@@ -280,6 +281,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
             RowDataProperties.Builder rdp = new RowDataProperties.Builder().
                     textIndent(p.getTextBlockProperties().getTextIndent()).
                     firstLineIndent(p.getTextBlockProperties().getFirstLineIndent()).
+                    rightTextIndent(p.getTextBlockProperties().getRightTextIndent()).
                     align(p.getTextBlockProperties().getAlignment()).
                     rowSpacing(p.getTextBlockProperties().getRowSpacing()).
                     orphans(p.getOrphans()).

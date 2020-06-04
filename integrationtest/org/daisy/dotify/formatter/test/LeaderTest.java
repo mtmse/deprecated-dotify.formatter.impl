@@ -48,4 +48,15 @@ public class LeaderTest extends AbstractFormatterEngineTest {
         );
     }
 
+    @Test
+    public void testLeaderRightTextIndent() throws
+            LayoutEngineException,
+            IOException,
+            PagedMediaWriterConfigurationException {
+        testPEF(
+            "resource-files/leader-right-text-indent-input.obfl",
+            "resource-files/leader-right-text-indent-expected.pef",
+            false
+        );
+    }
 }

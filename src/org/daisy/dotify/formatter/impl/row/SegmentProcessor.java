@@ -2,6 +2,7 @@ package org.daisy.dotify.formatter.impl.row;
 
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.FormattingTypes;
+import org.daisy.dotify.api.formatter.Leader;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.MarkerReference;
 import org.daisy.dotify.api.translator.AttributeWithContext;
@@ -965,6 +966,7 @@ class SegmentProcessor {
                             + processorContext.getRowDataProps().getTextIndent(),
                         processorContext.getRowDataProps().getBlockIndent()
                             + processorContext.getRowDataProps().getTextIndent(),
+                        processorContext.getRowDataProps().getRightTextIndent(),
                         mode,
                         lineProps
                     );
@@ -1003,6 +1005,7 @@ class SegmentProcessor {
                                 processorContext.getRowDataProps().getBlockIndentParent(),
                                 processorContext.getRowDataProps().getBlockIndentParent()
                                     + processorContext.getRowDataProps().getTextIndent(),
+                                processorContext.getRowDataProps().getRightTextIndent(),
                                 mode,
                                 lineProps
                             );
@@ -1014,6 +1017,7 @@ class SegmentProcessor {
                                     + processorContext.getRowDataProps().getFirstLineIndent(),
                                 processorContext.getRowDataProps().getBlockIndent()
                                     + processorContext.getRowDataProps().getTextIndent(),
+                                processorContext.getRowDataProps().getRightTextIndent(),
                                 mode,
                                 lineProps
                             );
@@ -1029,6 +1033,7 @@ class SegmentProcessor {
                             + processorContext.getRowDataProps().getFirstLineIndent(),
                         processorContext.getRowDataProps().getBlockIndent()
                             + processorContext.getRowDataProps().getTextIndent(),
+                        processorContext.getRowDataProps().getRightTextIndent(),
                         mode,
                         lineProps
                     );
@@ -1039,6 +1044,7 @@ class SegmentProcessor {
                     btr,
                     processorContext.getRowDataProps().getBlockIndent()
                         + processorContext.getRowDataProps().getTextIndent(),
+                    processorContext.getRowDataProps().getRightTextIndent(),
                     mode,
                     lineProps
                 );
@@ -1052,8 +1058,9 @@ class SegmentProcessor {
         private Optional<RowImpl> startNewRow(
             BrailleTranslatorResult btr,
             String listLabel,
-            int indent,
-            int nextRowIndent,
+            int leftIndent,
+            int nextRowLeftIndent,
+            int rightIndentIfNotLastRow,
             String mode,
             LineProperties lineProps
         ) {
@@ -1063,11 +1070,12 @@ class SegmentProcessor {
             newCurrentRow(processorContext.getMargins().getLeftMargin(), processorContext.getMargins().getRightMargin());
             return continueRow(
                 new RowInfo(
-                    getLeftIndentWithLabel(listLabel, indent),
+                    getLeftIndentWithLabel(listLabel, leftIndent),
                     processorContext.getAvailable() - lineProps.getReservedWidth()
                 ),
                 btr,
-                nextRowIndent,
+                nextRowLeftIndent,
+                rightIndentIfNotLastRow,
                 mode,
                 lineProps
             );
@@ -1094,6 +1102,7 @@ class SegmentProcessor {
             RowInfo row,
             BrailleTranslatorResult btr,
             int nextRowIndent,
+            int rightIndentIfNotLastRow,
             String mode,
             LineProperties lineProps
         ) {
@@ -1101,9 +1110,11 @@ class SegmentProcessor {
             // [margin][preContent][preTabText][tab][postTabText]
             //      preContentPos ^
             String tabSpace = "";
+            boolean rightAlignedLeader = false;
 
             // if a leader is pending lay it out first
             if (leaderManager.hasLeader()) {
+                rightAlignedLeader = leaderManager.getCurrentLeader().getAlignment() == Leader.Alignment.RIGHT;
                 int preTabPos = row.getPreTabPosition(currentRow);
                 int leaderPos = leaderManager.getLeaderPosition(
                     processorContext.getAvailable() - lineProps.getReservedWidth()
@@ -1141,10 +1152,32 @@ class SegmentProcessor {
             // get next row from BrailleTranslatorResult
             int contentLen = StringTools.length(tabSpace) + StringTools.length(currentRow.getText());
             boolean force = contentLen == 0;
-            //don't know if soft hyphens need to be replaced, but we'll keep it for now
-            String next = softHyphenPattern.matcher(
-                btr.nextTranslatedRow(row.getMaxLength(currentRow) - contentLen, force, lineProps.suppressHyphenation())
-            ).replaceAll("");
+            int availableIfLastRow = row.getMaxLength(currentRow) - contentLen;
+            String next = null;
+            boolean onLastRow = false;
+            // This implementation does not make use the full available space for the last line
+            // unless a right aligned leader is present.
+            if (rightAlignedLeader) {
+                // If a right aligned leader is present and there are more segments, they are either:
+                // - newlines: this means we can not be on the last line
+                // - leaders: we may be on last line but this function will be called again
+                // - external references: may be on last line; currently not supported
+                if (!hasMoreSegments()) {
+                    BrailleTranslatorResult btrCopy = btr.copy();
+                    btrCopy.nextTranslatedRow(availableIfLastRow, force, false);
+                    if (!btrCopy.hasNext()) {
+                        onLastRow = true;
+                    }
+                }
+            }
+            int available = availableIfLastRow;
+            if (!onLastRow) {
+                available -= rightIndentIfNotLastRow;
+            }
+            // break line
+            next = btr.nextTranslatedRow(available, force, lineProps.suppressHyphenation());
+            // don't know if soft hyphens need to be replaced, but we'll keep it for now
+            next = softHyphenPattern.matcher(next).replaceAll("");
             if ("".equals(next) && "".equals(tabSpace)) {
                 currentRow.text(row.getLeftIndent() + trailingWsBraillePattern.matcher(currentRow.getText()).replaceAll(""));
             } else {

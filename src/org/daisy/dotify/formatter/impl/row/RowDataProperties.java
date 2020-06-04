@@ -18,6 +18,7 @@ public final class RowDataProperties {
     private final ListItem listProps;
     private final int textIndent;
     private final int firstLineIndent;
+    private final int rightTextIndent;
     private final Alignment align;
     private final Float rowSpacing;
     private final int outerSpaceBefore;
@@ -40,6 +41,7 @@ public final class RowDataProperties {
         private int blockIndentParent = 0;
         private int textIndent = 0;
         private int firstLineIndent = 0;
+        private int rightTextIndent = 0;
         private int outerSpaceBefore = 0;
         private int outerSpaceAfter = 0;
         private int innerSpaceBefore = 0;
@@ -71,6 +73,7 @@ public final class RowDataProperties {
             this.listProps = template.listProps;
             this.textIndent = template.textIndent;
             this.firstLineIndent = template.firstLineIndent;
+            this.rightTextIndent = template.rightTextIndent;
             this.align = template.align;
             this.rowSpacing = template.rowSpacing;
             this.outerSpaceBefore = template.outerSpaceBefore;
@@ -102,6 +105,11 @@ public final class RowDataProperties {
 
         public Builder firstLineIndent(int firstLineIndent) {
             this.firstLineIndent = firstLineIndent;
+            return this;
+        }
+
+        public Builder rightTextIndent(int rightTextIndent) {
+            this.rightTextIndent = rightTextIndent;
             return this;
         }
 
@@ -192,6 +200,7 @@ public final class RowDataProperties {
         this.listProps = builder.listProps;
         this.textIndent = builder.textIndent;
         this.firstLineIndent = builder.firstLineIndent;
+        this.rightTextIndent = builder.rightTextIndent;
         this.align = builder.align;
         this.rowSpacing = builder.rowSpacing;
         this.outerSpaceBefore = builder.outerSpaceBefore;
@@ -228,6 +237,10 @@ public final class RowDataProperties {
 
     public int getFirstLineIndent() {
         return firstLineIndent;
+    }
+
+    public int getRightTextIndent() {
+        return rightTextIndent;
     }
 
     public FormattingTypes.Alignment getAlignment() {
@@ -306,6 +319,7 @@ public final class RowDataProperties {
         result = prime * result + orphans;
         result = prime * result + outerSpaceAfter;
         result = prime * result + outerSpaceBefore;
+        result = prime * result + rightTextIndent;
         result = prime * result + ((rowSpacing == null) ? 0 : rowSpacing.hashCode());
         result = prime * result + textIndent;
         result = prime * result + ((trailingDecoration == null) ? 0 : trailingDecoration.hashCode());
@@ -374,6 +388,9 @@ public final class RowDataProperties {
         if (outerSpaceBefore != other.outerSpaceBefore) {
             return false;
         }
+        if (rightTextIndent != other.rightTextIndent) {
+            return false;
+        }
         if (rowSpacing == null) {
             if (other.rowSpacing != null) {
                 return false;
@@ -408,11 +425,11 @@ public final class RowDataProperties {
     public String toString() {
         return "RowDataProperties [blockIndent=" + blockIndent + ", blockIndentParent=" + blockIndentParent
                 + ", margins=" + margins + ", listProps=" + listProps + ", textIndent=" + textIndent
-                + ", firstLineIndent=" + firstLineIndent + ", align=" + align + ", rowSpacing=" + rowSpacing
-                + ", outerSpaceBefore=" + outerSpaceBefore + ", outerSpaceAfter=" + outerSpaceAfter
-                + ", innerSpaceBefore=" + innerSpaceBefore + ", innerSpaceAfter=" + innerSpaceAfter + ", orphans="
-                + orphans + ", widows=" + widows + ", leadingDecoration=" + leadingDecoration + ", trailingDecoration="
-                + trailingDecoration + ", underlineStyle=" + underlineStyle + "]";
+                + ", firstLineIndent=" + firstLineIndent + ", rightTextIndent=" + rightTextIndent + ", align=" + align
+                + ", rowSpacing=" + rowSpacing + ", outerSpaceBefore=" + outerSpaceBefore + ", outerSpaceAfter="
+                + outerSpaceAfter + ", innerSpaceBefore=" + innerSpaceBefore + ", innerSpaceAfter=" + innerSpaceAfter
+                + ", orphans=" + orphans + ", widows=" + widows + ", leadingDecoration=" + leadingDecoration
+                + ", trailingDecoration=" + trailingDecoration + ", underlineStyle=" + underlineStyle + "]";
     }
 
 }
