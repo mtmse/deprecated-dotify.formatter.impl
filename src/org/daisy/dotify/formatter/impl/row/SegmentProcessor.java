@@ -916,10 +916,10 @@ class SegmentProcessor {
 
     private CurrentResult copy(CurrentResult cr) {
         return cr instanceof CurrentResultImpl
-            ? new CurrentResultImpl((CurrentResultImpl)cr)
+            ? new CurrentResultImpl((CurrentResultImpl) cr)
             : cr instanceof NewLineResult
-                ? new NewLineResult((NewLineResult)cr)
-                : new CloseResult((CloseResult)cr);
+                ? new NewLineResult((NewLineResult) cr)
+                : new CloseResult((CloseResult) cr);
     }
 
     private static final Pattern softHyphenPattern = Pattern.compile("\u00ad");
@@ -1067,7 +1067,8 @@ class SegmentProcessor {
             if (hasCurrentRow()) {
                 throw new RuntimeException("Error in code.");
             }
-            newCurrentRow(processorContext.getMargins().getLeftMargin(), processorContext.getMargins().getRightMargin());
+            newCurrentRow(processorContext.getMargins().getLeftMargin(),
+                          processorContext.getMargins().getRightMargin());
             return continueRow(
                 new RowInfo(
                     getLeftIndentWithLabel(listLabel, leftIndent),
@@ -1157,17 +1158,16 @@ class SegmentProcessor {
             boolean onLastRow = false;
             // This implementation does not make use the full available space for the last line
             // unless a right aligned leader is present.
-            if (rightAlignedLeader) {
+            if (rightAlignedLeader
                 // If a right aligned leader is present and there are more segments, they are either:
                 // - newlines: this means we can not be on the last line
                 // - leaders: we may be on last line but this function will be called again
                 // - external references: may be on last line; currently not supported
-                if (!hasMoreSegments()) {
-                    BrailleTranslatorResult btrCopy = btr.copy();
-                    btrCopy.nextTranslatedRow(availableIfLastRow, force, false);
-                    if (!btrCopy.hasNext()) {
-                        onLastRow = true;
-                    }
+                && !hasMoreSegments()) {
+                BrailleTranslatorResult btrCopy = btr.copy();
+                btrCopy.nextTranslatedRow(availableIfLastRow, force, false);
+                if (!btrCopy.hasNext()) {
+                    onLastRow = true;
                 }
             }
             int available = availableIfLastRow;
@@ -1179,7 +1179,8 @@ class SegmentProcessor {
             // don't know if soft hyphens need to be replaced, but we'll keep it for now
             next = softHyphenPattern.matcher(next).replaceAll("");
             if ("".equals(next) && "".equals(tabSpace)) {
-                currentRow.text(row.getLeftIndent() + trailingWsBraillePattern.matcher(currentRow.getText()).replaceAll(""));
+                currentRow.text(
+                    row.getLeftIndent() + trailingWsBraillePattern.matcher(currentRow.getText()).replaceAll(""));
             } else {
                 currentRow.text(row.getLeftIndent() + currentRow.getText() + tabSpace + next);
                 currentRow.leaderSpace(currentRow.getLeaderSpace() + tabSpace.length());
