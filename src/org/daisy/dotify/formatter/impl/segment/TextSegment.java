@@ -17,7 +17,7 @@ public class TextSegment implements Segment {
     public TextSegment(String chars, TextProperties tp) {
         this.chars = Objects.requireNonNull(chars);
         this.tp = Objects.requireNonNull(tp);
-   }
+    }
 
     public boolean canMakeResult() {
         return cache != null;
