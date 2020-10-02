@@ -12,14 +12,12 @@ import java.util.Optional;
 public class TextSegment implements Segment {
     private final String chars;
     private final TextProperties tp;
-    private final boolean markCapitalLetters;
     private BrailleTranslatorResult cache;
 
-    public TextSegment(String chars, TextProperties tp, boolean markCapitalLetters) {
+    public TextSegment(String chars, TextProperties tp) {
         this.chars = Objects.requireNonNull(chars);
         this.tp = Objects.requireNonNull(tp);
-        this.markCapitalLetters = markCapitalLetters;
-    }
+   }
 
     public boolean canMakeResult() {
         return cache != null;
@@ -111,7 +109,7 @@ public class TextSegment implements Segment {
 
     @Override
     public boolean shouldMarkCapitalLetters() {
-        return markCapitalLetters;
+        return tp.shouldMarkCapitalLetters();
     }
 
 }

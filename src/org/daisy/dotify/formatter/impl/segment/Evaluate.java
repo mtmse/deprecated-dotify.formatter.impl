@@ -119,7 +119,7 @@ public class Evaluate implements Segment {
 
     @Override
     public boolean shouldMarkCapitalLetters() {
-        return markCapitalLetters;
+        return props.shouldMarkCapitalLetters();
     }
 
 }

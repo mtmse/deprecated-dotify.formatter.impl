@@ -113,6 +113,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
     private FilterLocale locale;
     private String mode;
     private boolean hyphGlobal;
+    private boolean markCapitalLettersGlobal;
     private final Logger logger;
     private final FactoryManager fm;
     private boolean normalizeSpace = true;
@@ -147,6 +148,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
         this.locale = FilterLocale.parse(config.getLocale());
         this.mode = config.getTranslationMode();
         this.hyphGlobal = config.isHyphenating();
+        this.markCapitalLettersGlobal = config.isMarkingCapitalLetters();
         this.meta = new ArrayList<>();
         XMLEvent event;
         TextProperties tp = new TextProperties.Builder(
@@ -154,6 +156,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
         )
             .translationMode(mode)
             .hyphenate(hyphGlobal)
+            .markCapitalLetters(markCapitalLettersGlobal)
             .build();
         XMLEventIterator input;
         if (normalizeSpace) {
@@ -2075,8 +2078,14 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
     private TextProperties getTextProperties(XMLEvent event, TextProperties defaults) {
         String loc = getLang(event, defaults.getLocale());
         boolean hyph = getHyphenate(event, defaults.isHyphenating());
+        boolean markCapitalLetters = getMarkCapitalLetters(event, defaults.shouldMarkCapitalLetters());
+
         String trans = getTranslate(event, defaults.getTranslationMode());
-        return new TextProperties.Builder(loc.toString()).translationMode(trans).hyphenate(hyph).build();
+        return new TextProperties.Builder(loc.toString())
+                .translationMode(trans)
+                .hyphenate(hyph)
+                .markCapitalLetters(markCapitalLetters)
+                .build();
     }
 
     private String getLang(XMLEvent event, String locale) {
@@ -2102,6 +2111,18 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
             }
         }
         return hyphenate;
+    }
+
+    private boolean getMarkCapitalLetters(XMLEvent event, boolean markCapitalLetters) {
+        String markCL = getAttr(event, ObflQName.ATTR_MARK_CAPITAL_LETTERS);
+        if (markCL != null) {
+            if ("".equals(markCL)) {
+                return markCapitalLettersGlobal;
+            } else {
+                return "true".equals(markCL);
+            }
+        }
+        return markCapitalLetters;
     }
 
     private String getTranslate(XMLEvent event, String translate) {

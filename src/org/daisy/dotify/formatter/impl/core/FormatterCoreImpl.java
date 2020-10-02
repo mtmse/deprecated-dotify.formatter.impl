@@ -354,7 +354,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
             //list item has been used now, discard
             listItem = null;
         }
-        bl.addSegment(new TextSegment(c.toString(), p, fc.getConfiguration().isMarkingCapitalLetters()));
+        bl.addSegment(new TextSegment(c.toString(), p));
     }
 
     @Override
