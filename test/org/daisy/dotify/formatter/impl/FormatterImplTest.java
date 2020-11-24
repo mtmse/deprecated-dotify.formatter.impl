@@ -7,8 +7,10 @@ import org.daisy.dotify.api.formatter.Formatter;
 import org.daisy.dotify.api.formatter.FormatterConfiguration;
 import org.daisy.dotify.api.formatter.FormatterSequence;
 import org.daisy.dotify.api.formatter.LayoutMasterProperties;
+import org.daisy.dotify.api.formatter.NumeralStyle;
 import org.daisy.dotify.api.formatter.SequenceProperties;
 import org.daisy.dotify.api.formatter.TextProperties;
+import org.daisy.dotify.api.obfl.ExpressionFactoryMaker;
 import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMakerService;
 import org.daisy.dotify.api.translator.TextAttribute;
 import org.daisy.dotify.api.translator.TranslatorConfigurationException;
@@ -18,6 +20,9 @@ import org.daisy.dotify.api.writer.PagedMediaWriterException;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.api.writer.SectionProperties;
 import org.daisy.dotify.common.text.IdentityFilter;
+import org.daisy.dotify.formatter.impl.common.FactoryManager;
+import org.daisy.dotify.formatter.impl.obfl.OBFLDynamicContent;
+import org.daisy.dotify.formatter.impl.obfl.OBFLVariable;
 import org.daisy.dotify.translator.DefaultBrailleFilter;
 import org.daisy.dotify.translator.DefaultMarkerProcessor;
 import org.daisy.dotify.translator.Marker;
@@ -29,6 +34,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.function.Function;
 
 import static org.junit.Assert.assertEquals;
 
@@ -38,25 +44,9 @@ import static org.junit.Assert.assertEquals;
 @SuppressWarnings("javadoc")
 public class FormatterImplTest {
 
-    @Test
-    public void testConnectedStyles() throws TranslatorConfigurationException {
+    public String testingFormatter(Function<Formatter, Object> fi) throws TranslatorConfigurationException {
         String loc = "und";
         String mode = "bypass";
-        TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
-        DynamicContent exp = new DynamicContent() {
-            String str = "b";
-
-            @Override
-            public String render(Context context) {
-                return str;
-            }
-
-            @Override
-            public String render() {
-                return render(new Context() {
-                });
-            }
-        };
 
         DefaultMarkerProcessor mp = new DefaultMarkerProcessor.Builder()
                 .addDictionary("em", (String str, TextAttribute attributes) -> new Marker("1>", "<1"))
@@ -69,22 +59,14 @@ public class FormatterImplTest {
         BrailleTranslatorFactoryMakerService sr = Mockito.mock(BrailleTranslatorFactoryMakerService.class);
         Mockito.when(sr.newTranslator(loc, mode)).thenReturn(trr);
 
-        Formatter f1 = new FormatterImpl(
+        final Formatter f1 = new FormatterImpl(
                 sr,
                 null,
                 new FormatterConfiguration.Builder(loc, mode).hyphenate(false).build());
         f1.newLayoutMaster("main", new LayoutMasterProperties.Builder(50, 20).build());
 
-        FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
-        f.startBlock(new BlockProperties.Builder().build());
-        f.startStyle("em");
-        f.addChars("a", tp);
-        f.startStyle("strong");
-        f.insertEvaluate(exp, tp);
-        f.endStyle();
-        f.addChars("c", tp);
-        f.endStyle();
-        f.endBlock();
+        fi.apply(f1);
+
         StringBuilder sb = new StringBuilder();
         f1.write(new PagedMediaWriter() {
             @Override
@@ -108,19 +90,284 @@ public class FormatterImplTest {
             }
 
             @Override
-            public void newRow(Row row) {
-                sb.append(row.getChars());
-            }
+            public void newRow(Row row) { sb.append(row.getChars()); }
 
             @Override
             public void newRow() {
             }
 
             @Override
-            public void newPage() {
-            }
+            public void newPage() { }
         });
-        assertEquals("1>a2>b<2c<1", sb.toString());
+        return sb.toString();
     }
 
+    @Test
+    public void testConnectedStyles() throws TranslatorConfigurationException {
+        String loc = "und";
+
+        TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
+        DynamicContent exp = new DynamicContent() {
+            String str = "b";
+
+            @Override
+            public String render(Context context) {
+                return str;
+            }
+
+            @Override
+            public String render() {
+                return render(new Context() {
+                });
+            }
+        };
+
+        String res = testingFormatter((f1) -> {
+            FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
+            f.startBlock(new BlockProperties.Builder().build());
+            f.startStyle("em");
+            f.addChars("a", tp);
+            f.startStyle("strong");
+            f.insertEvaluate(exp, tp);
+            f.endStyle();
+            f.addChars("c", tp);
+            f.endStyle();
+            f.endBlock();
+            return null;
+        });
+
+        assertEquals("1>a2>b<2c<1", res);
+    }
+
+
+    @Test
+    public void testTwoBlocksWithoutExpression() throws TranslatorConfigurationException {
+        String loc = "und";
+
+        TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
+
+        String res = testingFormatter((f1) -> {
+            FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
+            f.startBlock(new BlockProperties.Builder().build());
+            f.addChars("Testing1", tp);
+            f.endBlock();
+            f.startBlock(new BlockProperties.Builder().build());
+            f.addChars("Testing2", tp);
+            f.endBlock();
+            return null;
+        });
+
+        assertEquals("Testing1Testing2", res);
+    }
+
+    @Test
+    public void testTwoBlocksWithDisplayWhenTrue() throws TranslatorConfigurationException {
+        String loc = "und";
+
+        TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
+        final OBFLDynamicContent dynamic = new OBFLDynamicContent(
+                "true",
+                ExpressionFactoryMaker.newInstance().getFactory()
+        );
+
+        String res = testingFormatter((f1) -> {
+            FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
+            BlockProperties bb = new BlockProperties.Builder()
+                    .displayWhen(dynamic)
+                    .build();
+            f.startBlock(bb);
+            f.addChars("Testing1", tp);
+            f.endBlock();
+            f.startBlock(new BlockProperties.Builder().build());
+            f.addChars("Testing2", tp);
+            f.endBlock();
+            return null;
+        });
+
+        assertEquals("Testing1Testing2", res);
+    }
+
+    @Test
+    public void testTwoBlocksWithDisplayWhenFalse() throws TranslatorConfigurationException {
+        String loc = "und";
+
+        TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
+        final OBFLDynamicContent dynamic = new OBFLDynamicContent(
+                "false",
+                ExpressionFactoryMaker.newInstance().getFactory()
+        );
+
+        String res = testingFormatter((f1) -> {
+            FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
+            BlockProperties bb = new BlockProperties.Builder()
+                    .displayWhen(dynamic)
+                    .build();
+            f.startBlock(bb);
+            f.addChars("Testing1", tp);
+            f.endBlock();
+            f.startBlock(new BlockProperties.Builder().build());
+            f.addChars("Testing2", tp);
+            f.endBlock();
+            return null;
+        });
+
+        assertEquals("Testing2", res);
+    }
+
+    @Test
+    public void testTwoBlocksWithDisplayWhenExpressionEvaluateToTrue() throws TranslatorConfigurationException {
+        String loc = "und";
+
+        TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
+        final OBFLDynamicContent dynamic = new OBFLDynamicContent(
+                "(= 1 1)",
+                ExpressionFactoryMaker.newInstance().getFactory()
+        );
+
+        String res = testingFormatter((f1) -> {
+            FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
+            BlockProperties bb = new BlockProperties.Builder()
+                    .displayWhen(dynamic)
+                    .build();
+            f.startBlock(bb);
+            f.addChars("Testing1", tp);
+            f.endBlock();
+            f.startBlock(new BlockProperties.Builder().build());
+            f.addChars("Testing2", tp);
+            f.endBlock();
+            return null;
+        });
+
+        assertEquals("Testing1Testing2", res);
+    }
+
+    @Test
+    public void testTwoBlocksWithDisplayWhenExpressionEvaluateToFalse() throws TranslatorConfigurationException {
+        String loc = "und";
+
+        TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
+        final OBFLDynamicContent dynamic = new OBFLDynamicContent(
+                "(= 0 1)",
+                ExpressionFactoryMaker.newInstance().getFactory()
+                //OBFLVariable.PAGE_NUMBER
+        );
+        String res = testingFormatter((f1) -> {
+            FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
+            BlockProperties bb = new BlockProperties.Builder()
+                    .displayWhen(dynamic)
+                    .build();
+            f.startBlock(bb);
+            f.addChars("Testing1", tp);
+            f.endBlock();
+            f.startBlock(new BlockProperties.Builder().build());
+            f.addChars("Testing2", tp);
+            f.endBlock();
+            return null;
+        });
+
+        assertEquals("Testing2", res);
+    }
+
+    @Test
+    public void testTwoBlocksWithDisplayWhenExpressionStartedPageNumberIsOne() throws TranslatorConfigurationException {
+        String loc = "und";
+
+        TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
+        final OBFLDynamicContent dynamic = new OBFLDynamicContent(
+                "(= $started-page-number 1)",
+                ExpressionFactoryMaker.newInstance().getFactory(),
+                OBFLVariable.STARTED_PAGE_NUMBER
+        );
+        String res = testingFormatter((f1) -> {
+            FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
+            BlockProperties bb = new BlockProperties.Builder()
+                    .displayWhen(dynamic)
+                    .build();
+            f.startBlock(bb);
+            f.addChars("Testing1", tp);
+            f.endBlock();
+            f.startBlock(new BlockProperties.Builder().build());
+            f.addChars("Testing2", tp);
+            f.endBlock();
+            return null;
+        });
+
+        assertEquals("Testing2", res);
+    }
+
+    @Test
+    public void testTwoBlocksWithDisplayWhenExpressionStartsAtTopOfPage() throws TranslatorConfigurationException {
+        String loc = "und";
+
+        TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
+        final OBFLDynamicContent dynamic = new OBFLDynamicContent(
+                "(! $starts-at-top-of-page)",
+                ExpressionFactoryMaker.newInstance().getFactory(),
+                OBFLVariable.STARTS_AT_TOP_OF_PAGE
+        );
+        String res = testingFormatter((f1) -> {
+            FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
+            BlockProperties bb = new BlockProperties.Builder()
+                    .displayWhen(dynamic)
+                    .build();
+            BlockProperties nb = new BlockProperties.Builder().build();
+
+            f.startBlock(bb);
+            f.addChars("Testing1", tp);
+            f.endBlock();
+            f.startBlock(nb);
+            f.addChars("Testing2", tp);
+            f.endBlock();
+            return null;
+        });
+
+        assertEquals("Testing2", res);
+    }
+
+
+    @Test
+    public void testTwoBlocksWithDisplayWhenExpressionStartsAtTopOfPageMultiPage() throws TranslatorConfigurationException {
+        String loc = "und";
+
+        TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
+        final OBFLDynamicContent dynamic = new OBFLDynamicContent(
+                "(! $starts-at-top-of-page)",
+                ExpressionFactoryMaker.newInstance().getFactory(),
+                OBFLVariable.STARTS_AT_TOP_OF_PAGE
+        );
+        String res = testingFormatter((f1) -> {
+            FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
+            BlockProperties bb = new BlockProperties.Builder()
+                    .displayWhen(dynamic)
+                    .build();
+            BlockProperties nb = new BlockProperties.Builder().build();
+
+            f.startBlock(bb);
+            f.addChars("Testing1", tp);
+            f.endBlock();
+            f.startBlock(nb);
+            f.addChars("Testing2", tp);
+            f.endBlock();
+
+            for (int i=0; i<18; i++) {
+                f.startBlock(nb);
+                f.addChars(".", tp);
+                f.endBlock();
+            }
+
+            f.startBlock(bb);
+            f.addChars("Testing1", tp);
+            f.endBlock();
+            f.startBlock(bb);
+            f.addChars("Testing2", tp);
+            f.endBlock();
+            f.startBlock(nb);
+            f.addChars("Testing3", tp);
+            f.endBlock();
+
+            return null;
+        });
+
+        assertEquals("Testing2..................Testing3", res);
+    }
 }
