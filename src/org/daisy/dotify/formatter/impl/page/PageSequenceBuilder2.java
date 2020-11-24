@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl.page;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
+import org.daisy.dotify.api.formatter.DynamicContent;
 import org.daisy.dotify.api.formatter.FallbackRule;
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
 import org.daisy.dotify.api.formatter.PageAreaProperties;
@@ -363,6 +364,7 @@ public class PageSequenceBuilder2 {
                     master.getFlowWidth() -
                     master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth()
                 )
+                .topOfPage(true)
                 .build();
             data.setContext(bc);
             // This function returns the space that header or footer fields take up in a row at a
@@ -556,7 +558,7 @@ public class PageSequenceBuilder2 {
                     cbl = gr.getLineProperties().getBlockLineLocation();
                 }
                 // Add the body rows to the page.
-                addRows(head, current);
+                addRows(head, current, bc);
                 // The VolumeKeepPriority of the page is the maximum value (lowest priority) of all
                 // RowGroups. Discarded RowGroups (i.e. collapsed margins) are also taken into
                 // account.
@@ -686,9 +688,15 @@ public class PageSequenceBuilder2 {
         }
     }
 
-    private void addRows(List<RowGroup> head, PageImpl p) {
+    private void addRows(List<RowGroup> head, PageImpl p, BlockContext blockContext) {
         int i = head.size();
+        blockContext.setTopOfPage(true);
         for (RowGroup rg : head) {
+            DynamicContent dc = rg.getDisplayWhen();
+            if (dc != null && dc.render(blockContext).equalsIgnoreCase("false")) {
+                continue;
+            }
+            blockContext.setTopOfPage(false);
             i--;
             addProperties(p, rg);
             List<RowImpl> rows = rg.getRows();

@@ -69,6 +69,12 @@ public class BlockContext extends DefaultContext {
         }
 
         @Override
+        public Builder topOfPage(boolean value) {
+            super.topOfPage(value);
+            return this;
+        }
+
+        @Override
         public Builder space(Space value) {
             super.space(value);
             return this;

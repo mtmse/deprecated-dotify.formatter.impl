@@ -56,6 +56,10 @@ public enum OBFLVariable {
      */
     STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER,
     /**
+     * <p>Indicates if no content have been printed previously on this page.</p>
+     */
+    STARTS_AT_TOP_OF_PAGE,
+    /**
      * <p>The total number of sheets in the document.</p>
      */
     SHEET_COUNT,

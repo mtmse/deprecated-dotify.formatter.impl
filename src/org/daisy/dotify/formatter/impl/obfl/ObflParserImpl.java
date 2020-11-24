@@ -1115,6 +1115,16 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
                 builder.verticalAlignment(VerticalAlignment.valueOf(att.getValue().toUpperCase()));
             } else if ("row-spacing".equals(name)) {
                 builder.rowSpacing(Float.parseFloat(att.getValue()));
+            } else if ("display-when".equals(name)) {
+
+                final OBFLDynamicContent dynamic;
+                dynamic = new OBFLDynamicContent(
+                    att.getValue(),
+                    fm.getExpressionFactory(),
+                    OBFLVariable.PAGE_NUMBER
+                );
+
+                builder.displayWhen(dynamic);
             } else if (name.startsWith("border")) {
                 border.put(name, att.getValue());
             } else if ("underline-pattern".equals(name)) {
