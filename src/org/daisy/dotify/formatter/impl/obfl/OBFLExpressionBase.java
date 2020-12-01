@@ -35,7 +35,7 @@ public abstract class OBFLExpressionBase {
             volumeCountVariableName = null,
             metaVolumeNumberVariableName = null,
             metaPageNumberVariableName = null,
-            metaStartsAtTopOfPage = null,
+            startsAtTopOfPageName = null,
             sheetCountVariableName = null,
             volumeSheetCountVariableName = null;
 
@@ -81,7 +81,7 @@ public abstract class OBFLExpressionBase {
                 this.metaPageNumberVariableName = STARTED_PAGE_NUMBER_VARIABLE_NAME;
                 break;
             case STARTS_AT_TOP_OF_PAGE:
-                this.metaStartsAtTopOfPage = STARTS_AT_TOP_OF_PAGE_VARIABLE_NAME;
+                this.startsAtTopOfPageName = STARTS_AT_TOP_OF_PAGE_VARIABLE_NAME;
                 break;
             case STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER:
                 if (variablesSeen.contains(OBFLVariable.STARTED_PAGE_NUMBER)) {
@@ -135,8 +135,8 @@ public abstract class OBFLExpressionBase {
         if (metaPageNumberVariableName != null) {
             variables.put(metaPageNumberVariableName, "" + context.getMetaPage());
         }
-        if (metaStartsAtTopOfPage != null) {
-            variables.put(metaStartsAtTopOfPage, "" + context.isTopOfPage());
+        if (startsAtTopOfPageName != null && context instanceof BlockContext) {
+            variables.put(startsAtTopOfPageName, "" + ((BlockContext)context).isTopOfPage());
         }
         if (sheetCountVariableName != null) {
             variables.put(sheetCountVariableName, "" + context.getSheetsInDocument());

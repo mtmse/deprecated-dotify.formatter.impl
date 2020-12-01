@@ -21,6 +21,7 @@ import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.api.writer.SectionProperties;
 import org.daisy.dotify.common.text.IdentityFilter;
 import org.daisy.dotify.formatter.impl.common.FactoryManager;
+import org.daisy.dotify.formatter.impl.obfl.OBFLCondition;
 import org.daisy.dotify.formatter.impl.obfl.OBFLDynamicContent;
 import org.daisy.dotify.formatter.impl.obfl.OBFLVariable;
 import org.daisy.dotify.translator.DefaultBrailleFilter;
@@ -90,7 +91,7 @@ public class FormatterImplTest {
             }
 
             @Override
-            public void newRow(Row row) { sb.append(row.getChars()); }
+            public void newRow(Row row) { sb.append(row.getChars() + "\n"); }
 
             @Override
             public void newRow() {
@@ -136,7 +137,7 @@ public class FormatterImplTest {
             return null;
         });
 
-        assertEquals("1>a2>b<2c<1", res);
+        assertEquals("1>a2>b<2c<1\n", res);
     }
 
 
@@ -157,7 +158,7 @@ public class FormatterImplTest {
             return null;
         });
 
-        assertEquals("Testing1Testing2", res);
+        assertEquals("Testing1\nTesting2\n", res);
     }
 
     @Test
@@ -165,7 +166,7 @@ public class FormatterImplTest {
         String loc = "und";
 
         TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
-        final OBFLDynamicContent dynamic = new OBFLDynamicContent(
+        final OBFLCondition condition = new OBFLCondition(
                 "true",
                 ExpressionFactoryMaker.newInstance().getFactory()
         );
@@ -173,7 +174,7 @@ public class FormatterImplTest {
         String res = testingFormatter((f1) -> {
             FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
             BlockProperties bb = new BlockProperties.Builder()
-                    .displayWhen(dynamic)
+                    .displayWhen(condition)
                     .build();
             f.startBlock(bb);
             f.addChars("Testing1", tp);
@@ -184,7 +185,7 @@ public class FormatterImplTest {
             return null;
         });
 
-        assertEquals("Testing1Testing2", res);
+        assertEquals("Testing1\nTesting2\n", res);
     }
 
     @Test
@@ -192,7 +193,7 @@ public class FormatterImplTest {
         String loc = "und";
 
         TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
-        final OBFLDynamicContent dynamic = new OBFLDynamicContent(
+        final OBFLCondition condition = new OBFLCondition(
                 "false",
                 ExpressionFactoryMaker.newInstance().getFactory()
         );
@@ -200,7 +201,7 @@ public class FormatterImplTest {
         String res = testingFormatter((f1) -> {
             FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
             BlockProperties bb = new BlockProperties.Builder()
-                    .displayWhen(dynamic)
+                    .displayWhen(condition)
                     .build();
             f.startBlock(bb);
             f.addChars("Testing1", tp);
@@ -211,7 +212,7 @@ public class FormatterImplTest {
             return null;
         });
 
-        assertEquals("Testing2", res);
+        assertEquals("Testing2\n", res);
     }
 
     @Test
@@ -219,7 +220,7 @@ public class FormatterImplTest {
         String loc = "und";
 
         TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
-        final OBFLDynamicContent dynamic = new OBFLDynamicContent(
+        final OBFLCondition condition = new OBFLCondition(
                 "(= 1 1)",
                 ExpressionFactoryMaker.newInstance().getFactory()
         );
@@ -227,7 +228,7 @@ public class FormatterImplTest {
         String res = testingFormatter((f1) -> {
             FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
             BlockProperties bb = new BlockProperties.Builder()
-                    .displayWhen(dynamic)
+                    .displayWhen(condition)
                     .build();
             f.startBlock(bb);
             f.addChars("Testing1", tp);
@@ -238,7 +239,7 @@ public class FormatterImplTest {
             return null;
         });
 
-        assertEquals("Testing1Testing2", res);
+        assertEquals("Testing1\nTesting2\n", res);
     }
 
     @Test
@@ -246,15 +247,14 @@ public class FormatterImplTest {
         String loc = "und";
 
         TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
-        final OBFLDynamicContent dynamic = new OBFLDynamicContent(
-                "(= 0 1)",
-                ExpressionFactoryMaker.newInstance().getFactory()
-                //OBFLVariable.PAGE_NUMBER
+        final OBFLCondition condition = new OBFLCondition(
+            "(= 0 1)",
+            ExpressionFactoryMaker.newInstance().getFactory()
         );
         String res = testingFormatter((f1) -> {
             FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
             BlockProperties bb = new BlockProperties.Builder()
-                    .displayWhen(dynamic)
+                    .displayWhen(condition)
                     .build();
             f.startBlock(bb);
             f.addChars("Testing1", tp);
@@ -265,7 +265,7 @@ public class FormatterImplTest {
             return null;
         });
 
-        assertEquals("Testing2", res);
+        assertEquals("Testing2\n", res);
     }
 
     @Test
@@ -273,7 +273,7 @@ public class FormatterImplTest {
         String loc = "und";
 
         TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
-        final OBFLDynamicContent dynamic = new OBFLDynamicContent(
+        final OBFLCondition condition = new OBFLCondition(
                 "(= $started-page-number 1)",
                 ExpressionFactoryMaker.newInstance().getFactory(),
                 OBFLVariable.STARTED_PAGE_NUMBER
@@ -281,7 +281,7 @@ public class FormatterImplTest {
         String res = testingFormatter((f1) -> {
             FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
             BlockProperties bb = new BlockProperties.Builder()
-                    .displayWhen(dynamic)
+                    .displayWhen(condition)
                     .build();
             f.startBlock(bb);
             f.addChars("Testing1", tp);
@@ -292,7 +292,7 @@ public class FormatterImplTest {
             return null;
         });
 
-        assertEquals("Testing2", res);
+        assertEquals("Testing2\n", res);
     }
 
     @Test
@@ -300,7 +300,7 @@ public class FormatterImplTest {
         String loc = "und";
 
         TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
-        final OBFLDynamicContent dynamic = new OBFLDynamicContent(
+        final OBFLCondition condition = new OBFLCondition(
                 "(! $starts-at-top-of-page)",
                 ExpressionFactoryMaker.newInstance().getFactory(),
                 OBFLVariable.STARTS_AT_TOP_OF_PAGE
@@ -308,7 +308,7 @@ public class FormatterImplTest {
         String res = testingFormatter((f1) -> {
             FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
             BlockProperties bb = new BlockProperties.Builder()
-                    .displayWhen(dynamic)
+                    .displayWhen(condition)
                     .build();
             BlockProperties nb = new BlockProperties.Builder().build();
 
@@ -321,7 +321,7 @@ public class FormatterImplTest {
             return null;
         });
 
-        assertEquals("Testing2", res);
+        assertEquals("Testing2\n", res);
     }
 
 
@@ -330,7 +330,7 @@ public class FormatterImplTest {
         String loc = "und";
 
         TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
-        final OBFLDynamicContent dynamic = new OBFLDynamicContent(
+        final OBFLCondition condition = new OBFLCondition(
                 "(! $starts-at-top-of-page)",
                 ExpressionFactoryMaker.newInstance().getFactory(),
                 OBFLVariable.STARTS_AT_TOP_OF_PAGE
@@ -338,7 +338,7 @@ public class FormatterImplTest {
         String res = testingFormatter((f1) -> {
             FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
             BlockProperties bb = new BlockProperties.Builder()
-                    .displayWhen(dynamic)
+                    .displayWhen(condition)
                     .build();
             BlockProperties nb = new BlockProperties.Builder().build();
 
@@ -368,6 +368,6 @@ public class FormatterImplTest {
             return null;
         });
 
-        assertEquals("Testing2..................Testing3", res);
+        assertEquals("Testing2\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\nTesting3\n", res);
     }
 }

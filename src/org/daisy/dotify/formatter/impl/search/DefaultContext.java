@@ -10,7 +10,6 @@ public class DefaultContext implements Context {
     private final Integer currentVolume, currentPage, metaVolume, metaPage;
     private final PageId currentPageId;
     private final Space space;
-    private boolean topOfPage;
     protected final CrossReferenceHandler crh;
 
     /**
@@ -36,7 +35,6 @@ public class DefaultContext implements Context {
             this.currentPageId = base.getCurrentPageId();
             this.space = base.space;
             this.crh = base.crh;
-            this.topOfPage = base.topOfPage;
         }
 
         public Builder currentVolume(Integer value) {
@@ -70,11 +68,6 @@ public class DefaultContext implements Context {
             return this;
         }
 
-        public Builder topOfPage(boolean value) {
-            this.topOfPage = value;
-            return this;
-        }
-
         public DefaultContext build() {
             return new DefaultContext(this);
         }
@@ -92,7 +85,6 @@ public class DefaultContext implements Context {
         this.currentPageId = builder.currentPageId;
         this.space = builder.space;
         this.crh = builder.crh;
-        this.topOfPage = builder.topOfPage;
     }
 
     @Override
@@ -118,15 +110,6 @@ public class DefaultContext implements Context {
     @Override
     public Integer getMetaPage() {
         return metaPage;
-    }
-
-    @Override
-    public boolean isTopOfPage() {
-        return topOfPage;
-    }
-
-    public void setTopOfPage(boolean b) {
-        topOfPage = b;
     }
 
     @Override

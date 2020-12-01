@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl.page;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
+import org.daisy.dotify.api.formatter.Condition;
 import org.daisy.dotify.api.formatter.DynamicContent;
 import org.daisy.dotify.api.formatter.FallbackRule;
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
@@ -364,7 +365,6 @@ public class PageSequenceBuilder2 {
                     master.getFlowWidth() -
                     master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth()
                 )
-                .topOfPage(true)
                 .build();
             data.setContext(bc);
             // This function returns the space that header or footer fields take up in a row at a
@@ -690,13 +690,13 @@ public class PageSequenceBuilder2 {
 
     private void addRows(List<RowGroup> head, PageImpl p, BlockContext blockContext) {
         int i = head.size();
-        blockContext.setTopOfPage(true);
+        blockContext = new BlockContext.Builder(blockContext).topOfPage(true).build();
         for (RowGroup rg : head) {
-            DynamicContent dc = rg.getDisplayWhen();
-            if (dc != null && dc.render(blockContext).equalsIgnoreCase("false")) {
+            Condition dc = rg.getDisplayWhen();
+            if (dc != null && !dc.evaluate(blockContext)) {
                 continue;
             }
-            blockContext.setTopOfPage(false);
+            blockContext = new BlockContext.Builder(blockContext).topOfPage(false).build();
             i--;
             addProperties(p, rg);
             List<RowImpl> rows = rg.getRows();

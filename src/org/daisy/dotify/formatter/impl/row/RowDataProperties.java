@@ -1,5 +1,6 @@
 package org.daisy.dotify.formatter.impl.row;
 
+import org.daisy.dotify.api.formatter.Condition;
 import org.daisy.dotify.api.formatter.DynamicContent;
 import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.formatter.FormattingTypes.Alignment;
@@ -32,7 +33,7 @@ public final class RowDataProperties {
     private final SingleLineDecoration trailingDecoration;
     private final String underlineStyle;
     private final Object externalReference;
-    private final DynamicContent displayWhen;
+    private final Condition displayWhen;
 
 
     /**
@@ -64,7 +65,7 @@ public final class RowDataProperties {
 
         private ListItem listProps = null;
         private Object externalReference = null;
-        private DynamicContent displayWhen = null;
+        private Condition displayWhen = null;
 
         public Builder() {
         }
@@ -192,7 +193,7 @@ public final class RowDataProperties {
             return this;
         }
 
-        public Builder displayWhen(DynamicContent value) {
+        public Builder displayWhen(Condition value) {
             this.displayWhen = value;
             return this;
         }
@@ -313,7 +314,7 @@ public final class RowDataProperties {
         return underlineStyle;
     }
 
-    public DynamicContent getDisplayWhen() {
+    public Condition getDisplayWhen() {
         return displayWhen;
     }
 

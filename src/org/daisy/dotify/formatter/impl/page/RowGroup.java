@@ -1,5 +1,6 @@
 package org.daisy.dotify.formatter.impl.page;
 
+import org.daisy.dotify.api.formatter.Condition;
 import org.daisy.dotify.api.formatter.DynamicContent;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.writer.Row;
@@ -32,7 +33,7 @@ class RowGroup implements SplitPointUnit {
     private final boolean lastInBlock;
     private final boolean mergeable;
     private final LineProperties lineProps;
-    private final DynamicContent displayWhen;
+    private final Condition displayWhen;
 
     static class Builder {
         private final List<RowImpl> rows;
@@ -47,7 +48,7 @@ class RowGroup implements SplitPointUnit {
         private boolean lastInBlock = false;
         private boolean mergeable = false;
         private LineProperties lineProps = LineProperties.DEFAULT;
-        private DynamicContent displayWhen;
+        private Condition displayWhen;
 
 
         Builder(float rowDefault, RowImpl... rows) {
@@ -146,7 +147,7 @@ class RowGroup implements SplitPointUnit {
             return this;
         }
 
-        Builder displayWhen(DynamicContent value) {
+        Builder displayWhen(Condition value) {
             this.displayWhen = value;
             return this;
         }
@@ -364,7 +365,7 @@ class RowGroup implements SplitPointUnit {
         return lineProps;
     }
 
-    public DynamicContent getDisplayWhen() {
+    public Condition getDisplayWhen() {
         return displayWhen;
     }
 }
