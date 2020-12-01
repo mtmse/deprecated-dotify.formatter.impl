@@ -1117,14 +1117,13 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
                 builder.rowSpacing(Float.parseFloat(att.getValue()));
             } else if ("display-when".equals(name)) {
 
-                final OBFLDynamicContent dynamic;
-                dynamic = new OBFLDynamicContent(
+                final OBFLCondition condition = new OBFLCondition(
                     att.getValue(),
                     fm.getExpressionFactory(),
-                    OBFLVariable.PAGE_NUMBER
+                    OBFLVariable.STARTS_AT_TOP_OF_PAGE
                 );
 
-                builder.displayWhen(dynamic);
+                builder.displayWhen(condition);
             } else if (name.startsWith("border")) {
                 border.put(name, att.getValue());
             } else if ("underline-pattern".equals(name)) {

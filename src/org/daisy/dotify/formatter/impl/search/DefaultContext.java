@@ -20,7 +20,6 @@ public class DefaultContext implements Context {
                 metaVolume = null, metaPage = null;
         private PageId currentPageId = null;
         private Space space = null;
-        private boolean topOfPage = false;
         private final CrossReferenceHandler crh;
 
         public Builder(CrossReferenceHandler crh) {
