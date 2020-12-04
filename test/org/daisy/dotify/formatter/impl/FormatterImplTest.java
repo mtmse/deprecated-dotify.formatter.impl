@@ -7,7 +7,6 @@ import org.daisy.dotify.api.formatter.Formatter;
 import org.daisy.dotify.api.formatter.FormatterConfiguration;
 import org.daisy.dotify.api.formatter.FormatterSequence;
 import org.daisy.dotify.api.formatter.LayoutMasterProperties;
-import org.daisy.dotify.api.formatter.NumeralStyle;
 import org.daisy.dotify.api.formatter.SequenceProperties;
 import org.daisy.dotify.api.formatter.TextProperties;
 import org.daisy.dotify.api.obfl.ExpressionFactoryMaker;
@@ -20,9 +19,7 @@ import org.daisy.dotify.api.writer.PagedMediaWriterException;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.api.writer.SectionProperties;
 import org.daisy.dotify.common.text.IdentityFilter;
-import org.daisy.dotify.formatter.impl.common.FactoryManager;
 import org.daisy.dotify.formatter.impl.obfl.OBFLCondition;
-import org.daisy.dotify.formatter.impl.obfl.OBFLDynamicContent;
 import org.daisy.dotify.formatter.impl.obfl.OBFLVariable;
 import org.daisy.dotify.translator.DefaultBrailleFilter;
 import org.daisy.dotify.translator.DefaultMarkerProcessor;
@@ -91,7 +88,9 @@ public class FormatterImplTest {
             }
 
             @Override
-            public void newRow(Row row) { sb.append(row.getChars() + "\n"); }
+            public void newRow(Row row) {
+                sb.append(row.getChars() + "\n");
+            }
 
             @Override
             public void newRow() {
@@ -324,9 +323,10 @@ public class FormatterImplTest {
         assertEquals("Testing2\n", res);
     }
 
-
     @Test
-    public void testTwoBlocksWithDisplayWhenExpressionStartsAtTopOfPageMultiPage() throws TranslatorConfigurationException {
+    public void testTwoBlocksWithDisplayWhenExpressionStartsAtTopOfPageMultiPage()
+        throws TranslatorConfigurationException {
+
         String loc = "und";
 
         TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
@@ -349,7 +349,7 @@ public class FormatterImplTest {
             f.addChars("Testing2", tp);
             f.endBlock();
 
-            for (int i=0; i<18; i++) {
+            for (int i = 0; i < 18; i++) {
                 f.startBlock(nb);
                 f.addChars(".", tp);
                 f.endBlock();

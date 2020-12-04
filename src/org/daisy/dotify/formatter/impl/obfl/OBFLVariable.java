@@ -56,7 +56,7 @@ public enum OBFLVariable {
      */
     STARTED_VOLUME_FIRST_CONTENT_PAGE_NUMBER,
     /**
-     * <p>Indicates if no content have been printed previously on this page.</p>
+     * <p>Indicates that no content has been printed on this page yet.</p>
      */
     STARTS_AT_TOP_OF_PAGE,
     /**
