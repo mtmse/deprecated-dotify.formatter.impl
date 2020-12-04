@@ -2,7 +2,6 @@ package org.daisy.dotify.formatter.impl.page;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.Condition;
-import org.daisy.dotify.api.formatter.DynamicContent;
 import org.daisy.dotify.api.formatter.FallbackRule;
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
 import org.daisy.dotify.api.formatter.PageAreaProperties;

@@ -1,7 +1,6 @@
 package org.daisy.dotify.formatter.impl.row;
 
 import org.daisy.dotify.api.formatter.Condition;
-import org.daisy.dotify.api.formatter.DynamicContent;
 import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.formatter.FormattingTypes.Alignment;
 import org.daisy.dotify.formatter.impl.row.Margin.Type;

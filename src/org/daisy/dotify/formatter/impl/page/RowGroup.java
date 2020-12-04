@@ -1,7 +1,6 @@
 package org.daisy.dotify.formatter.impl.page;
 
 import org.daisy.dotify.api.formatter.Condition;
-import org.daisy.dotify.api.formatter.DynamicContent;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.common.splitter.SplitPointUnit;
