@@ -110,7 +110,6 @@ public class BlockContext extends DefaultContext {
         return fcontext;
     }
 
-    @Override
     public boolean isTopOfPage() {
         return topOfPage;
     }

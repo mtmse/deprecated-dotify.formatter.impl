@@ -322,6 +322,9 @@ public class PageSequenceBuilder2 {
             current.getPageTemplate().validateAndAnalyzeHeader() +
             current.getPageTemplate().validateAndAnalyzeFooter()
         );
+
+        blockContext = new BlockContext.Builder(blockContext).topOfPage(true).build();
+
         // while there are more rows in the current block, or there are more blocks...
         while (dataGroupsIndex < dataGroups.size() || (data != null && !data.isEmpty())) {
             if ((data == null || data.isEmpty()) && dataGroupsIndex < dataGroups.size()) {
@@ -558,7 +561,7 @@ public class PageSequenceBuilder2 {
                     cbl = gr.getLineProperties().getBlockLineLocation();
                 }
                 // Add the body rows to the page.
-                addRows(head, current, bc);
+                bc = addRows(head, current, bc);
                 // The VolumeKeepPriority of the page is the maximum value (lowest priority) of all
                 // RowGroups. Discarded RowGroups (i.e. collapsed margins) are also taken into
                 // account.
@@ -688,9 +691,8 @@ public class PageSequenceBuilder2 {
         }
     }
 
-    private void addRows(List<RowGroup> head, PageImpl p, BlockContext blockContext) {
+    private BlockContext addRows(List<RowGroup> head, PageImpl p, BlockContext blockContext) {
         int i = head.size();
-        blockContext = new BlockContext.Builder(blockContext).topOfPage(true).build();
         for (RowGroup rg : head) {
             Condition dc = rg.getDisplayWhen();
             if (dc != null && !dc.evaluate(blockContext)) {
@@ -714,6 +716,7 @@ public class PageSequenceBuilder2 {
                 }
             }
         }
+        return blockContext;
     }
 
     private VolumeKeepPriority getVolumeKeepPriority(List<RowGroup> list, VolumeKeepPriority def) {
