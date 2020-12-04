@@ -135,7 +135,12 @@ public abstract class OBFLExpressionBase {
         if (metaPageNumberVariableName != null) {
             variables.put(metaPageNumberVariableName, "" + context.getMetaPage());
         }
-        if (startsAtTopOfPageName != null && context instanceof BlockContext) {
+        if (startsAtTopOfPageName != null) {
+            if (!(context instanceof BlockContext)) {
+                throw new IllegalArgumentException(
+                    "Use of starts-at-top-of-page in a none block context is not allowed."
+                );
+            }
             variables.put(startsAtTopOfPageName, "" + ((BlockContext) context).isTopOfPage());
         }
         if (sheetCountVariableName != null) {
