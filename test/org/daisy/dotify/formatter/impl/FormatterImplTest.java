@@ -6,6 +6,7 @@ import org.daisy.dotify.api.formatter.DynamicContent;
 import org.daisy.dotify.api.formatter.Formatter;
 import org.daisy.dotify.api.formatter.FormatterConfiguration;
 import org.daisy.dotify.api.formatter.FormatterSequence;
+import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.formatter.LayoutMasterProperties;
 import org.daisy.dotify.api.formatter.SequenceProperties;
 import org.daisy.dotify.api.formatter.TextProperties;
@@ -369,5 +370,55 @@ public class FormatterImplTest {
         });
 
         assertEquals("Testing2\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\nTesting3\n", res);
+    }
+
+    @Test
+    public void testBlockFlowingOverTwoPages()
+            throws TranslatorConfigurationException {
+
+        String loc = "und";
+
+        TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
+        final OBFLCondition condition = new OBFLCondition(
+                "(! $starts-at-top-of-page)",
+                ExpressionFactoryMaker.newInstance().getFactory(),
+                OBFLVariable.STARTS_AT_TOP_OF_PAGE
+        );
+        String res = testingFormatter((f1) -> {
+            FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
+            BlockProperties bb = new BlockProperties.Builder()
+                    .displayWhen(condition)
+                    .keep(FormattingTypes.Keep.PAGE)
+                    .build();
+            BlockProperties nb = new BlockProperties.Builder().build();
+
+            f.startBlock(bb);
+            f.addChars("Testing1", tp);
+            f.endBlock();
+            f.startBlock(nb);
+            f.addChars("Testing2", tp);
+            f.endBlock();
+
+            for (int i = 0; i < 17; i++) {
+                f.startBlock(nb);
+                f.addChars(".", tp);
+                f.endBlock();
+            }
+
+            f.startBlock(bb);
+            f.addChars("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus facilisis elit id " +
+                    "tellus lacinia fermentum. In sed arcu at eros scelerisque elementum quis ac velit.", tp);
+            f.endBlock();
+            f.startBlock(bb);
+            f.addChars("Testing2", tp);
+            f.endBlock();
+            f.startBlock(nb);
+            f.addChars("Testing3", tp);
+            f.endBlock();
+
+            return null;
+        });
+
+        assertEquals("Testing2\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\nTesting3\n", res);
     }
 }
