@@ -318,7 +318,7 @@ public class FormatterImplTest {
             f.endBlock();
             return null;
         });
-        
+
         assertEquals("Lorem⠀ipsum⠀dolor⠀sit⠀amet,⠀consectetur⠀adipiscing\n" +
                 "elit.⠀Vivamus⠀facilisis⠀elit⠀id⠀tellus⠀lacinia\n" +
                 "fermentum.⠀In⠀sed⠀arcu⠀at⠀eros⠀scelerisque\n" +
