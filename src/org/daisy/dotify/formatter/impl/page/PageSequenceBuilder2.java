@@ -697,7 +697,6 @@ public class PageSequenceBuilder2 {
             if (dc != null && !dc.evaluate(blockContext)) {
                 continue;
             }
-            blockContext = new BlockContext.Builder(blockContext).topOfPage(false).build();
             i--;
             addProperties(p, rg);
             List<RowImpl> rows = rg.getRows();
@@ -715,7 +714,7 @@ public class PageSequenceBuilder2 {
                 }
             }
         }
-        return blockContext;
+        return new BlockContext.Builder(blockContext).topOfPage(false).build();
     }
 
     private VolumeKeepPriority getVolumeKeepPriority(List<RowGroup> list, VolumeKeepPriority def) {

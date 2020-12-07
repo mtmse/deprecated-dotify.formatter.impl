@@ -295,6 +295,36 @@ public class FormatterImplTest {
         assertEquals("Testing2\n", res);
     }
 
+
+    @Test
+    public void testTwoBlocksWithDisplayWhenAsTrue() throws TranslatorConfigurationException {
+        String loc = "und";
+
+        TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
+        final OBFLCondition condition = new OBFLCondition(
+                "$starts-at-top-of-page",
+                ExpressionFactoryMaker.newInstance().getFactory(),
+                OBFLVariable.STARTS_AT_TOP_OF_PAGE
+        );
+        String res = testingFormatter((f1) -> {
+            FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
+            BlockProperties bb = new BlockProperties.Builder()
+                    .displayWhen(condition)
+                    .keep(FormattingTypes.Keep.PAGE)
+                    .build();
+            f.startBlock(bb);
+            f.addChars("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus facilisis elit id " +
+                    "tellus lacinia fermentum. In sed arcu at eros scelerisque elementum quis ac velit.", tp);
+            f.endBlock();
+            return null;
+        });
+        
+        assertEquals("Lorem⠀ipsum⠀dolor⠀sit⠀amet,⠀consectetur⠀adipiscing\n" +
+                "elit.⠀Vivamus⠀facilisis⠀elit⠀id⠀tellus⠀lacinia\n" +
+                "fermentum.⠀In⠀sed⠀arcu⠀at⠀eros⠀scelerisque\n" +
+                "elementum⠀quis⠀ac⠀velit.\n", res);
+    }
+
     @Test
     public void testTwoBlocksWithDisplayWhenExpressionStartsAtTopOfPage() throws TranslatorConfigurationException {
         String loc = "und";
