@@ -50,11 +50,11 @@ class SegmentProcessor {
     private final AttributeWithContext attr;
 
     private DefaultContext context;
-    private final boolean significantContent;
+    private final boolean hasSignificantContent;
     /*
      * Whether some segments are PageNumberReference or Evaluate
      */
-    private final boolean dynamicContent;
+    private final boolean hasDynamicContent;
     private final SegmentProcessorContext processorContext;
 
     private int segmentIndex;
@@ -136,8 +136,8 @@ class SegmentProcessor {
         this.groupIdentifiers = new ArrayList<>();
         this.externalReference = null;
         this.leaderManager = new LeaderManager();
-        this.significantContent = calculateSignificantContent(this.segments, context, rdp);
-        this.dynamicContent = this.segments.stream().anyMatch(
+        this.hasSignificantContent = calculateSignificantContent(this.segments, context, rdp);
+        this.hasDynamicContent = this.segments.stream().anyMatch(
             s -> s.getSegmentType() == SegmentType.Evaluate ||
                  s.getSegmentType() == SegmentType.PageReference);
         this.processorContext = new SegmentProcessorContext(fcontext, rdp, margins, flowWidth, available);
@@ -183,8 +183,8 @@ class SegmentProcessor {
         this.segmentIndex = template.segmentIndex;
         this.current = template.current != null ? copy(template.current) : null;
         this.closed = template.closed;
-        this.significantContent = template.significantContent;
-        this.dynamicContent = template.dynamicContent;
+        this.hasSignificantContent = template.hasSignificantContent;
+        this.hasDynamicContent = template.hasDynamicContent;
         this.blockId = template.blockId;
         this.pagenumResolver = template.pagenumResolver;
         // can't simply copy because getContext() of template would be used
@@ -452,7 +452,7 @@ class SegmentProcessor {
     }
 
     public boolean hasSignificantContent() {
-        return significantContent;
+        return hasSignificantContent;
     }
 
     Optional<RowImpl> getNext(LineProperties lineProps) {
@@ -584,9 +584,9 @@ class SegmentProcessor {
                     .build();
             btr = toResult(spec, mode);
             // Do not cache the braille translation of this text segment if there are preceding or
-            // following segments whos values can change, because this may influence the translation
-            // of the text segment.
-            if (!dynamicContent) {
+            // following segments whose values can change, because this may influence the
+            // translation of the text segment.
+            if (!hasDynamicContent) {
                 ts.storeResult(btr);
             }
         } else {
