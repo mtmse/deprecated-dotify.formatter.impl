@@ -175,6 +175,7 @@ public class FormatterImplTest {
             FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
             BlockProperties bb = new BlockProperties.Builder()
                     .displayWhen(condition)
+                    .keep(FormattingTypes.Keep.PAGE)
                     .build();
             f.startBlock(bb);
             f.addChars("Testing1", tp);
@@ -202,6 +203,7 @@ public class FormatterImplTest {
             FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
             BlockProperties bb = new BlockProperties.Builder()
                     .displayWhen(condition)
+                    .keep(FormattingTypes.Keep.PAGE)
                     .build();
             f.startBlock(bb);
             f.addChars("Testing1", tp);
@@ -229,6 +231,7 @@ public class FormatterImplTest {
             FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
             BlockProperties bb = new BlockProperties.Builder()
                     .displayWhen(condition)
+                    .keep(FormattingTypes.Keep.PAGE)
                     .build();
             f.startBlock(bb);
             f.addChars("Testing1", tp);
@@ -255,6 +258,7 @@ public class FormatterImplTest {
             FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
             BlockProperties bb = new BlockProperties.Builder()
                     .displayWhen(condition)
+                    .keep(FormattingTypes.Keep.PAGE)
                     .build();
             f.startBlock(bb);
             f.addChars("Testing1", tp);
@@ -282,6 +286,7 @@ public class FormatterImplTest {
             FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
             BlockProperties bb = new BlockProperties.Builder()
                     .displayWhen(condition)
+                    .keep(FormattingTypes.Keep.PAGE)
                     .build();
             f.startBlock(bb);
             f.addChars("Testing1", tp);
@@ -339,6 +344,7 @@ public class FormatterImplTest {
             FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
             BlockProperties bb = new BlockProperties.Builder()
                     .displayWhen(condition)
+                    .keep(FormattingTypes.Keep.PAGE)
                     .build();
             BlockProperties nb = new BlockProperties.Builder().build();
 
@@ -370,6 +376,7 @@ public class FormatterImplTest {
             FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("main").build());
             BlockProperties bb = new BlockProperties.Builder()
                     .displayWhen(condition)
+                    .keep(FormattingTypes.Keep.PAGE)
                     .build();
             BlockProperties nb = new BlockProperties.Builder().build();
 
