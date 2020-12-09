@@ -322,6 +322,10 @@ public class PageSequenceBuilder2 {
             current.getPageTemplate().validateAndAnalyzeFooter()
         );
 
+        // At the beginning here before we start printing the page for this iteration we will set
+        // the value topOfPage and because this is a mutable context value we need to build a
+        // new object. This value will be changed later on when we aren't at the top of
+        // the page anymore. This is signified by that we have written a full row group.
         blockContext = new BlockContext.Builder(blockContext).topOfPage(true).build();
 
         // while there are more rows in the current block, or there are more blocks...
@@ -693,6 +697,13 @@ public class PageSequenceBuilder2 {
     private BlockContext addRows(List<RowGroup> head, PageImpl p, BlockContext blockContext) {
         int i = head.size();
         for (RowGroup rg : head) {
+
+            // At this point we expect that the attribute keep="page" is set, which means that each
+            // block should not be spanning multiple pages. This is required so we don't print just a part
+            // of the block when the display-when attribute is set to false.
+            // We also expect the display-when value never to be true. It could be missing or an expression
+            // which will remove a block at the beginning of a page. (! $starts-at-top-of-page)
+            // These restrictions are added in the OBFL Parser and will lead to exceptions being thrown.
             Condition dc = rg.getDisplayWhen();
             if (dc != null && !dc.evaluate(blockContext)) {
                 continue;
@@ -714,6 +725,10 @@ public class PageSequenceBuilder2 {
                 }
             }
         }
+
+        // After we have written the row group we are no longer at the top of the page so the mutable
+        // value topOfPage needs to change so we will rebuild an object in order to change this context
+        // to false.
         return new BlockContext.Builder(blockContext).topOfPage(false).build();
     }
 
