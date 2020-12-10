@@ -27,6 +27,7 @@ import org.daisy.dotify.translator.DefaultMarkerProcessor;
 import org.daisy.dotify.translator.Marker;
 import org.daisy.dotify.translator.SimpleBrailleTranslator;
 import org.daisy.dotify.translator.impl.DefaultBrailleFinalizer;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -301,7 +302,16 @@ public class FormatterImplTest {
     }
 
 
+    /**
+     * This test is now ignored because the code that handled changing the value of the top of the page
+     * was changed and makes this test fail. The code we used changed the value when we had written the
+     * first row group to the page which was deemed to be the incorrect solution to this problem and
+     * therefore reverted. We will keep this test here for future reference if we implement this feature.
+     *
+     * @throws TranslatorConfigurationException
+     */
     @Test
+    @Ignore
     public void testTwoBlocksWithDisplayWhenAsTrue() throws TranslatorConfigurationException {
         String loc = "und";
 

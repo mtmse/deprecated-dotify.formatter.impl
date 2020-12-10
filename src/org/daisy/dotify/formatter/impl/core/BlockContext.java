@@ -110,6 +110,13 @@ public class BlockContext extends DefaultContext {
         return fcontext;
     }
 
+    /**
+     * This is the top of page boolean. It will be set to true during the rendering to signify that you
+     * are currently at the top of the page in this context. When you try to write the first data to the
+     * page you are no longer at the top of the page and this value will be changed to false.
+     *
+     * @return  boolean     Will be true if you are at the top of the page during rendering.
+     */
     public boolean isTopOfPage() {
         return topOfPage;
     }
