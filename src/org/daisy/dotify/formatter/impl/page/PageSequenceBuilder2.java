@@ -713,7 +713,7 @@ public class PageSequenceBuilder2 {
 
                 Above assumption deserves some more explanation for a good understanding:
                 we need it because we evaluate display-when for each RowGroup while normally
-                it should be evaluated _only once per block.
+                it should be evaluated only once per block.
 
                 This is fine in the two mentioned cases:
                     - display-when="true": trivial.
@@ -724,9 +724,7 @@ public class PageSequenceBuilder2 {
                         - if it evaluates to false, it means the page does not already contain a RowImpl,
                           so we know it must be the start of a new page and block (because keep="page" in
                           this case).
-                (*) Refer to the line below where you set .topOfPage(false). The line should however be moved
-                inside the for loop because it could be that all of RowGroups are skipped, in which case
-                the value should remain the same.
+                (*) Refer to the line below where we set .topOfPage(false).
              */
             Condition dc = rg.getDisplayWhen();
             if (dc != null && !dc.evaluate(blockContext)) {
