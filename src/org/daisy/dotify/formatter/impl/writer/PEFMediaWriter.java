@@ -239,6 +239,11 @@ public class PEFMediaWriter implements PagedMediaWriter {
 
     @Override
     public void newRow(Row row) {
+
+        /*
+            This implemetation is specific for the RowImpl. If someone would create an another
+            implementation of Row it's not likely that they would implement this function.
+         */
         if (row instanceof RowImpl && ((RowImpl) row).isInvisible()) {
             return;
         }
