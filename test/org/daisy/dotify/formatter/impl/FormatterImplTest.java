@@ -3,11 +3,16 @@ package org.daisy.dotify.formatter.impl;
 import org.daisy.dotify.api.formatter.BlockProperties;
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.DynamicContent;
+import org.daisy.dotify.api.formatter.Field;
+import org.daisy.dotify.api.formatter.FieldList;
 import org.daisy.dotify.api.formatter.Formatter;
 import org.daisy.dotify.api.formatter.FormatterConfiguration;
 import org.daisy.dotify.api.formatter.FormatterSequence;
 import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.formatter.LayoutMasterProperties;
+import org.daisy.dotify.api.formatter.MarkerReference;
+import org.daisy.dotify.api.formatter.MarkerReferenceField;
+import org.daisy.dotify.api.formatter.PageTemplateBuilder;
 import org.daisy.dotify.api.formatter.SequenceProperties;
 import org.daisy.dotify.api.formatter.TextProperties;
 import org.daisy.dotify.api.obfl.ExpressionFactoryMaker;
@@ -22,6 +27,7 @@ import org.daisy.dotify.api.writer.SectionProperties;
 import org.daisy.dotify.common.text.IdentityFilter;
 import org.daisy.dotify.formatter.impl.obfl.OBFLCondition;
 import org.daisy.dotify.formatter.impl.obfl.OBFLVariable;
+import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.daisy.dotify.translator.DefaultBrailleFilter;
 import org.daisy.dotify.translator.DefaultMarkerProcessor;
 import org.daisy.dotify.translator.Marker;
@@ -33,6 +39,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -91,6 +98,9 @@ public class FormatterImplTest {
 
             @Override
             public void newRow(Row row) {
+                if (row instanceof RowImpl && ((RowImpl) row).isInvisible()) {
+                    return;
+                }
                 sb.append(row.getChars() + "\n");
             }
 
@@ -416,7 +426,7 @@ public class FormatterImplTest {
             return null;
         });
 
-        assertEquals("Testing2\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\nTesting3\n", res);
+        assertEquals("Testing2\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\nTesting2\nTesting3\n", res);
     }
 
     @Test
@@ -466,6 +476,69 @@ public class FormatterImplTest {
             return null;
         });
 
-        assertEquals("Testing2\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\nTesting3\n", res);
+        assertEquals("Testing2\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n" +
+                "elit.⠀Vivamus⠀facilisis⠀elit⠀id⠀tellus⠀lacinia\n" +
+                "fermentum.⠀In⠀sed⠀arcu⠀at⠀eros⠀scelerisque\n" +
+                "elementum⠀quis⠀ac⠀velit.\n" +
+                "Testing2\nTesting3\n", res);
+    }
+
+
+    @Test
+    public void testBlocksWithMarkers()
+            throws TranslatorConfigurationException {
+
+        String loc = "und";
+
+        TextProperties tp = new TextProperties.Builder(loc).hyphenate(false).build();
+        final OBFLCondition condition = new OBFLCondition(
+                "(! $starts-at-top-of-page)",
+                ExpressionFactoryMaker.newInstance().getFactory(),
+                OBFLVariable.STARTS_AT_TOP_OF_PAGE
+        );
+
+        BlockProperties bb = new BlockProperties.Builder()
+                .displayWhen(condition)
+                .keep(FormattingTypes.Keep.PAGE)
+                .build();
+        BlockProperties nb = new BlockProperties.Builder().build();
+
+        String res = testingFormatter((f1) -> {
+            final OBFLCondition tempCondition = new OBFLCondition(
+                    "true",
+                    ExpressionFactoryMaker.newInstance().getFactory()
+            );
+
+            PageTemplateBuilder ptb = f1.newLayoutMaster("test", new LayoutMasterProperties.Builder(10, 2).build())
+            .newTemplate(tempCondition);
+
+            List<Field> list = new ArrayList<>();
+            list.add(
+                new MarkerReferenceField("pagenum-turn",
+                MarkerReference.MarkerSearchDirection.FORWARD,
+                MarkerReference.MarkerSearchScope.PAGE_CONTENT)
+            );
+            ptb.addToHeader(new FieldList.Builder(list).build());
+
+
+            FormatterSequence f = f1.newSequence(new SequenceProperties.Builder("test").build());
+            f.startBlock(bb);
+            f.insertMarker(new org.daisy.dotify.api.formatter.Marker("pagenum", "1"));
+            f.insertMarker(new org.daisy.dotify.api.formatter.Marker("pagenum-turn", "1-"));
+            f.addChars("Testing1", tp);
+            f.endBlock();
+            f.startBlock(nb);
+            f.addChars("Testing2", tp);
+            f.endBlock();
+            f.startBlock(nb);
+            f.insertMarker(new org.daisy.dotify.api.formatter.Marker("pagenum", "2"));
+            f.insertMarker(new org.daisy.dotify.api.formatter.Marker("pagenum-turn", "2-"));
+            f.addChars("Testing2", tp);
+            f.endBlock();
+
+            return null;
+        });
+
+        assertEquals("1⠤\n\nTesting2\n2⠤\nTesting2\n", res);
     }
 }

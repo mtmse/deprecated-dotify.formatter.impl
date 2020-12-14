@@ -4,6 +4,7 @@ import org.daisy.dotify.api.formatter.Condition;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.common.splitter.SplitPointUnit;
+import org.daisy.dotify.formatter.impl.core.BlockContext;
 import org.daisy.dotify.formatter.impl.row.LineProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.daisy.dotify.formatter.impl.search.VolumeKeepPriority;
@@ -217,6 +218,45 @@ class RowGroup implements SplitPointUnit {
             t += getRowSpacing(rowDefault, r);
         }
         return t;
+    }
+
+    public List<RowImpl> getRows(BlockContext blockContext) {
+            /*
+                At this point we expect keep="page" is set when the condition evaluates to false, which means that
+                each block should not be spanning multiple pages. This is required so we don't print just a part
+                of the block when the display-when attribute is set to false.
+                We expect display-when is either set to "true" (or missing, which is the same) or
+                "(! $starts-at-top-of-page)". Other values are not permitted.
+                These restrictions are added in the OBFL Parser and will lead to exceptions being thrown.
+
+                Above assumption deserves some more explanation for a good understanding:
+                we need it because we evaluate display-when for each RowGroup while normally
+                it should be evaluated only once per block.
+
+                This is fine in the two mentioned cases:
+                    - display-when="true": trivial.
+                    - display-when="(! $starts-at-top-of-page)":
+                        - if this evaluates to true, it means the page must already contain a RowImpl(*),
+                          so regardless of whether the current RowGroup belongs to the same block or a new
+                          block, it must be rendered.
+                        - if it evaluates to false, it means the page does not already contain a RowImpl,
+                          so we know it must be the start of a new page and block (because keep="page" in
+                          this case).
+                (*) Refer to the line below where we set .topOfPage(false).
+             */
+        Condition dc = getDisplayWhen();
+        List<RowImpl> newRows = new ArrayList<>();
+        if (dc != null && !dc.evaluate(blockContext)) {
+            for (RowImpl row : rows) {
+                RowImpl newRow = new RowImpl.Builder(row)
+                        .invisible(true)
+                        .build();
+                newRows.add(newRow);
+            }
+        } else {
+            newRows.addAll(rows);
+        }
+        return Collections.unmodifiableList(newRows);
     }
 
     List<RowImpl> getRows() {

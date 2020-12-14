@@ -7,6 +7,7 @@ import org.daisy.dotify.api.writer.PagedMediaWriterException;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.api.writer.SectionProperties;
 import org.daisy.dotify.common.io.StateObject;
+import org.daisy.dotify.formatter.impl.row.RowImpl;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -238,6 +239,10 @@ public class PEFMediaWriter implements PagedMediaWriter {
 
     @Override
     public void newRow(Row row) {
+        if (row instanceof RowImpl && ((RowImpl) row).isInvisible()) {
+            return;
+        }
+
         state.assertOpen();
 
         if (errorCount < 10 && logger.isLoggable(Level.WARNING) && !validate(row)) {

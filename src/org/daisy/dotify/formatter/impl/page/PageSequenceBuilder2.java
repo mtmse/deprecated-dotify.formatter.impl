@@ -1,7 +1,6 @@
 package org.daisy.dotify.formatter.impl.page;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
-import org.daisy.dotify.api.formatter.Condition;
 import org.daisy.dotify.api.formatter.FallbackRule;
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
 import org.daisy.dotify.api.formatter.PageAreaProperties;
@@ -702,43 +701,10 @@ public class PageSequenceBuilder2 {
     private BlockContext addRows(List<RowGroup> head, PageImpl p, BlockContext blockContext) {
         int i = head.size();
         for (RowGroup rg : head) {
-
-            /*
-                At this point we expect keep="page" is set when the condition evaluates to false, which means that
-                each block should not be spanning multiple pages. This is required so we don't print just a part
-                of the block when the display-when attribute is set to false.
-                We expect display-when is either set to "true" (or missing, which is the same) or
-                "(! $starts-at-top-of-page)". Other values are not permitted.
-                These restrictions are added in the OBFL Parser and will lead to exceptions being thrown.
-
-                Above assumption deserves some more explanation for a good understanding:
-                we need it because we evaluate display-when for each RowGroup while normally
-                it should be evaluated only once per block.
-
-                This is fine in the two mentioned cases:
-                    - display-when="true": trivial.
-                    - display-when="(! $starts-at-top-of-page)":
-                        - if this evaluates to true, it means the page must already contain a RowImpl(*),
-                          so regardless of whether the current RowGroup belongs to the same block or a new
-                          block, it must be rendered.
-                        - if it evaluates to false, it means the page does not already contain a RowImpl,
-                          so we know it must be the start of a new page and block (because keep="page" in
-                          this case).
-                (*) Refer to the line below where we set .topOfPage(false).
-             */
-            Condition dc = rg.getDisplayWhen();
-            if (dc != null && !dc.evaluate(blockContext)) {
-                continue;
-            }
-
-            // After we have written the row we are no longer at the top of the page so the mutable
-            // value topOfPage needs to change so we will rebuild an object in order to change this context
-            // to false.
-            blockContext = new BlockContext.Builder(blockContext).topOfPage(false).build();
-
             i--;
             addProperties(p, rg);
-            List<RowImpl> rows = rg.getRows();
+
+            List<RowImpl> rows = rg.getRows(blockContext);
             int j = rows.size();
             for (RowImpl r : rows) {
                 j--;
@@ -752,6 +718,11 @@ public class PageSequenceBuilder2 {
                     p.newRow(r);
                 }
             }
+
+            // After we have written the row we are no longer at the top of the page so the mutable
+            // value topOfPage needs to change so we will rebuild an object in order to change this context
+            // to false.
+            blockContext = new BlockContext.Builder(blockContext).topOfPage(false).build();
         }
 
         return blockContext;
