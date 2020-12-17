@@ -32,7 +32,7 @@ public class HeightCalculator {
 
     void addRow(Row r) {
         /*
-            This implemetation is specific for the RowImpl. If someone would create an another
+            This implementation is specific for the RowImpl. If someone would create an another
             implementation of Row it's not likely that they would implement this function.
          */
         if (r instanceof RowImpl && ((RowImpl) r).isInvisible()) {

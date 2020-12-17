@@ -1127,7 +1127,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
                         .equalsIgnoreCase("(!$starts-at-top-of-page)")
                 ) {
                     throw new IllegalArgumentException(
-                        "At the moment we only support he condition '(! $starts-at-top-of-page)'"
+                        "At the moment we only support the condition '(! $starts-at-top-of-page)'"
                     );
                 }
 
