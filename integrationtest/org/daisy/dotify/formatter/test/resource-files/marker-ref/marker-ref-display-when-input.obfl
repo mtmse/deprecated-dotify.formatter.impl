@@ -13,6 +13,6 @@
 		</default-template>
 	</layout-master>
 	<sequence master="main" initial-page-number="1">
-		<block display-when="(! $starts-at-top-of-page)" keep="page"><marker class="pagenum" value="1"/></block>
+        <block display-when="(! $starts-at-top-of-page)" keep="page"><marker class="pagenum" value="1"/>⠤⠤</block>
 	</sequence>
 </obfl>
