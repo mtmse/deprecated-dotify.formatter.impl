@@ -199,7 +199,7 @@ public class BorderManager {
         }
     }
 
-    private void addRowInner(Row r) {
+    private void addRowInner(RowImpl r) {
         ret2.add(r);
         hc.addRow(r);
     }
