@@ -2,7 +2,7 @@
 <obfl xmlns="http://www.daisy.org/ns/2011/obfl" version="2011-1" xml:lang="und" hyphenate="false">
    <meta xmlns:dc="http://purl.org/dc/elements/1.1/">
       <dc:title>Right text indent</dc:title>
-      <dc:description>Tests a right-aligned leader on the last line of a block which is indented on the right side for all the other lines.</dc:description>
+      <dc:description>Tests a right-aligned leader on the last line of a block that is indented on the right side for all the other lines. Tests both with a leader that is aligned to the right edge of the page and with a leader that is aligned to a position that is further than 'right-text-indent' cells away from the right edge of the page.</dc:description>
    </meta>
    <layout-master name="a" duplex="false" page-width="20" page-height="10">
       <default-template>
@@ -11,7 +11,14 @@
       </default-template>
    </layout-master>
    <sequence master="a">
-      <block right-text-indent="4">⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿
-      <leader pattern="⠤" position="100%" align="right"/> ⠿⠿</block>
+      <!--
+          indentation of last line smaller than indentation of other lines
+      -->
+      <block right-text-indent="4">⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿<leader pattern="⠤" position="20" align="right"/>⠿⠿</block>
+      <!--
+          indentation of last line bigger than indentation of other lines
+      -->
+      <block right-text-indent="4">⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿<leader pattern="⠤" position="10" align="right"/>⠿⠿</block>
+      <block right-text-indent="4">⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿​⠿<leader pattern="⠤" position="10" align="right"/>⠿⠿</block>
    </sequence>
 </obfl>
