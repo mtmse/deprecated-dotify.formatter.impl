@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 class TocSequenceEventImpl implements VolumeSequence {
     private final TocProperties props;
@@ -168,7 +169,13 @@ class TocSequenceEventImpl implements VolumeSequence {
                                 b.setMetaVolume(vol);
                             }
                             fsm.appendGroup(volumeStart);
-                            fsm.appendGroup(volumeToc);
+                            // If a chapter is so long that the there are two or
+                            // more resumed entries for that chapter in the
+                            // document TOC, the corresponding blocks must be
+                            // copied so that dynamic content (in particular
+                            // page numbers) is evaluated correctly. To avoid
+                            // code complexity, we simply copy all blocks here.
+                            fsm.appendGroup(volumeToc.stream().map(Block::copy).collect(Collectors.toList()));
                             fsm.appendGroup(volumeEnd);
                         }
                     }
