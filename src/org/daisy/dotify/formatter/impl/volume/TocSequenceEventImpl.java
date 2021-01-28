@@ -1,5 +1,6 @@
 package org.daisy.dotify.formatter.impl.volume;
 
+import org.daisy.dotify.formatter.impl.core.BlockCloner;
 import org.daisy.dotify.api.formatter.Condition;
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.FormatterCore;
@@ -24,9 +25,8 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
-class TocSequenceEventImpl implements VolumeSequence {
+class TocSequenceEventImpl implements VolumeSequence, BlockCloner {
     private final TocProperties props;
 
     private final ArrayList<ConditionalBlock> tocStartEvents;
@@ -84,19 +84,24 @@ class TocSequenceEventImpl implements VolumeSequence {
                 Iterable<Block> tmp = ev.getSequence();
                 for (Block b : tmp) {
                     //always clone these blocks, as they may be placed in multiple contexts
-                    Block bl = b.copy();
-                    currentBlockAddress = new BlockAddress(
-                        groupNumber,
-                        currentBlockAddress.getBlockNumber() + 1
-                    );
-                    bl.setBlockAddress(currentBlockAddress);
-                    it.add(bl);
+                    it.add(clone(b));
                 }
             }
         }
         return it;
     }
 
+    @Override
+    public Block clone(Block b) {
+        Block bl = b.copy();
+        currentBlockAddress = new BlockAddress(
+            groupNumber,
+            currentBlockAddress.getBlockNumber() + 1
+        );
+        bl.setBlockAddress(currentBlockAddress);
+        return bl;
+    }
+    
     private Iterable<Block> getVolumeStart(Context vars) throws IOException {
         return getCompoundIterableB(volumeStartEvents, vars);
     }
@@ -139,7 +144,8 @@ class TocSequenceEventImpl implements VolumeSequence {
                             // no content pages, in which case the variable would have no value,
                             // which would result in the CrossReferenceHandler becoming dirty for no
                             // reason, which could in turn result in endless iterations.
-                            () -> crh.getPageNumberOfFirstContentPageOfVolume(currentVolume)
+                            () -> crh.getPageNumberOfFirstContentPageOfVolume(currentVolume),
+                            null
                     );
                     if (volumeToc.isEmpty()) {
                         return null;
@@ -153,7 +159,8 @@ class TocSequenceEventImpl implements VolumeSequence {
                         final int v = vol;
                         Collection<Block> volumeToc = data.filter(
                                 refToVolume(vol, crh), rangeToVolume(vol, crh),
-                                () -> crh.getPageNumberOfFirstContentPageOfVolume(v)
+                                () -> crh.getPageNumberOfFirstContentPageOfVolume(v),
+                                this
                         );
                         if (!volumeToc.isEmpty()) {
                             Context varsWithVolume = DefaultContext
@@ -169,17 +176,13 @@ class TocSequenceEventImpl implements VolumeSequence {
                                 b.setMetaVolume(vol);
                             }
                             fsm.appendGroup(volumeStart);
-                            // If a chapter is so long that the there are two or
-                            // more resumed entries for that chapter in the
-                            // document TOC, the corresponding blocks must be
-                            // copied so that dynamic content (in particular
-                            // page numbers) is evaluated correctly. To avoid
-                            // code complexity, we simply copy all blocks here.
-                            fsm.appendGroup(volumeToc.stream().map(Block::copy).collect(Collectors.toList()));
+                            fsm.appendGroup(volumeToc);
                             fsm.appendGroup(volumeEnd);
                         }
                     }
-                    Collection<Block> volumeToc = data.filter(refToVolume(null, crh), range -> false, () -> 0);
+                    Collection<Block> volumeToc = data.filter(
+                            refToVolume(null, crh), range -> false, () -> 0, this
+                    );
                     if (!volumeToc.isEmpty()) {
                         fsm.appendGroup(volumeToc);
                     }
