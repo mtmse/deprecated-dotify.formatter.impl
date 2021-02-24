@@ -11,33 +11,28 @@ import java.util.Stack;
  * TODO: Write java doc.
  */
 public class SectionBuilder {
-    private Stack<Section> ret = new Stack<Section>();
-    private SectionProperties currentProps = null;
-    private int sheets = 0;
-
-    public void addSheet(Sheet s) {
-        sheets++;
-        /* We're using object identity here to communicate requests for
-         * new sections. It is left over from a previous cleanup, and
-         * might not be very intuitive, but it have to do for now.
-         * Please improve if you wish.
-         */
-        if (ret.isEmpty() || currentProps != s.getSectionProperties()) {
-            currentProps = s.getSectionProperties();
-            ret.add(new SectionImpl(currentProps));
+    
+    public static List<Section> getSections(List<Sheet> sheets) {
+        Stack<Section> ret = new Stack<>();
+        SectionProperties currentProps = null;
+        for (Sheet s : sheets) {
+            /* We're using object identity here to communicate requests for
+             * new sections. It is left over from a previous cleanup, and
+             * might not be very intuitive, but it have to do for now.
+             * Please improve if you wish.
+             */
+            if (ret.isEmpty() || currentProps != s.getSectionProperties()) {
+                currentProps = s.getSectionProperties();
+                // start a new Section
+                ret.add(new SectionImpl(currentProps));
+            }
+            SectionImpl sect = ((SectionImpl) ret.peek());
+            for (PageImpl p : s.getPages()) {
+                sect.addPage(p);
+            }
+            
         }
-        SectionImpl sect = ((SectionImpl) ret.peek());
-        for (PageImpl p : s.getPages()) {
-            sect.addPage(p);
-        }
-    }
-
-    List<Section> getSections() {
         return ret;
     }
-
-    int getSheetCount() {
-        return sheets;
-    }
-
+    
 }
