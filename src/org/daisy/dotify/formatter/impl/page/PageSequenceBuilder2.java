@@ -94,12 +94,8 @@ public class PageSequenceBuilder2 {
     private int dataGroupsIndex;
     private boolean nextEmpty = false;
 
-    // BlockLineLocation of the last line of the previous page
-    // (produced by this PageSequenceBuilder2 or the previous one)
     private BlockLineLocation cbl;
-    // BlockLineLocation of the last line of the page before the previous page,
-    // or null if no page has been produced yet
-    private BlockLineLocation pcbl;
+    private BlockLineLocation prevCbl; // previous value of cbl
 
     //From view, temporary
     private final int fromIndex;
@@ -120,7 +116,8 @@ public class PageSequenceBuilder2 {
      * @param context    ?
      * @param rcontext   ?
      * @param seqId      identifier/position of the block sequence
-     * @param blc        The {@link BlockLineLocation} of the last line of the previous PageSequenceBuilder2.
+     * @param blc        The {@link BlockLineLocation} of the last line of the previous PageSequenceBuilder2, or
+     *                   null if there is no previous PageSequenceBuilder2.
      */
     public PageSequenceBuilder2(
         int fromIndex,
@@ -161,7 +158,7 @@ public class PageSequenceBuilder2 {
         this.dataGroupsIndex = 0;
         this.seqId = seqId;
         this.cbl = blc;
-        this.pcbl = null;
+        this.prevCbl = null;
         PageDetails details = new PageDetails(
             master.duplex(),
             new PageId(pageCount, getGlobalStartIndex(), seqId),
@@ -192,7 +189,7 @@ public class PageSequenceBuilder2 {
         this.fromIndex = template.fromIndex;
         this.toIndex = template.toIndex;
         this.cbl = template.cbl;
-        this.pcbl = template.pcbl;
+        this.prevCbl = template.prevCbl;
     }
 
     public static PageSequenceBuilder2 copyUnlessNull(PageSequenceBuilder2 template) {
@@ -216,6 +213,10 @@ public class PageSequenceBuilder2 {
         return new PageId(pageCount + offset, getGlobalStartIndex(), seqId);
     }
 
+    /**
+     * @return The BlockLineLocation of the last line of the page that was produced last (by this
+     *         PageSequenceBuilder2 or the previous one), or null if no page has been produced yet.
+     */
     public BlockLineLocation currentBlockLineLocation() {
         return cbl;
     }
@@ -301,7 +302,7 @@ public class PageSequenceBuilder2 {
         // PageStructBuilder.paginateInner
         PageImpl current = newPage(pageNumberOffset);
         if (
-            pcbl != null &&
+            prevCbl != null &&
             // Store a mapping from the BlockLineLocation of the last line of the page before the
             // previous page to the BlockLineLocation of the last line of the previous page. This
             // info is used (in the next iteration) in SheetDataSource to obtain info about the
@@ -309,8 +310,7 @@ public class PageSequenceBuilder2 {
             transitionContent.isPresent() &&
             transitionContent.get().getType() == TransitionContent.Type.INTERRUPT
         ) {
-
-            blockContext.getRefs().setNextPageDetailsInSequence(pcbl, current.getDetails());
+            blockContext.getRefs().setNextPageDetailsInSequence(prevCbl, current.getDetails());
         }
         if (nextEmpty) {
             nextEmpty = false;
@@ -565,7 +565,7 @@ public class PageSequenceBuilder2 {
                 if (!head.isEmpty()) {
                     int s = head.size();
                     RowGroup gr = head.get(s - 1);
-                    pcbl = cbl;
+                    prevCbl = cbl;
                     cbl = gr.getLineProperties().getBlockLineLocation();
                 }
                 // Add the body rows to the page.
