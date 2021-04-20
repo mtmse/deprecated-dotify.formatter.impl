@@ -384,6 +384,15 @@ public class CrossReferenceHandler {
     }
 
     /**
+     * Indicate that a page is the last one in the sequence or that the next page is empty.
+     *
+     * @param id The BlockLineLocation that identifies the page.
+     */
+    public void setNextPageInSequenceEmptyOrAbsent(BlockLineLocation id) {
+        nextPageDetails.remove(id);
+    }
+
+    /**
      * Returns true if some information has been changed since last use.
      *
      * @return true if some information has been changed, false otherwise

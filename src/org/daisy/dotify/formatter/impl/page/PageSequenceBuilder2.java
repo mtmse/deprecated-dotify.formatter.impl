@@ -307,6 +307,30 @@ public class PageSequenceBuilder2 {
             context.getTransitionBuilder().getProperties().getApplicationRange() != ApplicationRange.NONE &&
             transitionContent.isPresent() &&
             transitionContent.get().getType() == TransitionContent.Type.INTERRUPT;
+        if (nextEmpty) {
+            // Return an empty page because the next row should be on a new sheet and we are
+            // currently on the back of a sheet.
+            // Note that we don't update cbl here, so the page after this one will have the same
+            // identity. Luckily it does not matter for SheetIdentity: there can't be two empty
+            // verso pages after each other so every SheetIdentity is still unique.
+            // Also note that we don't call keepTransitionProperties().
+            nextEmpty = false;
+            if (prevCbl != null && interruptContentPresent) {
+                // By calling setNextPageInSequenceEmptyOrAbsent() we tell SheetDataSource
+                // (in the next iteration) two things:
+                // 1. to not use this page's currentBlockLineLocation to look up its
+                //    transitionProperties because that info is not available (so could result in
+                //    CrossReferenceHandler staying dirty forever) and the currentBlockLineLocation
+                //    is not unique.
+                // 2. If the volume must be broken on a sheet that is empty on the back, we prefer
+                //    to put the transition content on the back of the sheet, not on the front.
+                blockContext.getRefs().setNextPageInSequenceEmptyOrAbsent(prevCbl);
+                // Set prevCbl to null so that the command above can not be undone with a
+                // setNextPageDetailsInSequence() in the next nextPage() call.
+                prevCbl = null;
+            }
+            return current;
+        }
         // Store a mapping from the BlockLineLocation of the last line of the page before the
         // previous page to the BlockLineLocation of the last line of the previous page. This info
         // is used (in the next iteration) in SheetDataSource to obtain info about the verso page of
@@ -314,10 +338,6 @@ public class PageSequenceBuilder2 {
         // break the volume after the current page or the next.
         if (prevCbl != null && interruptContentPresent) {
             blockContext.getRefs().setNextPageDetailsInSequence(prevCbl, current.getDetails());
-        }
-        if (nextEmpty) {
-            nextEmpty = false;
-            return current;
         }
         prevCbl = cbl;
 
@@ -621,15 +641,17 @@ public class PageSequenceBuilder2 {
                     BreakBefore nextStart = dataGroups.get(dataGroupsIndex).getBreakBefore();
                     switch (nextStart) {
                         case SHEET:
+                            // next row starts on new sheet
                             if (master.duplex()) {
-                                if (pageCount % 2 == 1) { // on recto page
+                                if (pageCount % 2 == 1) { // we are on a recto page
                                     if (current.hasRows()) {
+                                        // indicate that the next page (the verso page) should be empty
                                         nextEmpty = true;
                                         return current;
                                     } else {
                                         break; // we are already at the beginning of a recto page
                                     }
-                                } else { // on verso page
+                                } else { // we are on a verso page
                                     return current;
                                 }
                             }
@@ -643,6 +665,7 @@ public class PageSequenceBuilder2 {
                             break; // we are already at the beginning of a page
 
                         case PAGE:
+                            // next row starts on new page
                             if (current.hasRows()) {
                                 return current;
                             }
