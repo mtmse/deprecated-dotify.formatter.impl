@@ -15,7 +15,6 @@ import org.daisy.dotify.formatter.impl.page.RestartPaginationException;
 import org.daisy.dotify.formatter.impl.search.BlockLineLocation;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;
-import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.formatter.impl.search.SequenceId;
 import org.daisy.dotify.formatter.impl.search.SheetIdentity;
 import org.daisy.dotify.formatter.impl.search.TransitionProperties;
@@ -302,21 +301,20 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
                         ) {
                             // This id is the same id as the one created below in the call to nextPage
                             BlockLineLocation thisPageId = psb.currentBlockLineLocation();
-                            // This gets the page details for the next page in this sequence (if any)
-                            Optional<PageDetails> next = thisPageId != null
-                                ? rcontext.getRefs().getNextPageDetailsInSequence(thisPageId)
+                            // This gets the page location for the next page in this sequence (if any)
+                            Optional<BlockLineLocation> nextPageId = thisPageId != null
+                                ? rcontext.getRefs().getNextPageLocationInSequence(thisPageId)
                                 : Optional.empty();
-                            // If there is a page details in this sequence and volume break is preferred on this page
-                            if (next.isPresent()) {
+                            if (nextPageId.isPresent()) {
+                                // there is a next page in this sequence and a volume break is preferred on this page
                                 Optional<TransitionProperties> st1 = rcontext.getRefs().getTransitionProperties(
-                                        thisPageId
+                                    thisPageId
                                 );
                                 TransitionProperties p = st1.orElse(TransitionProperties.empty());
                                 double v1 = p.getVolumeKeepPriority()
                                     .orElse(10) + (p.hasBlockBoundary() ? 0.5 : 0);
-
                                 Optional<TransitionProperties> st2 = rcontext.getRefs().getTransitionProperties(
-                                    next.get().getPageLocation()
+                                    nextPageId.get()
                                 );
                                 p = st2.orElse(TransitionProperties.empty());
                                 double v2 = p.getVolumeKeepPriority()

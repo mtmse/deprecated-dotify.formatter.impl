@@ -370,8 +370,9 @@ public class CrossReferenceHandler {
         return searchInfo.findStartAndMarker(id, spec);
     }
 
-    public Optional<PageDetails> getNextPageDetailsInSequence(BlockLineLocation id) {
-        return Optional.ofNullable(nextPageDetails.get(id));
+    public Optional<BlockLineLocation> getNextPageLocationInSequence(BlockLineLocation id) {
+        PageDetails details = nextPageDetails.get(id);
+        return details != null ? Optional.of(details.getPageLocation()) : Optional.empty();
     }
 
     public void setNextPageDetailsInSequence(BlockLineLocation id, PageDetails details) {
