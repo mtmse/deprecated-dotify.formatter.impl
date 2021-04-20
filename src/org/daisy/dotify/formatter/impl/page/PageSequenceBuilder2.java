@@ -299,17 +299,19 @@ public class PageSequenceBuilder2 {
             boolean wasSplitInSequence,
             boolean isFirst
     ) throws PaginatorException, RestartPaginationException { // pagination must be restarted in
-        // PageStructBuilder.paginateInner
+                                                              // PageStructBuilder.paginateInner
         PageImpl current = newPage(pageNumberOffset);
-        if (
-            prevCbl != null &&
-            // Store a mapping from the BlockLineLocation of the last line of the page before the
-            // previous page to the BlockLineLocation of the last line of the previous page. This
-            // info is used (in the next iteration) in SheetDataSource to obtain info about the
-            // verso page of a sheet when we are on a recto page of that sheet.
+        // whether this is the last page of the volume and a volume transition was provided
+        boolean interruptContentPresent =
+            context.getTransitionBuilder().getProperties().getApplicationRange() != ApplicationRange.NONE &&
             transitionContent.isPresent() &&
-            transitionContent.get().getType() == TransitionContent.Type.INTERRUPT
-        ) {
+            transitionContent.get().getType() == TransitionContent.Type.INTERRUPT;
+        // Store a mapping from the BlockLineLocation of the last line of the page before the
+        // previous page to the BlockLineLocation of the last line of the previous page. This info
+        // is used (in the next iteration) in SheetDataSource to obtain info about the verso page of
+        // a sheet when we are on a recto page of that sheet and we need to determine whether to
+        // break the volume after the current page or the next.
+        if (prevCbl != null && interruptContentPresent) {
             blockContext.getRefs().setNextPageDetailsInSequence(prevCbl, current.getDetails());
         }
         if (nextEmpty) {
@@ -437,7 +439,7 @@ public class PageSequenceBuilder2 {
                 // First find the optimal break point
                 SplitPointSpecification spec;
                 boolean addTransition = true;
-                if (transitionContent.isPresent() && transitionContent.get().getType() == Type.INTERRUPT) {
+                if (interruptContentPresent) {
                     // Subtract the height of the transition text from the available height.
                     // We need to account for the last unit size here (because this is the last unit) instead
                     // of the one below. The transition text may have a smaller row spacing than the last row of
@@ -581,25 +583,20 @@ public class PageSequenceBuilder2 {
                 );
                 // Store info about this volume transition for use in the next iteration (used in SheetDataSource).
                 // No need to do this unless there is an active transition builder.
-                if (context.getTransitionBuilder().getProperties().getApplicationRange() != ApplicationRange.NONE) {
+                if (interruptContentPresent) {
                     // Determine whether there is a block boundary on the page, with enough space
                     // available after this point for sequence-interrupted and any-interrupted.
                     boolean hasBlockBoundary =
                         blockBoundary.isPresent() ?
                         blockBoundary.get() :
                         res.getHead().stream().filter(r -> r.isLastRowGroupInBlock()).findFirst().isPresent();
-                    if (
-                            transitionContent.isPresent() &&
-                                    transitionContent.get().getType() == TransitionContent.Type.INTERRUPT
-                    ) {
-                        bc.getRefs().keepTransitionProperties(
-                                current.getDetails().getPageLocation(),
-                                new TransitionProperties(
-                                        current.getAvoidVolumeBreakAfter(),
-                                        hasBlockBoundary
-                                )
-                        );
-                    }
+                    bc.getRefs().keepTransitionProperties(
+                        current.getDetails().getPageLocation(),
+                        new TransitionProperties(
+                            current.getAvoidVolumeBreakAfter(),
+                            hasBlockBoundary
+                        )
+                    );
                 }
                 // Discard collapsed margins, but retain their properties (identifiers, markers,
                 // keep-with-next-sheets, keep-with-previous-sheets).
