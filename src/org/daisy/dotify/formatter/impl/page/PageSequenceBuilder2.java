@@ -95,7 +95,8 @@ public class PageSequenceBuilder2 {
     private boolean nextEmpty = false;
 
     private BlockLineLocation cbl;
-    private BlockLineLocation prevCbl; // previous value of cbl
+    private BlockLineLocation prevCbl; // value of cbl in effect before the last call to nextPage(),
+                                       // or null if nextPage() has not been called yet
 
     //From view, temporary
     private final int fromIndex;
@@ -318,6 +319,8 @@ public class PageSequenceBuilder2 {
             nextEmpty = false;
             return current;
         }
+        prevCbl = cbl;
+
         // The purpose of this is to prevent supplements from combining with header/footer
         cd.setExtraOverhead(
             current.getPageTemplate().validateAndAnalyzeHeader() +
@@ -567,7 +570,6 @@ public class PageSequenceBuilder2 {
                 if (!head.isEmpty()) {
                     int s = head.size();
                     RowGroup gr = head.get(s - 1);
-                    prevCbl = cbl;
                     cbl = gr.getLineProperties().getBlockLineLocation();
                 }
                 // Add the body rows to the page.
