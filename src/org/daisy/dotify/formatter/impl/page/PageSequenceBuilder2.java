@@ -335,10 +335,10 @@ public class PageSequenceBuilder2 {
         // correct under all the assumptions made.
         blockContext = new BlockContext.Builder(blockContext).topOfPage(true).build();
 
-        // while there are more rows in the current block, or there are more blocks...
+        // while there are more rows in the current RowGroupSequence, or there are more RowGroupSequences
         while (dataGroupsIndex < dataGroups.size() || (data != null && !data.isEmpty())) {
             if ((data == null || data.isEmpty()) && dataGroupsIndex < dataGroups.size()) {
-                // pick up next block (as RowGroupSequence)
+                // pick up next RowGroupSequence
                 RowGroupSequence rgs = dataGroups.get(dataGroupsIndex);
                 //TODO: This assumes that all page templates have margin regions that are of the same width
                 BlockContext bc = BlockContext.from(blockContext)
